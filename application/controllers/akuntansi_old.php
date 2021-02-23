@@ -15,6 +15,7 @@ class Akuntansi extends CI_Controller
         parent::__construct();
         /*tester*/
         /*tester2*/
+        /*tester3*/
 
     }
 
