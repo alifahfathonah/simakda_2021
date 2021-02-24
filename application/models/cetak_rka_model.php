@@ -2417,4 +2417,677 @@ Bulan</td>
         break;
         }
     }
+
+    function preview_rka_skpd_pergeseran($tgl_ttd,$ttd1,$ttd2,$id,$cetak,$detail,$tanggal_ttd,$doc,$gaji, $status1, $status2){
+        $sqlsc="SELECT tgl_rka,provinsi,kab_kota,daerah,thn_ang FROM sclient where kd_skpd='$id'";
+        $sqlsclient=$this->db->query($sqlsc);
+        foreach ($sqlsclient->result() as $rowsc){
+                    $tgl=$rowsc->tgl_rka;
+                    $kab     = $rowsc->kab_kota;
+                    $daerah  = $rowsc->daerah;
+                    $thn     = $rowsc->thn_ang;
+        }
+
+        $sqldns="SELECT a.kd_urusan as kd_u,left(b.kd_bidang_urusan,1) as header, LEFT(a.kd_skpd,20) as kd_org,b.nm_bidang_urusan as nm_u,a.kd_skpd as kd_sk,
+                a.nm_skpd as nm_sk FROM ms_skpd a INNER JOIN ms_bidang_urusan b
+                 ON a.kd_urusan=b.kd_bidang_urusan WHERE  kd_skpd='$id'";
+        $sqlskpd=$this->db->query($sqldns);
+        foreach ($sqlskpd->result() as $rowdns){
+                    $kd_urusan=$rowdns->kd_u;                    
+                    $nm_urusan= $rowdns->nm_u;
+                    $kd_skpd  = $rowdns->kd_sk;
+                    $nm_skpd  = $rowdns->nm_sk;
+                    $header   = $rowdns->header;
+                    $kd_org   = $rowdns->kd_org;
+        } 
+
+        if($status1=='nilai'){
+            $status_anggaran1="";
+        } else if($status1=='nilai_sempurna'){
+            $status_anggaran1="_sempurna";
+        } else{
+            $status_anggaran1="_ubah";
+        }
+
+        if($status2=='nilai'){
+            $status_anggaran2="";
+            $doc='DPA';
+            $rka="DOKUMEN PELAKSANAAN ANGGARAN";
+        } else if($status2=='nilai_sempurna'){
+            $rka="DOKUMEN PELAKSANAAN ANGGARAN";
+            $status_anggaran2="_sempurna";
+            $doc='DPA';
+        } else{
+            $status_anggaran2="_ubah";
+            $rka="DOKUMEN PELAKSANAAN PERUBAHAN ANGGARAN";
+            $doc='DPPA';
+        }
+
+
+        if($doc=='RKA'){
+            $rka="RENCANA KERJA DAN ANGGARAN";
+            $judul="Ringkasan Anggaran Pendapatan dan Belanja
+                    <br> Satuan Kerja Perangkat Daerah";
+            $tambahan="";
+        }else{
+
+            $nodpa=$this->db->query("SELECT * from trhrka where kd_skpd='$id'")->row()->no_dpa;
+            $judul="Ringkasan Dokumen Pelaksanaan Anggaran Pendapatan dan Belanja Daerah
+                    <br> Satuan Kerja Perangkat Daerah";
+            $tambahan="<tr>
+                        <td style='border-right:none'> No DPA</td>
+                        <td style='border-left:none'>: $nodpa</td>
+                    </tr>";
+        }
+        $cRet='';
+        $cRet .="<table style='border-collapse:collapse;font-size:12px' width='100%' align='center' border='1' cellspacing='0' cellpadding='0'>
+                    <tr> 
+                         <td colspan='1' width='80%' align='center'><strong>$rka <br> SATUAN KERJA PERANGKAT DAERAH</strong></td>
+                         <td colspan='1' width='20%' rowspan='4' align='center'><strong>$doc - SKPD</strong></td>
+                    </tr>
+                    <tr>
+                         <td colspan='1' align='center'><strong>$kab <br>TAHUN ANGGARAN $thn</strong> </td>
+                    </tr>
+                </table>";
+
+        $cRet .="<table style='border-collapse:collapse;font-size:12px' width='100%' align='left' border='1' cellpadding='5px'>
+                    $tambahan
+                    <tr>
+                        <td style='border-right:none'> Organisasi</td>
+                        <td style='border-left:none'>: $kd_skpd - $nm_skpd</td>
+                    </tr>
+                    <tr>
+                        <td colspan='2' bgcolor='#CCCCCC'> &nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td colspan='2' align='center'><strong>$judul </strong></td>
+                    </tr>
+                </table>";
+        $cRet .= "<table style='border-collapse:collapse;font-size:12px' width='100%' align='center' border='1' cellspacing='0' cellpadding='5px'>
+                     <thead>                       
+                        <tr>
+                            <td bgcolor='#CCCCCC' rowspan='2' width='15%' align='center'><b>KODE REKENING</b></td>                            
+                            <td bgcolor='#CCCCCC' rowspan='2' width='25%' align='center'><b>URAIAN</b></td>
+                            <td bgcolor='#CCCCCC' colspan='2' width='30%' align='center'><b>JUMLAH(Rp.)</b></td>
+                            <td bgcolor='#CCCCCC' colspan='2' width='30%' align='center'><b>BERTAMBAH/BERKURANG </b></td>                            
+                        </tr>
+                        <tr>
+                            <td bgcolor='#CCCCCC' width='15%' align='center'><b>SEBELUM PERGESERAN</b></td>                            
+                            <td bgcolor='#CCCCCC' width='15%' align='center'><b>SESUDAH PERGESERAN</b></td>
+                            <td bgcolor='#CCCCCC' width='15%' align='center'><b>(Rp.)</b></td>
+                            <td bgcolor='#CCCCCC' width='15%' align='center'><b>%</b></td>                            
+                        </tr>
+                     </thead>
+                     
+                        <tr>
+                            <td style='vertical-align:top;border-top: none;border-bottom: none;' width='15%' align='center'>1</td>                            
+                            <td style='vertical-align:top;border-top: none;border-bottom: none;' width='25%' align='center'>2</td>
+                            <td style='vertical-align:top;border-top: none;border-bottom: none;' width='15%' align='center'>3</td>
+                            <td style='vertical-align:top;border-top: none;border-bottom: none;' width='15%' align='center'>4</td>                            
+                            <td style='vertical-align:top;border-top: none;border-bottom: none;' width='15%' align='center'>5</td>
+                            <td style='vertical-align:top;border-top: none;border-bottom: none;' width='15%' align='center'>6</td>
+                        </tr>
+
+                ";
+
+
+
+        if($detail=='detail'){
+            $rincian="  UNION ALL "."
+
+                        SELECT a.kd_rek4 AS kd_rek,a.nm_rek4 AS nm_rek ,
+                        SUM(b.nilai$status_anggaran1) AS nilai, SUM(b.nilai$status_anggaran2) AS nilai2 FROM ms_rek4 a INNER JOIN trdrka b ON a.kd_rek4=LEFT(b.kd_rek6,(len(a.kd_rek4)))
+                        where left(b.kd_rek6,1)='4' and left(b.kd_skpd,17)=left('$id',17)  
+                        GROUP BY a.kd_rek4, a.nm_rek4  
+                        UNION ALL 
+
+                        SELECT a.kd_rek5 AS kd_rek,a.nm_rek5 AS nm_rek ,
+                        SUM(b.nilai$status_anggaran1) AS nilai, SUM(b.nilai$status_anggaran2) AS nilai2 FROM ms_rek5 a INNER JOIN trdrka b ON a.kd_rek5=LEFT(b.kd_rek6,(len(a.kd_rek5)))
+                        where left(b.kd_rek6,1)='4' and left(b.kd_skpd,17)=left('$id',17) 
+                        GROUP BY a.kd_rek5, a.nm_rek5 
+                        UNION ALL 
+
+                        SELECT a.kd_rek6 AS kd_rek,a.nm_rek6 AS nm_rek ,
+                        SUM(b.nilai$status_anggaran1) AS nilai, SUM(b.nilai$status_anggaran2) AS nilai2 FROM ms_rek6 a INNER JOIN trdrka b ON a.kd_rek6=LEFT(b.kd_rek6,(len(a.kd_rek6)))
+                        where left(b.kd_rek6,1)='4' and left(b.kd_skpd,17)=left('$id',17) 
+                        GROUP BY a.kd_rek6, a.nm_rek6";
+        }else{ $rincian='';}
+        
+        $sql1="SELECT a.kd_rek1 AS kd_rek, a.nm_rek1 AS nm_rek ,SUM(b.nilai$status_anggaran1) AS nilai, SUM(b.nilai$status_anggaran2) AS nilai2 FROM ms_rek1 a 
+                INNER JOIN trdrka b ON a.kd_rek1=LEFT(b.kd_rek6,(len(a.kd_rek1))) where left(b.kd_rek6,1)='4' 
+                and left(b.kd_skpd,17)=left('$id',17) GROUP BY a.kd_rek1, a.nm_rek1 
+
+                UNION ALL 
+
+                SELECT a.kd_rek2 AS kd_rek,a.nm_rek2 AS nm_rek ,SUM(b.nilai$status_anggaran1) AS nilai, SUM(b.nilai$status_anggaran2) AS nilai2 FROM ms_rek2 a INNER JOIN trdrka b 
+                ON a.kd_rek2=LEFT(b.kd_rek6,(len(a.kd_rek2))) where left(b.kd_rek6,1)='4' and left(b.kd_skpd,17)=left('$id',17) 
+                GROUP BY a.kd_rek2,a.nm_rek2 
+
+                UNION ALL 
+
+                SELECT a.kd_rek3 AS kd_rek,a.nm_rek3 AS nm_rek, SUM(b.nilai$status_anggaran1) AS nilai, SUM(b.nilai$status_anggaran2) AS nilai2 FROM ms_rek3 a INNER JOIN trdrka b ON a.kd_rek3=LEFT(b.kd_rek6,(len(a.kd_rek3)))
+                where left(b.kd_rek6,1)='4' and left(b.kd_skpd,17)=left('$id',17) 
+                GROUP BY a.kd_rek3, a.nm_rek3 
+                $rincian
+                ORDER BY kd_rek";
+                 
+        $query = $this->db->query($sql1);
+        if ($query->num_rows() > 0){                                  
+            foreach ($query->result() as $row){
+                    $coba1=$this->support->dotrek($row->kd_rek);
+                    $coba2=$row->nm_rek;
+                    $coba3= number_format($row->nilai,"2",",",".");
+                    $nilai4= number_format($row->nilai2,"2",",",".");
+                    $selisih=$this->support->rp_minus($row->nilai-$row->nilai2);
+                    $persen=$this->support->rp_minus((($row->nilai-$row->nilai2)/$row->nilai2)*100);
+                   
+                    $cRet.= " <tr>
+                                <td style='vertical-align:top;border-top: solid 1px black;border-bottom: none;'  align='left'>&nbsp;$coba1</td>                                     
+                                <td style='vertical-align:top;border-top: solid 1px black;border-bottom: none;' >&nbsp;$coba2</td>
+                                <td style='vertical-align:top;border-top: solid 1px black;border-bottom: none;'  align='right'>&nbsp;$coba3</td>
+                                <td style='vertical-align:top;border-top: solid 1px black;border-bottom: none;'  align='right'>&nbsp;$nilai4</td>                                     
+                                <td style='vertical-align:top;border-top: solid 1px black;border-bottom: none;'  align='right'>&nbsp;$selisih</td>
+                                <td style='vertical-align:top;border-top: solid 1px black;border-bottom: none;'  align='right'>&nbsp;$persen</td>
+                             </tr>";                     
+            }
+        }else{
+                $cRet .= " <tr>
+                            <td style='vertical-align:top;border-top: solid 1px black;border-bottom: none;'  align='left'>4</td>                                     
+                            <td style='vertical-align:top;border-top: solid 1px black;border-bottom: none;' >PENDAPATAN</td>
+                            <td style='vertical-align:top;border-top: solid 1px black;border-bottom: none;'  align='right'>".number_format(0,"2",",",".")."</td>
+                            <td style='vertical-align:top;border-top: solid 1px black;border-bottom: none;'  align='right'>4</td>                                     
+                            <td style='vertical-align:top;border-top: solid 1px black;border-bottom: none;' >PENDAPATAN</td>
+                            <td style='vertical-align:top;border-top: solid 1px black;border-bottom: none;'  align='right'>".number_format(0,"2",",",".")."</td>
+                          </tr>";
+                    
+                
+        }                                 
+                
+        $sqltp="SELECT SUM(nilai$status_anggaran1) AS totp, SUM(nilai$status_anggaran2) AS totp1 FROM trdrka WHERE LEFT(kd_rek6,1)='4' and left(kd_skpd,17)=left('$id',17)";
+        $sqlp=$this->db->query($sqltp);
+        foreach ($sqlp->result() as $rowp){
+
+            $coba4=number_format($rowp->totp,"2",",",".");
+            $coba42=number_format($rowp->totp1,"2",",",".");
+            $selisih=$this->support->rp_minus($rowp->totp-$rowp->totp1);
+            $persen=$this->support->rp_minus((($rowp->totp-$rowp->totp1)/$rowp->totp1)*100);
+            $cob1=$rowp->totp;
+            $total_pendapatan=$rowp->totp1;
+                   
+            $cRet    .= "<tr>
+                            <td style='vertical-align:top;border-top: solid 1px black;border-bottom: none;'  align='left'></td>                                     
+                            <td style='vertical-align:top;border-top: solid 1px black;border-bottom: none;'  align='right'>Jumlah Pendapatan</td>
+                            <td style='vertical-align:top;border-top: solid 1px black;border-bottom: none;'  align='right'>$coba4</td>
+                            <td style='vertical-align:top;border-top: solid 1px black;border-bottom: none;'  align='right'>$coba42</td>                                     
+                            <td style='vertical-align:top;border-top: solid 1px black;border-bottom: none;'  align='right'>$selisih</td>
+                            <td style='vertical-align:top;border-top: solid 1px black;border-bottom: none;'  align='right'>$persen</td>
+                        </tr>
+                        <tr>
+                            <td style='vertical-align:top;border-top: solid 1px black;border-bottom: none;'  align='left'></td>                                     
+                            <td style='vertical-align:top;border-top: solid 1px black;border-bottom: none;' >&nbsp;</td>
+                            <td style='vertical-align:top;border-top: solid 1px black;border-bottom: none;'  align='right'></td>
+                            <td style='vertical-align:top;border-top: solid 1px black;border-bottom: none;'  align='right'></td>                                     
+                            <td style='vertical-align:top;border-top: solid 1px black;border-bottom: none;' >&nbsp;</td>
+                            <td style='vertical-align:top;border-top: solid 1px black;border-bottom: none;'  align='right'></td>
+                        </tr>";
+        }
+
+        if($gaji==1){
+            $aktifkanGaji="and right(b.kd_sub_kegiatan,10) <> '01.2.02.01' ";
+        }else{
+            $aktifkanGaji="";
+        }
+
+        if($detail=='detail'){
+            $rincian="  UNION ALL "." 
+                        SELECT a.kd_rek4 AS kd_rek,a.kd_rek4 AS rek,a.nm_rek4 AS nm_rek ,SUM(b.nilai$status_anggaran1) AS nilai, sum(b.nilai$status_anggaran2) as nilai2 FROM ms_rek4 a 
+                        INNER JOIN trdrka b ON a.kd_rek4=LEFT(b.kd_rek6,(len(a.kd_rek4))) WHERE LEFT(kd_rek6,1)='5' AND left(b.kd_skpd,17)=left('$id',17) $aktifkanGaji
+                        GROUP BY a.kd_rek4, a.nm_rek4 
+                        UNION ALL 
+                        SELECT a.kd_rek5 AS kd_rek,a.kd_rek5 AS rek,a.nm_rek5 AS nm_rek ,SUM(b.nilai$status_anggaran1) AS nilai, sum(b.nilai$status_anggaran2) as nilai2 FROM ms_rek5 a 
+                        INNER JOIN trdrka b ON a.kd_rek5=LEFT(b.kd_rek6,(len(a.kd_rek5))) WHERE LEFT(kd_rek6,1)='5' AND left(b.kd_skpd,17)=left('$id',17) $aktifkanGaji
+                        GROUP BY a.kd_rek5, a.nm_rek5 
+                        UNION ALL 
+                        SELECT a.kd_rek6 AS kd_rek,a.kd_rek6 AS rek,a.nm_rek6 AS nm_rek ,SUM(b.nilai$status_anggaran1) AS nilai, sum(b.nilai$status_anggaran2) as nilai2 FROM ms_rek6 a 
+                        INNER JOIN trdrka b ON a.kd_rek6=b.kd_rek6 WHERE LEFT(b.kd_rek6,1)='5' AND left(b.kd_skpd,17)=left('$id',17) $aktifkanGaji
+                        GROUP BY a.kd_rek6, a.nm_rek6";
+        }else{ $rincian='';}     
+                $sql2="SELECT a.kd_rek1 AS kd_rek, a.kd_rek1 AS rek, a.nm_rek1 AS nm_rek ,SUM(b.nilai$status_anggaran1) AS nilai, sum(b.nilai$status_anggaran2) as nilai2 FROM ms_rek1 a 
+                        INNER JOIN trdrka b ON a.kd_rek1=LEFT(b.kd_rek6,(len(a.kd_rek1))) WHERE LEFT(kd_rek6,1)='5' AND left(b.kd_skpd,17)=left('$id',17) $aktifkanGaji
+                        GROUP BY a.kd_rek1, a.nm_rek1 
+                        UNION ALL 
+                        SELECT a.kd_rek2 AS kd_rek,a.kd_rek2 AS rek,a.nm_rek2 AS nm_rek ,SUM(b.nilai$status_anggaran1) AS nilai, sum(b.nilai$status_anggaran2) as nilai2 FROM ms_rek2 a 
+                        INNER JOIN trdrka b ON a.kd_rek2=LEFT(b.kd_rek6,(len(a.kd_rek2))) WHERE LEFT(kd_rek6,1)='5' AND left(b.kd_skpd,17)=left('$id',17) $aktifkanGaji
+                        GROUP BY a.kd_rek2,a.nm_rek2 
+                        UNION ALL 
+                        SELECT a.kd_rek3 AS kd_rek,a.kd_rek3 AS rek,a.nm_rek3 AS nm_rek ,SUM(b.nilai$status_anggaran1) AS nilai, sum(b.nilai$status_anggaran2) as nilai2 FROM ms_rek3 a 
+                        INNER JOIN trdrka b ON a.kd_rek3=LEFT(b.kd_rek6,(len(a.kd_rek3))) WHERE LEFT(kd_rek6,1)='5' AND left(b.kd_skpd,17)=left('$id',17) $aktifkanGaji
+                        GROUP BY a.kd_rek3, a.nm_rek3 
+                        $rincian
+                        ORDER BY kd_rek
+                        ";
+                 
+                 $query1 = $this->db->query($sql2);
+                 foreach ($query1->result() as $row1)
+                {
+                    $coba5=$this->support->dotrek($row1->rek);
+                    $coba6=$row1->nm_rek;
+                    $coba7= number_format($row1->nilai,"2",",",".");
+                    $nilai5= number_format($row1->nilai2,"2",",",".");
+                    $selisih=$this->support->rp_minus($row1->nilai-$row1->nilai2);
+                    $persen=$this->support->rp_minus((($row1->nilai-$row1->nilai2)/$row1->nilai2)*100);
+                   
+                     $cRet    .= " <tr>
+                                     <td style='vertical-align:top;'  align='left'>&nbsp;$coba5</td>                                     
+                                     <td style='vertical-align:top;' >&nbsp;$coba6</td>
+                                     <td style='vertical-align:top;'  align='right'>&nbsp;$coba7</td>
+                                     <td style='vertical-align:top;'  align='right'>&nbsp;$nilai5</td>                                     
+                                     <td style='vertical-align:top;'  align='right'>&nbsp;$selisih</td>
+                                     <td style='vertical-align:top;'  align='right'>&nbsp;$persen</td>
+                                    </tr>";
+                }
+
+                if($gaji==1){
+                    $aktifkanGaji="and right(kd_sub_kegiatan,10) <> '01.2.02.01' ";
+                }else{
+                    $aktifkanGaji="";
+                }     
+
+                $sqltb="SELECT SUM(nilai$status_anggaran1) AS totb, SUM(nilai$status_anggaran2) AS totb1 FROM trdrka WHERE LEFT(kd_rek6,1)='5' and left(kd_skpd,17)=left('$id',17) $aktifkanGaji";
+                $sqlb=$this->db->query($sqltb);
+                foreach ($sqlb->result() as $rowb)
+                {
+                   $coba8=number_format($rowb->totb,"2",",",".");
+                   $coba81=number_format($rowb->totb1,"2",",",".");
+                    $cob=$rowb->totb;
+                    $selisih=$this->support->rp_minus($rowb->totb-$rowb->totb1);
+                    $persen=$this->support->rp_minus((($rowb->totb-$rowb->totb1)/$rowb->totb1)*100);
+                    $total_belanja=$rowb->totb1;
+                    $cRet    .= " <tr>
+                                     <td style='vertical-align:top;'  align='left'></td>                                     
+                                     <td style='vertical-align:top;'  align='right'>Jumlah Belanja</td>
+                                     <td style='vertical-align:top;'  align='right'>$coba8</td>
+                                     <td style='vertical-align:top;'  align='right'> $coba81</td>                                     
+                                     <td style='vertical-align:top;'  align='right'> $selisih</td>
+                                     <td style='vertical-align:top;'  align='right'>$persen</td>
+                                </tr>";
+                 }
+                    $cRet    .= " <tr>
+                                     <td style='vertical-align:top;'  align='left'></td>                                     
+                                     <td style='vertical-align:top;'  align='right'></td>
+                                     <td style='vertical-align:top;'  align='right'>&nbsp;</td>
+                                     <td style='vertical-align:top;'  align='left'></td>                                     
+                                     <td style='vertical-align:top;'  align='right'></td>
+                                     <td style='vertical-align:top;'  align='right'>&nbsp;</td>
+                                  </tr>";
+                  
+                  $surplus=$cob1-$cob;
+                  $surplus2=$total_pendapatan-$total_belanja; 
+                    $cRet    .= " <tr>   
+                                    <td></td>                                 
+                                     <td style='vertical-align:top;border-top: solid 1px black;' align='right'>Surplus/Defisit</td>
+                                     <td style='vertical-align:top;border-top: solid 1px black;'  align='right'>".$this->rka_model->angka($surplus)."</td>
+                                     <td style='vertical-align:top;border-top: solid 1px black;' align='right'>".$this->rka_model->angka($surplus2)."</td>                                 
+                                     <td style='vertical-align:top;border-top: solid 1px black;' align='right'>".$this->support->rp_minus($surplus-$surplus2)."</td>
+                                     <td style='vertical-align:top;border-top: solid 1px black;'  align='right'>".$this->support->rp_minus((($surplus-$surplus2)/$surplus2)*100)."</td>
+                            </tr>"; 
+
+                    
+                $sqltpm="SELECT isnull(SUM(nilai$status_anggaran1),0) AS totb, isnull(SUM(nilai$status_anggaran2),0) AS totb2 FROM trdrka WHERE LEFT(kd_rek6,1)='6' and left(kd_skpd,17)=left('$id',17)";
+                $sqltpm=$this->db->query($sqltpm);
+                foreach ($sqltpm->result() as $rowtpm)
+                {
+                    $coba12=number_format($rowtpm->totb,"2",",",".");
+                    $coba12x=number_format($rowtpm->totb2,"2",",",".");
+                    $selisih=$this->support->rp_minus($rowtpm->totb-$rowtpm->totb2);
+                    
+                    $cobtpm=$rowtpm->totb;
+                    if($cobtpm>0){
+                        $persen=$this->support->rp_minus((($rowtpm->totb-$rowtpm->totb2)/$rowtpm->totb2)*100);
+                    $cRet    .= " <tr>
+                                     <td style='vertical-align:top;'  align='left'></td>                                     
+                                     <td style='vertical-align:top;'  align='right'></td>
+                                     <td style='vertical-align:top;'  align='right'>&nbsp;</td>
+                                     <td style='vertical-align:top;'  align='left'></td>                                     
+                                     <td style='vertical-align:top;'  align='right'></td>
+                                     <td style='vertical-align:top;'  align='right'>&nbsp;</td>
+                                    </tr>";
+
+                        $cRet    .= "<tr>
+                                        <td style='vertical-align:top;'  align='left'>6</td>                                     
+                                         <td style='vertical-align:top;' >Pembiayaan</td>
+                                         <td style='vertical-align:top;'  align='right'>$coba12
+                                     <td style='vertical-align:top;'  align='right'>$coba12x</td>                                     
+                                     <td style='vertical-align:top;'  align='right'>$selisih</td>
+                                     <td style='vertical-align:top;'  align='right'> $persen</td>
+                                    </td>
+                                    </tr>";
+                        if($detail=='detail'){
+                            $rincian="  UNION ALL "." 
+                                        SELECT a.kd_rek4 AS kd_rek,a.kd_rek4 AS rek,a.nm_rek4 AS nm_rek ,SUM(b.nilai$status_anggaran1) AS nilai, SUM(b.nilai$status_anggaran2) AS nilai2 FROM ms_rek4 a 
+                                        INNER JOIN trdrka b ON a.kd_rek4=LEFT(b.kd_rek6,(len(a.kd_rek4))) WHERE LEFT(kd_rek6,2)='61' AND left(b.kd_skpd,17)=left('$id',17) 
+                                        GROUP BY a.kd_rek4, a.nm_rek4 
+                                        UNION ALL 
+                                        SELECT a.kd_rek5 AS kd_rek,a.kd_rek5 AS rek,a.nm_rek5 AS nm_rek ,SUM(b.nilai$status_anggaran1) AS nilai, SUM(b.nilai$status_anggaran2) AS nilai2 FROM ms_rek5 a 
+                                        INNER JOIN trdrka b ON a.kd_rek5=LEFT(b.kd_rek6,(len(a.kd_rek5))) WHERE LEFT(kd_rek6,2)='61' AND left(b.kd_skpd,17)=left('$id',17) 
+                                        GROUP BY a.kd_rek5, a.nm_rek5 
+                                        UNION ALL 
+                                        SELECT a.kd_rek6 AS kd_rek,a.kd_rek6 AS rek,a.nm_rek6 AS nm_rek ,SUM(b.nilai$status_anggaran1) AS nilai, SUM(b.nilai$status_anggaran2) AS nilai2 FROM ms_rek6 a 
+                                        INNER JOIN trdrka b ON a.kd_rek6=b.kd_rek6 WHERE LEFT(b.kd_rek6,2)='61' AND left(b.kd_skpd,17)=left('$id',17) 
+                                        GROUP BY a.kd_rek6, a.nm_rek6 ";
+                        }else{$rincian='';}
+
+                        $sqlpm="
+                        SELECT a.kd_rek2 AS kd_rek,a.kd_rek2 AS rek,a.nm_rek2 AS nm_rek ,SUM(b.nilai$status_anggaran1) AS nilai, SUM(b.nilai$status_anggaran2) AS nilai2 FROM ms_rek2 a 
+                        INNER JOIN trdrka b ON a.kd_rek2=LEFT(b.kd_rek6,(len(a.kd_rek2))) WHERE LEFT(kd_rek6,2)='61' AND left(b.kd_skpd,17)=left('$id',17) GROUP BY a.kd_rek2,a.nm_rek2 
+                        UNION ALL 
+                        SELECT a.kd_rek3 AS kd_rek,a.kd_rek3 AS rek,a.nm_rek3 AS nm_rek ,SUM(b.nilai$status_anggaran1) AS nilai, SUM(b.nilai$status_anggaran2) AS nilai2 FROM ms_rek3 a 
+                        INNER JOIN trdrka b ON a.kd_rek3=LEFT(b.kd_rek6,(len(a.kd_rek3))) WHERE LEFT(kd_rek6,2)='61' AND left(b.kd_skpd,17)=left('$id',17) 
+                        GROUP BY a.kd_rek3, a.nm_rek3 
+                        $rincian
+                        ORDER BY kd_rek
+                        ";
+                 
+                         $querypm = $this->db->query($sqlpm);
+                         foreach ($querypm->result() as $rowpm)
+                        {
+                            $coba9=$this->support->dotrek($rowpm->rek);
+                            $coba10=$rowpm->nm_rek;
+                            $coba11= number_format($rowpm->nilai,"2",",",".");
+                            $nilai2= number_format($rowpm->nilai2,"2",",",".");
+                            $selisih=$this->support->rp_minus($coba11-$nilai2);
+                            $persen=$this->support->rp_minus((($coba11-$nilai2)/$nilai2)*100);
+                           
+                             $cRet    .= " <tr><td style='vertical-align:top;border-top: solid 1px black;'  align='left'>$coba9</td>                                     
+                                             <td style='vertical-align:top;border-top: solid 1px black;' >$coba10</td>
+                                             <td style='vertical-align:top;border-top: solid 1px black;'  align='right'>$coba11</td>
+                                                <td style='vertical-align:top;border-top: solid 1px black;'  align='right'>$nilai2</td>                                     
+                                             <td style='vertical-align:top;border-top: solid 1px black;'  align='right'>$selisih</td>
+                                             <td style='vertical-align:top;border-top: solid 1px black;'  align='right'>$persen</td>
+                                            </tr>";
+                        } 
+
+
+                        $sqltpm="SELECT SUM(nilai$status_anggaran1) AS totb, SUM(nilai$status_anggaran2) AS totb2 FROM trdrka WHERE LEFT(kd_rek6,2)='61' and left(kd_skpd,17)=left('$id',17)";
+                                            $sqltpm=$this->db->query($sqltpm);
+                                         foreach ($sqltpm->result() as $rowtpm)
+                                        {
+                                            $coba12=number_format($rowtpm->totb,"2",",",".");
+                                            $nilai2=number_format($rowtpm->totb2,"2",",",".");
+                                            $selisih=$this->support->rp_minus($rowtpm->totb-$rowtpm->totb2);
+                                            $persen=$this->support->rp_minus((($rowtpm->totb-$rowtpm->totb2)/$rowtpm->totb2)*100);
+                                            $cobtpm=$rowtpm->totb;
+                                            $cobtpm2=$rowtpm->totb2;
+                                            $cRet    .= " <tr><td style='vertical-align:top;border-top: solid 1px black;'  align='left'></td>                                     
+                                                             <td style='vertical-align:top;border-top: solid 1px black;'  align='right'>Jumlah Penerimaan Pembiayaan</td>
+                                                             <td style='vertical-align:top;border-top: solid 1px black;'  align='right'>$coba12</td>
+                                                    <td style='vertical-align:top;border-top: solid 1px black;'  align='right'>$nilai2</td>                                     
+                                             <td style='vertical-align:top;border-top: solid 1px black;'  align='right'>$selisih</td>
+                                             <td style='vertical-align:top;border-top: solid 1px black;'  align='right'>$persen</td>
+                                                        </tr>";
+                                         } 
+
+                        if($detail=='detail'){
+                            $rincian="  UNION ALL "." 
+                                        SELECT a.kd_rek4 AS kd_rek,a.kd_rek4 AS rek,a.nm_rek4 AS nm_rek ,SUM(b.nilai$status_anggaran1) AS nilai, SUM(b.nilai$status_anggaran2) AS nilai2 FROM ms_rek4 a 
+                                        INNER JOIN trdrka b ON a.kd_rek4=LEFT(b.kd_rek6,(len(a.kd_rek4))) WHERE LEFT(kd_rek6,2)='62' AND left(b.kd_skpd,17)=left('$id',17) 
+                                        GROUP BY a.kd_rek4, a.nm_rek4 
+                                        UNION ALL 
+                                        SELECT a.kd_rek5 AS kd_rek,a.kd_rek5 AS rek,a.nm_rek5 AS nm_rek ,SUM(b.nilai$status_anggaran1) AS nilai, SUM(b.nilai$status_anggaran2) AS nilai2 FROM ms_rek5 a 
+                                        INNER JOIN trdrka b ON a.kd_rek5=LEFT(b.kd_rek6,(len(a.kd_rek5))) WHERE LEFT(kd_rek6,2)='62' AND left(b.kd_skpd,17)=left('$id',17) 
+                                        GROUP BY a.kd_rek5, a.nm_rek5 
+                                        UNION ALL 
+                                        SELECT a.kd_rek6 AS kd_rek,a.kd_rek6 AS rek,a.nm_rek6 AS nm_rek ,SUM(b.nilai$status_anggaran1) AS nilai, SUM(b.nilai$status_anggaran2) AS nilai2 FROM ms_rek6 a 
+                                        INNER JOIN trdrka b ON a.kd_rek6=b.kd_rek6 WHERE LEFT(b.kd_rek6,2)='62' AND left(b.kd_skpd,17)=left('$id',17) 
+                                        GROUP BY a.kd_rek6, a.nm_rek6 ";
+                        }else{$rincian='';}
+
+                        $sqlpk="
+                        SELECT a.kd_rek2 AS kd_rek,a.kd_rek2 AS rek,a.nm_rek2 AS nm_rek ,SUM(b.nilai$status_anggaran1) AS nilai, SUM(b.nilai$status_anggaran2) AS nilai2 FROM ms_rek2 a 
+                        INNER JOIN trdrka b ON a.kd_rek2=LEFT(b.kd_rek6,(len(a.kd_rek2))) WHERE LEFT(kd_rek6,2)='62' AND left(b.kd_skpd,17)=left('$id',17) GROUP BY a.kd_rek2,a.nm_rek2 
+                        UNION ALL 
+                        SELECT a.kd_rek3 AS kd_rek,a.kd_rek3 AS rek,a.nm_rek3 AS nm_rek ,SUM(b.nilai$status_anggaran1) AS nilai, SUM(b.nilai$status_anggaran2) AS nilai2 FROM ms_rek3 a 
+                        INNER JOIN trdrka b ON a.kd_rek3=LEFT(b.kd_rek6,(len(a.kd_rek3))) WHERE LEFT(kd_rek6,2)='62' AND left(b.kd_skpd,17)=left('$id',17) 
+                        GROUP BY a.kd_rek3, a.nm_rek3 
+                        $rincian
+                        ORDER BY kd_rek";
+                 
+                         $querypk= $this->db->query($sqlpk);
+                         foreach ($querypk->result() as $rowpk){
+                            $coba9=$this->support->dotrek($rowpk->rek);
+                            $coba10=$rowpk->nm_rek;
+                            $coba11= number_format($rowpk->nilai,"2",",",".");
+                            $nilai2= number_format($rowpk->nilai2,"2",",",".");
+                            $selisih=$this->support->rp_minus($rowpk->nilai-$rowpk->nilai2);
+                            $persen=$this->support->rp_minus((($rowpk->nilai-$rowpk->nilai2)/$rowpk->nilai2)*100);
+                           
+                             $cRet    .= " <tr><td style='vertical-align:top;border-top: solid 1px black;'  align='left'>$coba9</td>                                     
+                                             <td style='vertical-align:top;border-top: solid 1px black;' >$coba10</td>
+                                             <td style='vertical-align:top;border-top: solid 1px black;'  align='right'>$coba11</td>
+                                             <td style='vertical-align:top;border-top: solid 1px black;'  align='right'>$nilai2</td>                                     
+                                             <td style='vertical-align:top;border-top: solid 1px black;'  align='right'>$selisih</td>
+                                             <td style='vertical-align:top;border-top: solid 1px black;'  align='right'>$persen</td>
+                                             </tr>";
+                        } 
+
+
+                        $sqltpk="SELECT SUM(nilai$status_anggaran1) AS totb, SUM(nilai$status_anggaran2) AS totb2 FROM trdrka WHERE LEFT(kd_rek6,2)='62' and left(kd_skpd,17)=left('$id',17)";
+                    $sqltpk=$this->db->query($sqltpk);
+                 foreach ($sqltpk->result() as $rowtpk)
+                {
+                   $cobatpk=number_format($rowtpk->totb,"2",",",".");
+                    $cobtpk=$rowtpk->totb;
+                    $cobtpk2=$rowtpk->totb2;
+                    $nilai2= number_format($rowtpk->totb2,"2",",",".");
+                    $selisih=$this->support->rp_minus($rowtpk->totb-$rowtpk->totb2);
+                    $persen=$this->support->rp_minus((($rowtpk->totb-$rowtpk->totb2)/$rowtpk->totb2)*100);
+
+                    $cRet    .= " <tr><td style='vertical-align:top;border-top: solid 1px black;'  align='left'></td>                                     
+                                     <td style='vertical-align:top;border-top: solid 1px black;'  align='right'>Jumlah Pengeluaran Pembiayaan</td>
+                                     <td style='vertical-align:top;border-top: solid 1px black;'  align='right'>$cobatpk</td>
+                                     <td style='vertical-align:top;border-top: solid 1px black;'  align='right'>$nilai2</td>                                     
+                                             <td style='vertical-align:top;border-top: solid 1px black;'  align='right'>$selisih</td>
+                                             <td style='vertical-align:top;border-top: solid 1px black;'  align='right'>$persen</td>
+                                             </tr>";
+                 }
+    
+                $pnetto=$cobtpm-$cobtpk;
+                $pnetto2=$cobtpm2-$cobtpk2;
+                $selisih=$pnetto-$pnetto2;
+                $persen=$this->support->rp_minus(($selisih/$pnetto2)*100);
+
+                    $cRet    .= " <tr>                                     
+                                     <td colspan='2' style='vertical-align:top;border-top: solid 1px black;' align='right' >Pembiayaan Netto</td>
+                                     <td style='vertical-align:top;border-top: solid 1px black;'  align='right'>".$this->rka_model->angka($pnetto)."</td>
+                                     <td style='vertical-align:top;border-top: solid 1px black;'  align='right'>".$this->rka_model->angka($pnetto2)."</td>                                     
+                                             <td style='vertical-align:top;border-top: solid 1px black;'  align='right'>".$this->rka_model->angka($selisih)."</td>
+                                             <td style='vertical-align:top;border-top: solid 1px black;'  align='right'>$persen</td>
+                                             </tr></table>";                                                      
+                    
+
+                    } /*end if pembiayaan 0*/
+
+                } 
+               
+                $cRet    .= "</table>";
+
+                $angkas5=$this->db->query("SELECT  kd_skpd, 
+                                                isnull(sum(case WHEN bulan=1 then nilai else 0 end ),0) as jan,
+                                                isnull(sum(case WHEN bulan=2 then nilai else 0 end ),0) as feb,
+                                                isnull(sum(case WHEN bulan=3 then nilai else 0 end ),0) as mar,
+                                                isnull(sum(case WHEN bulan=4 then nilai else 0 end ),0) as apr,
+                                                isnull(sum(case WHEN bulan=5 then nilai else 0 end ),0) as mei,
+                                                isnull(sum(case WHEN bulan=6 then nilai else 0 end ),0) as jun,
+                                                isnull(sum(case WHEN bulan=7 then nilai else 0 end ),0) as jul,
+                                                isnull(sum(case WHEN bulan=8 then nilai else 0 end ),0) as ags,
+                                                isnull(sum(case WHEN bulan=9 then nilai else 0 end ),0) as sept,
+                                                isnull(sum(case WHEN bulan=10 then nilai else 0 end ),0) as okt,
+                                                isnull(sum(case WHEN bulan=11 then nilai else 0 end ),0) as nov,
+                                                isnull(sum(case WHEN bulan=12 then nilai else 0 end ),0) as des from (
+                                                select bulan, left(kd_skpd,17)+'.0000' kd_skpd , sum(nilai$status_anggaran2) nilai from trdskpd_ro WHERE left(kd_rek6,1)='5' GROUP BY bulan, left(kd_skpd,17)
+                                                ) okey where kd_skpd='$id' GROUP BY kd_skpd ")->row();
+                $angkas4=$this->db->query(" 
+                                                SELECT isnull(kd_skpd,'$id') kd_skpd, 
+                                                isnull(sum(case WHEN bulan=1 then nilai else 0 end ),0) as jan,
+                                                isnull(sum(case WHEN bulan=2 then nilai else 0 end ),0) as feb,
+                                                isnull(sum(case WHEN bulan=3 then nilai else 0 end ),0) as mar,
+                                                isnull(sum(case WHEN bulan=4 then nilai else 0 end ),0) as apr,
+                                                isnull(sum(case WHEN bulan=5 then nilai else 0 end ),0) as mei,
+                                                isnull(sum(case WHEN bulan=6 then nilai else 0 end ),0) as jun,
+                                                isnull(sum(case WHEN bulan=7 then nilai else 0 end ),0) as jul,
+                                                isnull(sum(case WHEN bulan=8 then nilai else 0 end ),0) as ags,
+                                                isnull(sum(case WHEN bulan=9 then nilai else 0 end ),0) as sept,
+                                                isnull(sum(case WHEN bulan=10 then nilai else 0 end ),0) as okt,
+                                                isnull(sum(case WHEN bulan=11 then nilai else 0 end ),0) as nov,
+                                                isnull(sum(case WHEN bulan=12 then nilai else 0 end ),0) as des from (
+                                                select bulan, left(kd_skpd,17)+'.0000' kd_skpd , sum(nilai$status_anggaran2) nilai from trdskpd_ro WHERE left(kd_rek6,1)='4' GROUP BY bulan, left(kd_skpd,17)
+                                                ) okey where kd_skpd='$id' GROUP BY kd_skpd
+                                                union all 
+                                                select '$id' kd_skpd, 0,0,0,0,0,0,0,0,0,0,0,0
+                                                 ")->row();
+
+               
+  if($ttd1!='tanpa'){ 
+            $sqlttd1="SELECT nama as nm,nip as nip,jabatan as jab, pangkat as pangkat FROM ms_ttd WHERE  id_ttd='$ttd1' ";
+            $sqlttd=$this->db->query($sqlttd1);
+            foreach ($sqlttd->result() as $rowttd){
+                        $nip=$rowttd->nip;  
+                        $pangkat=$rowttd->pangkat;  
+                        $nama= $rowttd->nm;
+                        $jabatan  = $rowttd->jab;
+            }
+              
+            $tambahan="<td rowspan='14' align='center' width='40%'>                                <br>$daerah, $tanggal_ttd <br>
+                                $jabatan 
+                                <br><br>
+                                <br><br>
+                                <br><br>
+                                <b>$nama</b><br>
+                                <u>$nip</u>
+                        
+
+
+                                </td>";
+              
+        }else{
+            $tambahan="";
+        }
+
+                $cRet .="<table border='1' width='100%' cellpadding='5' cellspacing='5' style='border-collapse: collapse; font-size:12px'>
+                            <tr>
+                                <td colspan='2' align='center' width='30%'>Rencana Realisasi Penerimaan Per Bulan</td>
+                                <td colspan='2' align='center' width='30%'>Rencana Penarikan Dana Per Bulan</td>
+                                $tambahan
+                            </tr>
+                            <tr>
+                                <td width='8%'>Januari</td>
+                                <td width='7%' align='right'>".number_format($angkas4->jan,'2',',','.')."</td> 
+                                <td width='8%'>Januari</td>
+                                <td width='7%' align='right'>".number_format($angkas5->jan,'2',',','.')."</td>                                
+                            </tr>
+                            <tr>
+                                <td width='8%'>Februari</td>
+                                <td width='7%' align='right'>".number_format($angkas4->feb,'2',',','.')."</td> 
+                                <td width='8%'>Februari</td>
+                                <td width='7%' align='right'>".number_format($angkas5->feb,'2',',','.')."</td>                                 
+                            </tr>
+                            <tr>
+                                <td width='8%'>Maret</td>
+                                <td width='7%' align='right'>".number_format($angkas4->mar,'2',',','.')."</td> 
+                                <td width='8%'>Maret</td>
+                                <td width='7%' align='right'>".number_format($angkas5->mar,'2',',','.')."</td>                                
+                            </tr>
+                            <tr>
+                                <td width='8%'>April</td>
+                                <td width='7%' align='right'>".number_format($angkas4->apr,'2',',','.')."</td> 
+                                <td width='8%'>April</td>
+                                <td width='7%' align='right'>".number_format($angkas5->apr,'2',',','.')."</td>                                
+                            </tr>
+                            <tr>
+                                <td width='8%'>Mei</td>
+                                <td width='7%' align='right'>".number_format($angkas4->mei,'2',',','.')."</td> 
+                                <td width='8%'>Mei</td>
+                                <td width='7%' align='right'>".number_format($angkas5->mei,'2',',','.')."</td>                                 
+                            </tr>
+                            <tr>
+                                <td width='8%'>Juni</td>
+                                <td width='7%' align='right'>".number_format($angkas4->jun,'2',',','.')."</td> 
+                                <td width='8%'>Juni</td>
+                                <td width='7%' align='right'>".number_format($angkas5->jun,'2',',','.')."</td>                                 
+                            </tr>
+                            <tr>
+                                <td width='8%'>Juli</td>
+                                <td width='7%' align='right'>".number_format($angkas4->jul,'2',',','.')."</td> 
+                                <td width='8%'>Juli</td>
+                                <td width='7%' align='right'>".number_format($angkas5->jul,'2',',','.')."</td>                                 
+                            </tr>
+                            <tr>
+                                <td width='8%'>Agustus</td>
+                                <td width='7%' align='right'>".number_format($angkas4->ags,'2',',','.')."</td> 
+                                <td width='8%'>Agustus</td>
+                                <td width='7%' align='right'>".number_format($angkas5->ags,'2',',','.')."</td>                                 
+                            </tr>
+                            <tr>
+                                <td width='8%'>September</td>
+                                <td width='7%' align='right'>".number_format($angkas4->sept,'2',',','.')."</td> 
+                                <td width='8%'>September</td>
+                                <td width='7%' align='right'>".number_format($angkas5->sept,'2',',','.')."</td>                                 
+                            </tr>
+                            <tr>
+                                <td width='8%'>Oktober</td>
+                                <td width='7%' align='right'>".number_format($angkas4->okt,'2',',','.')."</td> 
+                                <td width='8%'>Oktober</td>
+                                <td width='7%' align='right'>".number_format($angkas5->okt,'2',',','.')."</td>                                 
+                            </tr>
+                            <tr>
+                                <td width='8%'>November</td>
+                                <td width='7%' align='right'>".number_format($angkas4->nov,'2',',','.')."</td> 
+                                <td width='8%'>November</td>
+                                <td width='7%' align='right'>".number_format($angkas5->nov,'2',',','.')."</td>                                 
+                            </tr>
+                            <tr>
+                                <td width='8%'>Desember</td>
+                                <td width='7%' align='right'>".number_format($angkas4->des,'2',',','.')."</td> 
+                                <td width='8%'>Desember</td>
+                                <td width='7%' align='right'>".number_format($angkas5->des,'2',',','.')."</td>                                 
+                            </tr>
+                            <tr>
+                                <td width='8%'>Jumlah</td>
+                                <td width='7%' align='right'>".number_format($angkas4->des+$angkas4->nov+$angkas4->jan+$angkas4->feb+$angkas4->mar+$angkas4->apr+$angkas4->mei+$angkas4->jun+$angkas4->jul+$angkas4->ags+$angkas4->sept+$angkas4->okt,'2',',','.')."</td> 
+                                <td width='8%'>Jumlah</td>
+                                <td width='7%' align='right'>".number_format($angkas5->des+$angkas5->nov+$angkas5->jan+$angkas5->feb+$angkas5->mar+$angkas5->apr+$angkas5->mei+$angkas5->jun+$angkas5->jul+$angkas5->ags+$angkas5->sept+$angkas5->okt,'2',',','.')."</td>                                 
+                            </tr>
+
+                        </table>";
+              
+        
+       
+        $data['prev']= $cRet;    
+        $judul         = 'RKA SKPD';
+        switch($cetak) { 
+        case 1;
+             $this->master_pdf->_mpdf('',$cRet,10,10,10,'1');
+        break;
+        case 2;        
+            header("Cache-Control: no-cache, no-store, must-revalidate");
+            header("Content-Type: application/vnd.ms-excel");
+            header("Content-Disposition: attachment; filename= $judul.xls");
+            //$this->load->view('anggaran/rka/perkadaII', $data);
+        break;
+        case 3;     
+            header("Cache-Control: no-cache, no-store, must-revalidate");
+            header("Content-Type: application/vnd.ms-word");
+            header("Content-Disposition: attachment; filename= $judul.doc");
+            $this->load->view('anggaran/rka/perkadaII', $data);
+        break;
+        case 0;
+        echo ("<title>RKA SKPD</title>");
+        echo($cRet);
+        break;
+        }
+                
+    } 
+
+
+
 }

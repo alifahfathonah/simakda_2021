@@ -66,8 +66,10 @@ $route['hapus_user/(:any)'] = "master/hapus_user";//OK
 
 //ANGGARAN murni
 $route['cetak-rka-rekap'] 								= "cetak_rka/cetak_rka_rekap/RKA";
-$route['cetak-dpa-rekap'] 								= "cetak_rka/cetak_rka_rekap/DPA"; 				 				/*menu cetak rka satu*/
+$route['cetak-dpa-rekap'] 								= "cetak_rka/cetak_rka_rekap/DPA";
+$route['cetak-dpa-rekap-geser'] 								= "cetak_rka/cetak_rka_rekap_geser/DPA";  				 				/*menu cetak rka satu*/
 $route['preview_rka_skpd_penetapan/(:any)'] 			= "cetak_rka/preview_rka_skpd_penetapan/";  /*cetakan rka 1*/
+$route['preview_rka_skpd_pergeseran/(:any)'] 			= "cetak_rka/preview_rka_skpd_pergeseran/";
 $route['cetak-rka-pendapatan'] 							= "cetak_rka/cetak_rka_pendapatan/RKA";//OK
 $route['cetak-dpa-pendapatan'] 							= "cetak_rka/cetak_rka_pendapatan/DPA";
 $route['preview_pendapatan_penyusunan/(:any)'] 			= "cetak_rka/preview_pendapatan_penyusunan/";//OK
