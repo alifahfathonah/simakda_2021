@@ -28,8 +28,15 @@ public $ppkd1_lama = "4.02.02.02";
     function cetak_rka_rekap_geser($jenis=''){
         $data['jenis']=$jenis;
         $data['page_title']= 'CETAK';
-        $this->template->set('title', 'Cetak '.$jenis.' SKPD Penetapan');   
+        $this->template->set('title', 'Cetak '.$jenis.' SKPD Pergeseran');   
         $this->template->load('template','anggaran/rka/pergeseran/dpa_skpd_rekap',$data) ; 
+    }
+
+    function cetak_rka_rekap_ubah($jenis=''){
+        $data['jenis']=$jenis;
+        $data['page_title']= 'CETAK';
+        $this->template->set('title', 'Cetak '.$jenis.' SKPD Perubahan');   
+        $this->template->load('template','anggaran/rka/perubahan/dpa_skpd_rekap',$data) ; 
     }
 
     function cetak_rka_pendapatan($jenis=''){
@@ -37,6 +44,20 @@ public $ppkd1_lama = "4.02.02.02";
         $data['page_title']= 'CETAK';
         $this->template->set('title', 'Cetak '.$jenis.' 1 Penyusunan');   
         $this->template->load('template','anggaran/rka/penetapan/rka_pendapatan_penyusunan',$data) ; 
+    }
+
+    function cetak_rka_pendapatan_geser($jenis=''){
+        $data['jenis']=$jenis;
+        $data['page_title']= 'CETAK';
+        $this->template->set('title', 'Cetak '.$jenis.' 1 Pergeseran');   
+        $this->template->load('template','anggaran/rka/pergeseran/dpa_skpd_pendapatan',$data) ; 
+    }
+
+    function cetak_rka_pendapatan_ubah($jenis=''){
+        $data['jenis']=$jenis;
+        $data['page_title']= 'CETAK';
+        $this->template->set('title', 'Cetak '.$jenis.' 1 Perubahan');   
+        $this->template->load('template','anggaran/rka/perubahan/dpa_skpd_pendapatan',$data) ; 
     }
 
     function rka22_penyusunan($jenis=''){
@@ -142,6 +163,18 @@ public $ppkd1_lama = "4.02.02.02";
         $cetak   = $this->uri->segment(6);
         $doc     = $this->uri->segment(7);
         echo $this->cetak_rka_model->preview_pendapatan_penyusunan($tgl_ttd,$ttd1,$ttd2,$id,$cetak,$doc);
+    }
+
+    function preview_pendapatan_pergeseran(){
+        $tgl_ttd = $this->uri->segment(2);
+        $ttd1    = $this->uri->segment(3);
+        $ttd2    = $this->uri->segment(4);
+        $id      = $this->uri->segment(5);
+        $cetak   = $this->uri->segment(6);
+        $doc     = $this->uri->segment(7);
+        $status_anggaran1     = $this->uri->segment(8);
+        $status_anggaran2     = $this->uri->segment(9);
+        echo $this->cetak_rka_model->preview_pendapatan_pergeseran($tgl_ttd,$ttd1,$ttd2,$id,$cetak,$doc, $status_anggaran1, $status_anggaran2);
     }
 
     function preview_belanja_penyusunan(){

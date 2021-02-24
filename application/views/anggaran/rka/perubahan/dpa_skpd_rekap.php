@@ -215,8 +215,8 @@ function ttd(kode){
                 </select>
                 <select class="select" style="display: inline; width: 150px" id="status_anggaran2">
                     <option value="nilai">Nilai murni</option>
-                    <option value="nilai_sempurna" selected>Nilai pergeseran</option>
-                    <option value="nilai_ubah">Nilai perubahan</option>
+                    <option value="nilai_sempurna">Nilai pergeseran</option>
+                    <option value="nilai_ubah" selected>Nilai perubahan</option>
                 </select>
             </td>
         </tr>    
