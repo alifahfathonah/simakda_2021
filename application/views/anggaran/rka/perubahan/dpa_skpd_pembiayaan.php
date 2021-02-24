@@ -186,7 +186,7 @@ function ttd2(skpd){
                 <input type="text" id="nmskpd" readonly="true" style="width: 400px;border:0" />
             </td>
         </tr>
-        <tr> 
+        <tr hidden> 
             <td width="20%">STATUS ANGGARAN</td>
             <td width="1%">:</td>
             <td width="79%">
