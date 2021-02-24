@@ -2595,8 +2595,8 @@ Bulan</td>
                             <td style='vertical-align:top;border-top: solid 1px black;border-bottom: none;'  align='left'>4</td>                                     
                             <td style='vertical-align:top;border-top: solid 1px black;border-bottom: none;' >PENDAPATAN</td>
                             <td style='vertical-align:top;border-top: solid 1px black;border-bottom: none;'  align='right'>".number_format(0,"2",",",".")."</td>
-                            <td style='vertical-align:top;border-top: solid 1px black;border-bottom: none;'  align='right'>4</td>                                     
-                            <td style='vertical-align:top;border-top: solid 1px black;border-bottom: none;' >PENDAPATAN</td>
+                            <td style='vertical-align:top;border-top: solid 1px black;border-bottom: none;'  align='right'>".number_format(0,"2",",",".")."</td>                                     
+                            <td style='vertical-align:top;border-top: solid 1px black;border-bottom: none;'  align='right'>".number_format(0,"2",",",".")."</td>
                             <td style='vertical-align:top;border-top: solid 1px black;border-bottom: none;'  align='right'>".number_format(0,"2",",",".")."</td>
                           </tr>";
                     
@@ -2610,7 +2610,12 @@ Bulan</td>
             $coba4=number_format($rowp->totp,"2",",",".");
             $coba42=number_format($rowp->totp1,"2",",",".");
             $selisih=$this->support->rp_minus($rowp->totp-$rowp->totp1);
-            $persen=$this->support->rp_minus((($rowp->totp-$rowp->totp1)/$rowp->totp1)*100);
+            if($rowp->totp1==0){
+                $persen=number_format($rowp->totp1,"2",",",".");
+            }else{
+                $persen=$this->support->rp_minus((($rowp->totp-$rowp->totp1)/$rowp->totp1)*100);
+            }
+
             $cob1=$rowp->totp;
             $total_pendapatan=$rowp->totp1;
                    
