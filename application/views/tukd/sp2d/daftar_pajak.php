@@ -71,6 +71,16 @@
 				}
 			});
 			
+            	$('#tgl_ttd_pajak').datebox({  
+				required:true,
+				formatter :function(date){
+					var y = date.getFullYear();
+					var m = date.getMonth()+1;
+					var d = date.getDate();
+					return y+'-'+m+'-'+d;
+				}
+			});
+            
 			$('#tgl_ttd1').datebox({  
 				required:true,
 				formatter :function(date){
@@ -183,26 +193,36 @@
 		         //ttd = ttd.split(" ").join("123456789");
 			var ctglttd    = $('#tgl_ttd').datebox('getValue');
 			var ctglttd1   = $('#tgl_ttd1').datebox('getValue');
+            var ctglttd_pajak = $('#tgl_ttd_pajak').datebox('getValue');
 			
-			
+			if(ctglttd_pajak==''){
+			 alert("Tanggal TTD harus dipilih");
+             exit();
+			}
+            
+            if(ttd==''){
+			 alert("Kuasa BUD harus dipilih");
+             exit();
+			}
+            
 			if((jns=='0' && cetk=='0') || (jns=='0' && cetk=='3') || ( jns=='1' && cetk=='0') || ( jns=='1' && cetk=='3')){
 				
-				var url        = "<?php echo site_url(); ?>/tukd/ctk_daftar_pajak";
-				window.open(url+'/'+jns+'/'+belanja+'/'+ctak+'/'+ctglttd+'/'+ctglttd1+'/'+no_halaman+'/'+cetk+'/'+ttd, '_blank');
+				var url        = "<?php echo site_url(); ?>tukd/ctk_daftar_pajak";
+				window.open(url+'/'+jns+'/'+belanja+'/'+ctak+'/'+ctglttd+'/'+ctglttd1+'/'+no_halaman+'/'+cetk+'/'+ttd+'/'+'x'+'/'+ctglttd_pajak, '_blank');
 				window.focus();
 				
 			}else if((jns=='0' && cetk=='1') || (jns=='1' && cetk=='1')){
 				
 				var skpd       = document.getElementById('skpd').value;
-				var url        = "<?php echo site_url(); ?>/tukd/ctk_daftar_pajak";
-				window.open(url+'/'+jns+'/'+belanja+'/'+ctak+'/'+ctglttd+'/'+ctglttd1+'/'+no_halaman+'/'+cetk+'/'+ttd+'/'+skpd, '_blank');
+				var url        = "<?php echo site_url(); ?>tukd/ctk_daftar_pajak";
+				window.open(url+'/'+jns+'/'+belanja+'/'+ctak+'/'+ctglttd+'/'+ctglttd1+'/'+no_halaman+'/'+cetk+'/'+ttd+'/'+skpd+'/'+ctglttd_pajak, '_blank');
 				window.focus();
 				
 			}else if((jns=='0' && cetk=='2') || (jns=='1' && cetk=='2')){
 				
 				var skpd       = document.getElementById('sskpd').value;
-				var url        = "<?php echo site_url(); ?>/tukd/ctk_daftar_pajak";
-				window.open(url+'/'+jns+'/'+belanja+'/'+ctak+'/'+ctglttd+'/'+ctglttd1+'/'+no_halaman+'/'+cetk+'/'+ttd+'/'+skpd, '_blank');
+				var url        = "<?php echo site_url(); ?>tukd/ctk_daftar_pajak";
+				window.open(url+'/'+jns+'/'+belanja+'/'+ctak+'/'+ctglttd+'/'+ctglttd1+'/'+no_halaman+'/'+cetk+'/'+ttd+'/'+skpd+'/'+ctglttd_pajak, '_blank');
 				window.focus();
 				
 			}else{
@@ -230,7 +250,7 @@
 <div id="accordion">
     
     <p align="right">         
-        <table border="0" id="sp2d" title="Cetak Daftar Potongan Pajak" style="width:922px;height:200px;" >
+        <table border="0" id="sp2d" title="Cetak Daftar Potongan Pajak" style="width:860px;height:200px;" >
 		<tr>
 			<td colspan="4">
 				<table style="width:100%;" border="0">
@@ -305,6 +325,17 @@
 				</table>
 			</td>
 		</tr>
+        <tr>
+			<td>
+				<table style="width:100%;" border="0">
+					<td width="20%">Tanggal TTD</td>
+                    <td>
+						<input type="text" id="tgl_ttd_pajak" style="width: 100px;" /> 
+                    </td> 
+                </table>
+			</td>
+		</tr>	
+		
 		<tr>
 			<td>
 				<table style="width:100%;" border="0">
@@ -315,8 +346,8 @@
                     </td> 
                 </table>
 			</td>
-		</tr>	
-		<tr>
+		</tr>		
+        <tr>
 			<td>
 				<table style="width:100%;" border="0">
 					<td width="20%">No. Halaman</td>
