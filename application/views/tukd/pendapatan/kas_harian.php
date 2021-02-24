@@ -1,4 +1,4 @@
-
+ 
 
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   	<link rel="stylesheet" type="text/css" href="<?php echo base_url(); ?>easyui/themes/default/easyui.css">
@@ -16,9 +16,7 @@
     <script type="text/javascript">
    
      $(function(){ 
-        
-      
-      
+       
        $('#tgl1').datebox({  
             required:true,
             formatter :function(date){
@@ -44,7 +42,7 @@
      $(function(){
     	$('#ttd').combogrid({  
     		panelWidth:500,  
-    		url: '<?php echo base_url(); ?>/index.php/tukd/list_ttd',  
+    		url: '<?php echo base_url(); ?>/index.php/tukd/load_ttd_bud',  
     			idField:'nip',                    
     			textField:'nama',
     			mode:'remote',  
@@ -65,11 +63,11 @@
      function openWindow( url ){
       
         ctglttd = $('#tgl_ttd').datebox('getValue');
-        
+          cttd = $('#ttd').combogrid('getValue');
             ctgl1 = $('#tgl1').datebox('getValue');
-          
-            lc = '?tgl1='+ctgl1+'&tgl_ttd='+ctglttd;
-        
+            cttd = cttd.split(" ").join("a");
+            lc = '?tgl1='+ctgl1+'&tgl_ttd='+ctglttd+'&ttd='+cttd;
+            
          window.open(url+lc,'_blank');
          window.focus();
          
@@ -113,11 +111,48 @@
                 </div>
                 </td> 
             </tr>
+            <tr>
+                <td colspan="3">
+                <div id="div_bend">
+                        <table style="width:100%;" border="0">
+                            <td width="20%">TTD</td>
+                            <td width="1%">:</td>
+                            <td><input type="text" id="ttd" style="width: 100px;" /> 
+                            </td> 
+                        </table>
+                </div>
+                </td> 
+            </tr>
             <td colspan="3">&nbsp;</td>
             </tr>            
             <tr>
-                <td colspan="3" align="center">
-                <a href="<?php echo site_url(); ?>/tukd/cetak_kas_harian" class="easyui-linkbutton" iconCls="icon-print" plain="true" onclick="javascript:openWindow(this.href);return false">Cetak</a>
+                <td colspan="3" align="left">
+                <a href="<?php echo site_url(); ?>tukd/cetak_kas_harian/0/" class="easyui-linkbutton" iconCls="icon-print" plain="true" onclick="javascript:openWindow(this.href);return false">Cetak (Layar)</a>
+                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <a href="<?php echo site_url(); ?>tukd/cetak_kas_harian/1/" class="easyui-linkbutton" iconCls="icon-print" plain="true" onclick="javascript:openWindow(this.href);return false">Cetak (PDF)</a>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <a href="<?php echo site_url(); ?>tukd/cetak_kas_harian/2/" class="easyui-linkbutton" iconCls="icon-excel" plain="true" onclick="javascript:openWindow(this.href);return false">Cetak (Excel)</a>
+                
+                </td>                
+            </tr>
+            <tr>
+                <td colspan="3" align="left">
+                <a href="<?php echo site_url(); ?>tukd/cetak_kas_harian_rinci/0/" class="easyui-linkbutton" iconCls="icon-print" plain="true" onclick="javascript:openWindow(this.href);return false">Cetak Rincian (Layar)</a>
+                 &nbsp;
+                <a href="<?php echo site_url(); ?>tukd/cetak_kas_harian_rinci/1/" class="easyui-linkbutton" iconCls="icon-print" plain="true" onclick="javascript:openWindow(this.href);return false">Cetak Rincian (PDF)</a>
+                &nbsp;
+                <a href="<?php echo site_url(); ?>tukd/cetak_kas_harian_rinci/2/" class="easyui-linkbutton" iconCls="icon-excel" plain="true" onclick="javascript:openWindow(this.href);return false">Cetak Rincian (Excel)</a>
+                
+                </td>                
+            </tr>
+            <tr>
+                <td colspan="3" align="left">
+                <a href="<?php echo site_url(); ?>tukd/cetak_kas_harian_arusrinci/0/" class="easyui-linkbutton" iconCls="icon-print" plain="true" onclick="javascript:openWindow(this.href);return false">Cetak Arus Kas (Layar)</a>
+                 &nbsp;
+                <a href="<?php echo site_url(); ?>tukd/cetak_kas_harian_arusrinci/1/" class="easyui-linkbutton" iconCls="icon-print" plain="true" onclick="javascript:openWindow(this.href);return false">Cetak Arus Kas (PDF)</a>
+                &nbsp;
+                <a href="<?php echo site_url(); ?>tukd/cetak_kas_harian_arusrinci/2/" class="easyui-linkbutton" iconCls="icon-excel" plain="true" onclick="javascript:openWindow(this.href);return false">Cetak Arus Kas (Excel)</a>
+                
                 </td>                
             </tr>
         </table>  
