@@ -74,6 +74,20 @@ public $ppkd1_lama = "4.02.02.02";
         $this->template->load('template','anggaran/rka/penetapan/rka_pembiayaan_penetapan',$data) ; 
     }
 
+    function cetak_rka_pembiayaan_pergeseran($jenis=''){
+        $data['jenis']=$jenis;
+        $data['page_title']= 'CETAK '.$jenis.' PERGESERAN';
+        $this->template->set('title', 'CETAK '.$jenis.' PERGESERAN');   
+        $this->template->load('template','anggaran/rka/pergeseran/dpa_skpd_pembiayaan',$data) ; 
+    }
+
+    function cetak_rka_pembiayaan_perubahan($jenis=''){
+        $data['jenis']=$jenis;
+        $data['page_title']= 'CETAK '.$jenis.' PERUBAHAN';
+        $this->template->set('title', 'CETAK '.$jenis.' PERUBAHAN');   
+        $this->template->load('template','anggaran/rka/perubahan/dpa_skpd_pembiayaan',$data) ; 
+    }
+
     function list_cetakrka_skpd(){
         if($this->session->userdata('type')=='1'){
             $data['jenis']="RKA";
@@ -199,6 +213,19 @@ public $ppkd1_lama = "4.02.02.02";
         echo $this->cetak_rka_model->preview_rka_pembiayaan_penetapan($tgl_ttd,$ttd1,$ttd2,$id,$cetak,$detail,$tanggal_ttd,$doc);            
     } 
 
+    function preview_rka_pembiayaan_pergeseran(){
+        $tgl_ttd= $this->uri->segment(2);
+        $ttd1   = $this->uri->segment(3);
+        $ttd2   = $this->uri->segment(4);
+        $id     = $this->uri->segment(5);
+        $cetak  = $this->uri->segment(6);
+        $detail = $this->uri->segment(7);
+        $doc    = $this->uri->segment(8);
+        $status_anggaran1    = $this->uri->segment(9);
+        $status_anggaran2    = $this->uri->segment(10);
+        $tanggal_ttd = $this->support->tanggal_format_indonesia($tgl_ttd);
+        echo $this->cetak_rka_model->preview_rka_pembiayaan_pergeseran($tgl_ttd,$ttd1,$ttd2,$id,$cetak,$detail,$tanggal_ttd,$doc,$status_anggaran1,$status_anggaran2);            
+    }
 
      function preview_rka221_penyusunan(){
         $id = $this->uri->segment(2);

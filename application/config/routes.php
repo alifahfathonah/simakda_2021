@@ -68,7 +68,7 @@ $route['hapus_user/(:any)'] = "master/hapus_user";//OK
 $route['cetak-rka-rekap'] 								= "cetak_rka/cetak_rka_rekap/RKA";
 $route['cetak-dpa-rekap'] 								= "cetak_rka/cetak_rka_rekap/DPA";
 $route['cetak-dpa-rekap-geser'] 								= "cetak_rka/cetak_rka_rekap_geser/DPA";
-$route['cetak-dpa-rekap-ubah'] 								= "cetak_rka/cetak_rka_rekap_ubah/DPA";
+$route['cetak-dpa-rekap-ubah'] 								= "cetak_rka/cetak_rka_rekap_ubah/DPPA";
   				 				/*menu cetak rka satu*/
 $route['preview_rka_skpd_penetapan/(:any)'] 			= "cetak_rka/preview_rka_skpd_penetapan/";  /*cetakan rka 1*/
 $route['preview_rka_skpd_pergeseran/(:any)'] 			= "cetak_rka/preview_rka_skpd_pergeseran/";
@@ -86,7 +86,11 @@ $route['cetak-dpa-belanja'] 						    = "cetak_rka/rka22_penyusunan/DPA";//OK
 $route['preview_belanja_penyusunan/(:any)'] 			= "cetak_rka/preview_belanja_penyusunan/";//OK
 $route['cetak-rka-pembiayaan'] 			 				= "cetak_rka/cetak_rka_pembiayaan/RKA";
 $route['cetak-dpa-pembiayaan'] 			 				= "cetak_rka/cetak_rka_pembiayaan/DPA";
-$route['preview_rka_pembiayaan_penetapan/(:any)'] 		= "cetak_rka/preview_rka_pembiayaan_penetapan/";  
+$route['cetak-dpa-pembiayaan-geser'] 			 		= "cetak_rka/cetak_rka_pembiayaan_pergeseran/DPA";
+$route['cetak-dpa-pembiayaan-ubah'] 			 		= "cetak_rka/cetak_rka_pembiayaan_perubahan/DPPA";
+$route['preview_rka_pembiayaan_penetapan/(:any)'] 		= "cetak_rka/preview_rka_pembiayaan_penetapan/";
+$route['preview_rka_pembiayaan_pergeseran/(:any)'] 		= "cetak_rka/preview_rka_pembiayaan_pergeseran/";  
+$route['preview_rka_pembiayaan_perubahan/(:any)'] 		= "cetak_rka/preview_rka_pembiayaan_perubahan/";    
 $route['cetak-rka-rinci']		 						= "cetak_rka/rka221_penyusunan";//OK
 
 //PENYUSUNAN
