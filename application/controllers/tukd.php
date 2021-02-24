@@ -64,7 +64,12 @@ class Tukd extends CI_Controller {
         $mas->free_result();
     	   
 	}
-
+    function buku_kas_arus()
+    {
+        $data['page_title']= 'Buku Arus Kas';
+        $this->template->set('title', 'Buku Arus Kas');   
+        $this->template->load('template','tukd/pendapatan/kas_arus',$data) ; 
+    }
      function dth()
     {
         $data['page_title']= 'CETAK DTH';
@@ -8019,1541 +8024,2239 @@ $where AND a.no_sts NOT in (SELECT TOP $offset no_sts FROM trhkasin_ppkd a $wher
 
     
     function ctk_daftar_pajak($jns='', $belanja='', $ctak='', $tgl='', $tgl2=''){
+		
+		$lcttd      = str_replace('%20',' ',$this->uri->segment(10));
+		$thn_ang    = $this->session->userdata('pcThang');
+		$tanggal2   = $this->tanggal_format_indonesia_kasda($tgl2);
+		$no_halaman = $this->uri->segment(8);	
+		$cetk       = $this->uri->segment(9);	
+		$skpd       = $this->uri->segment(11);        	
+		$ttd_pajak  = $this->uri->segment(12);
+		$tanggal    = $this->tanggal_format_indonesia_kasda($tgl);
+		$tanggal_cetak    = $this->tanggal_format_indonesia_kasda($ttd_pajak);
+		
         
-        $lcttd      = str_replace('%20',' ',$this->uri->segment(10));
-        $thn_ang    = $this->session->userdata('pcThang');
-        $tanggal    = $this->tanggal_format_indonesia_kasda($tgl);
-        $tanggal2   = $this->tanggal_format_indonesia_kasda($tgl2);
-        $no_halaman = $this->uri->segment(8);   
-        $cetk       = $this->uri->segment(9);   
-        $skpd       = $this->uri->segment(11);
-        
-        $prv        = $this->db->query("SELECT TOP 1 * from sclient");
-        $prvn       = $prv->row();          
-        $prov       = $prvn->provinsi;         
-        $daerah     = $prvn->daerah;
-        
-        
-        
-        $sqlttd1="SELECT TOP 1 nama as nm,nip as nip,jabatan as jab,pangkat FROM ms_ttd where kode='BUD' and nip='$lcttd'";
-        $sqlttd=$this->db->query($sqlttd1);
-         foreach ($sqlttd->result() as $rowttd)
-            {
-                $nip=$rowttd->nip;                    
-                $nama= $rowttd->nm;
-                $jabatan  = $rowttd->jab;
-                $pangkat=$rowttd->pangkat;
-            }
-        
-        
-        if($jns=='0'){
+		$prv        = $this->db->query("SELECT provinsi,daerah from sclient where kd_skpd='5.02.0.00.0.00.01.0000'");
+		$prvn       = $prv->row();          
+		$prov       = $prvn->provinsi;         
+		$daerah     = $prvn->daerah;
+		
+		
+		
+		$sqlttd1="SELECT TOP 1 nama as nm,nip as nip,jabatan as jab,pangkat FROM ms_ttd where kode='BUD' and nip='$lcttd'";
+		$sqlttd=$this->db->query($sqlttd1);
+		 foreach ($sqlttd->result() as $rowttd)
+			{
+				$nip=$rowttd->nip;                    
+				$nama= $rowttd->nm;
+				$jabatan  = $rowttd->jab;
+				$pangkat=$rowttd->pangkat;
+			}
+		
+		
+		if($jns=='0'){
                          //GAJI
-                        $judul="DAFTAR POTONGAN SP2D GAJI";
-        }else{
-                        //NON GAJI
-                        $judul="DAFTAR POTONGAN SP2D NON GAJI";                         
+						$judul="DAFTAR POTONGAN SP2D GAJI";
+		}else{
+						//NON GAJI
+						$judul="DAFTAR POTONGAN SP2D NON GAJI";                         
         }
-        
-        $cRet = '';
-                
-        //Gaji
-        if($jns=='0'){
-            //rekap per SKPD
-            if($cetk=='0'){
-             $cRet .="<table style=\"border-collapse:collapse;\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\">
-                <tr>
-                    <td align=\"center\" colspan=\"16\" style=\"font-size:14px;border: solid 1px white;\"><b>$prov<br>$judul</b></td>
-                </tr>
-                <tr>
-                    <td align=\"center\" colspan=\"16\" style=\"font-size:14px;border: solid 1px white;\"><b>DARI TANGGAL : $tanggal S/D $tanggal2</b></td>
-                </tr>
-                <tr>
-                    <td align=\"left\" colspan=\"12\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 1px black;\">&nbsp;</td>
-                    <td align=\"left\" colspan=\"4\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 1px black;\"></td>
-                </tr>
-                </table>
-                <table style=\"border-collapse:collapse; border-color: black;font-size:12px\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\" >
-                <thead> 
-                <tr>
-                    <td align=\"center\" rowspan=\"2\" bgcolor=\"#CCCCCC\" width=\"5%\" style=\"font-weight:bold;\">No. Urut</td>  
-                    <td align=\"center\" rowspan=\"2\" bgcolor=\"#CCCCCC\" width=\"33%\" style=\"font-weight:bold\">Nama Instansi</td>
-                    <td align=\"center\" rowspan=\"2\" bgcolor=\"#CCCCCC\" width=\"12%\" style=\"font-weight:bold\">Nilai SP2D</td>
-                    <td align=\"center\" colspan=\"4\" bgcolor=\"#CCCCCC\" width=\"40%\" style=\"font-weight:bold\">Potongan-Potongan</td>
-                    <td align=\"center\" rowspan=\"2\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">Jumlah Potongan</td>
-                </tr>
-                <tr>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">IWP</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">TAPERUM</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">HKPG</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">PPH</td>
-                </tr>
-                <tr>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">1</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">2</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">3</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">4</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">5</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">6</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">7</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">8</td>
-                </tr>
-                </thead>"; 
-            
-                $sql = "SELECT a.kd_skpd, a.nm_skpd, ISNULL(a.nilai,0) as nilai,
-                    ISNULL(iwp,0) iwp,
-                    ISNULL(taperum,0) taperum,
-                    ISNULL(hkpg,0) hkpg,
-                    ISNULL(pph,0) pph,
-                    iwp+taperum+hkpg+pph as jumlah_potongan
-                    FROM
-                    (SELECT a.kd_skpd, a.nm_skpd, SUM(d.nilai) as nilai FROM trhsp2d a
-                    INNER JOIN trhspm b ON a.no_spm = b.no_spm AND a.kd_skpd = b.kd_skpd
-                    INNER JOIN trhspp c ON b.no_spp = c.no_spp AND b.kd_skpd = c.kd_skpd
-                    INNER JOIN trdspp d ON c.no_spp = d.no_spp AND c.kd_skpd = d.kd_skpd
-                    WHERE (a.jns_spp='4' AND a.jenis_beban='1') AND (a.tgl_kas_bud >= '$tgl' AND  a.tgl_kas_bud <= '$tgl2') AND a.status_bud='1'
-                    GROUP BY a.kd_skpd, a.nm_skpd
-                    )a LEFT JOIN
-                    (SELECT a.kd_skpd, a.nm_skpd
-                    ,SUM(CASE WHEN kd_rek5 in ('2110701','2110702','2110703') THEN c.nilai ELSE 0 END) AS iwp 
-                    ,SUM(CASE WHEN kd_rek5 ='2110501' THEN c.nilai ELSE 0 END) AS taperum 
-                    ,SUM(CASE WHEN kd_rek5 ='2110801' THEN c.nilai ELSE 0 END) AS hkpg 
-                    ,SUM(CASE WHEN kd_rek5 ='2130101' THEN c.nilai ELSE 0 END) AS pph 
-                    FROM trhsp2d a
-                    INNER JOIN trhspm b ON a.no_spm = b.no_spm AND a.kd_skpd = b.kd_skpd
-                    INNER JOIN trspmpot c ON b.no_spm = c.no_spm AND b.kd_skpd = c.kd_skpd
-                    WHERE (a.jns_spp='4' AND a.jenis_beban='1') AND (a.tgl_kas_bud >= '$tgl' AND  a.tgl_kas_bud <= '$tgl2') AND a.status_bud='1'
-                    GROUP BY a.kd_skpd, a.nm_skpd
-                    ) b ON a.kd_skpd=b.kd_skpd";
-            
-                $hasil = $this->db->query($sql);
-                
-                $nomor               ='0';
-                $jum_nilai           =0;
-                $jum_iwp             =0;
-                $jum_taperum         =0;
-                $jum_hkpg            =0;
-                $jum_pph             =0;
-                $jum_jumlah_potongan =0;
-                $jumlah_sp2d            =0;
-                $jumlah_iwp             =0;
-                $jumlah_sp2d            =0;
-                $jumlah_iwp             =0;
-                $jumlah_taperum         =0;
-                $jumlah_hkpg            =0;
-                $jumlah_pph             =0;
-                $jumlah_jumlah_potongan =0;
-                
-                foreach ($hasil->result() as $row){
-                    $kd_skpd         = $row->kd_skpd;
-                    $nm_skpd         = $row->nm_skpd;
-                    $nilai           = $row->nilai;
-                    $iwp             = $row->iwp;
-                    $taperum         = $row->taperum;
-                    $hkpg            = $row->hkpg;
-                    $pph             = $row->pph;
-                    $jumlah_potongan = $row->jumlah_potongan;
+		
+		$cRet = '';
+				
+		//Gaji
+		if($jns=='0'){
+			//rekap per SKPD
+			if($cetk=='0'){
+			 $cRet .="<table style=\"border-collapse:collapse;\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\">
+				<tr>
+					<td align=\"center\" colspan=\"17\" style=\"font-size:14px;border: solid 1px white;\"><b>$prov<br>$judul</b></td>
+				</tr>
+				<tr>
+					<td align=\"center\" colspan=\"17\" style=\"font-size:14px;border: solid 1px white;\"><b>DARI TANGGAL : $tanggal S/D $tanggal2</b></td>
+				</tr>
+				<tr>
+					<td align=\"left\" colspan=\"12\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 1px black;\">&nbsp;</td>
+					<td align=\"left\" colspan=\"5\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 1px black;\"></td>
+				</tr>
+				</table>
+				<table style=\"border-collapse:collapse; border-color: black;font-size:12px\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\" >
+				<thead> 
+				<tr>
+					<td align=\"center\" rowspan=\"2\" bgcolor=\"#CCCCCC\" width=\"5%\" style=\"font-weight:bold;\">No. Urut</td>  
+					<td align=\"center\" rowspan=\"2\" bgcolor=\"#CCCCCC\" width=\"33%\" style=\"font-weight:bold\">Nama Instansi</td>
+					<td align=\"center\" rowspan=\"2\" bgcolor=\"#CCCCCC\" width=\"12%\" style=\"font-weight:bold\">Nilai SP2D</td>
+					<td align=\"center\" colspan=\"6\" bgcolor=\"#CCCCCC\" width=\"40%\" style=\"font-weight:bold\">Potongan-Potongan</td>
+					<td align=\"center\" rowspan=\"2\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">Jumlah Potongan</td>
+				</tr>
+				<tr>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">IWP</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">TAPERUM</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">BPJS</td>
+                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">BPJS Tenaga Kerja</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">PPH</td>
+                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">TASPEN</td>
+				</tr>
+				<tr>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">1</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">2</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">3</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">4</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">5</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">6</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">7</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">8</td>
+                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">9</td>                    
+                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">10</td>
+				</tr>
+				</thead>"; 
+			
+				$sql = "SELECT a.kd_skpd, a.nm_skpd, ISNULL(a.nilai,0) as nilai,
+					ISNULL(iwp,0) iwp,
+					ISNULL(taperum,0) taperum,
+					ISNULL(hkpg,0) hkpg,
+                    ISNULL(bpjsk,0) bpjsk,
+					ISNULL(pph,0) pph,
+                    ISNULL(taspen,0) taspen,
+					iwp+taperum+hkpg+bpjsk+pph+taspen as jumlah_potongan
+					FROM
+					(SELECT a.kd_skpd, a.nm_skpd, SUM(d.nilai) as nilai FROM trhsp2d a
+					INNER JOIN trhspm b ON a.no_spm = b.no_spm AND a.kd_skpd = b.kd_skpd
+					INNER JOIN trhspp c ON b.no_spp = c.no_spp AND b.kd_skpd = c.kd_skpd
+					INNER JOIN trdspp d ON c.no_spp = d.no_spp AND c.kd_skpd = d.kd_skpd
+					WHERE (a.jns_spp='4' AND a.jenis_beban='1') AND (a.tgl_kas_bud >= '$tgl' AND  a.tgl_kas_bud <= '$tgl2') AND a.status_bud='1'
+					GROUP BY a.kd_skpd, a.nm_skpd
+					)a LEFT JOIN
+					(SELECT a.kd_skpd, a.nm_skpd
+					,SUM(CASE WHEN kd_rek6 in ('2110701','2110401') THEN c.nilai ELSE 0 END) AS iwp 
+					,SUM(CASE WHEN kd_rek6 ='2110501' THEN c.nilai ELSE 0 END) AS taperum 
+					,SUM(CASE WHEN kd_rek6 in ('2110201') THEN c.nilai ELSE 0 END) AS hkpg 
+                    ,SUM(CASE WHEN kd_rek6 ='2110901' THEN c.nilai ELSE 0 END) AS bpjsk 
+					,SUM(CASE WHEN kd_rek6 ='2130101' THEN c.nilai ELSE 0 END) AS pph
+                    ,SUM(CASE WHEN kd_rek6 ='2110101' THEN c.nilai ELSE 0 END) AS taspen  
+					FROM trhsp2d a
+					INNER JOIN trhspm b ON a.no_spm = b.no_spm AND a.kd_skpd = b.kd_skpd
+					INNER JOIN trspmpot c ON b.no_spm = c.no_spm AND b.kd_skpd = c.kd_skpd
+					WHERE (a.jns_spp='4' AND a.jenis_beban='1') AND (a.tgl_kas_bud >= '$tgl' AND  a.tgl_kas_bud <= '$tgl2') AND a.status_bud='1'
+					GROUP BY a.kd_skpd, a.nm_skpd
+					) b ON a.kd_skpd=b.kd_skpd";
+			
+				$hasil = $this->db->query($sql);
+				
+				$nomor               ='0';
+				$jum_nilai           =0;
+				$jum_iwp             =0;
+				$jum_taperum         =0;
+				$jum_hkpg            =0;
+                $jum_bpjsk           =0;
+				$jum_pph             =0;
+                $jum_taspen          =0;
+				$jum_jumlah_potongan =0;
+				$jumlah_sp2d            =0;
+				$jumlah_iwp             =0;
+				$jumlah_sp2d            =0;
+				$jumlah_iwp             =0;
+				$jumlah_taperum         =0;
+                $jumlah_bpjsk           =0;
+				$jumlah_hkpg            =0;
+				$jumlah_pph             =0;
+                $jumlah_taspen          =0;
+				$jumlah_jumlah_potongan =0;
+				
+				foreach ($hasil->result() as $row){
+					$kd_skpd         = $row->kd_skpd;
+					$nm_skpd         = $row->nm_skpd;
+					$nilai           = $row->nilai;
+					$iwp             = $row->iwp;
+					$taperum         = $row->taperum;
+					$hkpg            = $row->hkpg;
+                    $bpjsk            = $row->bpjsk;
+					$pph             = $row->pph;
+                    $taspen             = $row->taspen;
+					$jumlah_potongan = $row->jumlah_potongan;
+					
+					//TOTAL
+					$jum_nilai=$jum_nilai+$nilai;
+					$jumlah_sp2d=number_format($jum_nilai,"2",",",".");
+					
+					$jum_iwp=$jum_iwp+$iwp;
+					$jumlah_iwp=number_format($jum_iwp,"2",",",".");
+					
+					$jum_taperum=$jum_taperum+$taperum;
+					$jumlah_taperum=number_format($jum_taperum,"2",",",".");
+					
+					$jum_hkpg=$jum_hkpg+$hkpg;
+					$jumlah_hkpg=number_format($jum_hkpg,"2",",",".");
                     
-                    //TOTAL
-                    $jum_nilai=$jum_nilai+$nilai;
-                    $jumlah_sp2d=number_format($jum_nilai,"2",",",".");
+                    $jum_bpjsk=$jum_bpjsk+$bpjsk;
+					$jumlah_bpjsk=number_format($jum_bpjsk,"2",",",".");
+					
+					$jum_pph=$jum_pph+$pph;
+					$jumlah_pph=number_format($jum_pph,"2",",",".");
                     
-                    $jum_iwp=$jum_iwp+$iwp;
-                    $jumlah_iwp=number_format($jum_iwp,"2",",",".");
-                    
-                    $jum_taperum=$jum_taperum+$taperum;
-                    $jumlah_taperum=number_format($jum_taperum,"2",",",".");
-                    
-                    $jum_hkpg=$jum_hkpg+$hkpg;
-                    $jumlah_hkpg=number_format($jum_hkpg,"2",",",".");
-                    
-                    $jum_pph=$jum_pph+$pph;
-                    $jumlah_pph=number_format($jum_pph,"2",",",".");
-                    
-                    $jum_jumlah_potongan=$jum_jumlah_potongan+$jumlah_potongan;
-                    $jumlah_jumlah_potongan=number_format($jum_jumlah_potongan,"2",",",".");
-                    
-                    $nomor=$nomor+1;
+                    $jum_taspen=$jum_taspen+$taspen;
+					$jumlah_taspen=number_format($jum_taspen,"2",",",".");
+					
+					$jum_jumlah_potongan=$jum_jumlah_potongan+$jumlah_potongan;
+					$jumlah_jumlah_potongan=number_format($jum_jumlah_potongan,"2",",",".");
+					
+					$nomor=$nomor+1;
 
-                    $nilai=number_format($nilai,"2",",",".");
-                    $iwp=number_format($iwp,"2",",",".");
-                    $taperum=number_format($taperum,"2",",",".");
-                    $hkpg=number_format($hkpg,"2",",",".");
-                    $pph=number_format($pph,"2",",",".");
-                    $jumlah_potongan=number_format($jumlah_potongan,"2",",",".");
+					$nilai=number_format($nilai,"2",",",".");
+					$iwp=number_format($iwp,"2",",",".");
+					$taperum=number_format($taperum,"2",",",".");
+					$hkpg=number_format($hkpg,"2",",",".");
+                    $bpjsk=number_format($bpjsk,"2",",",".");
+					$pph=number_format($pph,"2",",",".");
+                    $taspen=number_format($taspen,"2",",",".");
+					$jumlah_potongan=number_format($jumlah_potongan,"2",",",".");
+					
+					$cRet .="<tr>
+								<td align=\"center\">$nomor</td>
+								<td align=\"left\">$nm_skpd</td>
+								<td align=\"right\">$nilai</td>
+								<td align=\"right\">$iwp</td>
+								<td align=\"right\">$taperum</td>
+								<td align=\"right\">$hkpg</td>
+                                <td align=\"right\">$bpjsk</td>
+								<td align=\"right\">$pph</td>
+                                <td align=\"right\">$taspen</td>
+								<td align=\"right\">$jumlah_potongan</td>
+							</tr>";
+				}	
+				
+					$cRet .="<tr>
+								<td colspan=\"2\" align=\"right\"><b>Jumlah</b></td>
+								<td align=\"right\"><b>$jumlah_sp2d</b></td>
+								<td align=\"right\"><b>$jumlah_iwp</b></td>
+								<td align=\"right\"><b>$jumlah_taperum</b></td>
+								<td align=\"right\"><b>$jumlah_hkpg</b></td>
+                                <td align=\"right\"><b>$jumlah_bpjsk</b></td>
+								<td align=\"right\"><b>$jumlah_pph</b></td>
+                                <td align=\"right\"><b>$jumlah_taspen</b></td>
+								<td align=\"right\"><b>$jumlah_jumlah_potongan</b></td>
+							</tr>";
+			
+			
+			}else if($cetk=='1'){
+				//per SKPD
+				$cRet .="<table style=\"border-collapse:collapse;\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\">
+				<tr>
+					<td align=\"center\" colspan=\"17\" style=\"font-size:14px;border: solid 1px white;\"><b>$prov<br>$judul</b></td>
+				</tr>
+				<tr>
+					<td align=\"center\" colspan=\"17\" style=\"font-size:14px;border: solid 1px white;\"><b>DARI TANGGAL : $tanggal S/D $tanggal2</b></td>
+				</tr>
+				<tr>
+					<td align=\"left\" colspan=\"12\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 1px black;\">&nbsp;</td>
+					<td align=\"left\" colspan=\"5\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 1px black;\"></td>
+				</tr>
+				</table>
+				<table style=\"border-collapse:collapse; border-color: black;font-size:12px\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\" >
+				<thead> 
+				<tr>
+					<td align=\"center\" rowspan=\"2\" bgcolor=\"#CCCCCC\" width=\"3%\" style=\"font-weight:bold;\">No.</td>  
+					<td align=\"center\" rowspan=\"2\" bgcolor=\"#CCCCCC\" width=\"15%\" style=\"font-weight:bold\">Nama Instansi</td>
+					<td align=\"center\" rowspan=\"2\" bgcolor=\"#CCCCCC\" width=\"8%\" style=\"font-weight:bold\">No/Tanggal Kas</td>
+					<td align=\"center\" rowspan=\"2\" bgcolor=\"#CCCCCC\" width=\"8%\" style=\"font-weight:bold\">No/Tanggal SP2D</td>                    
+					<td align=\"center\" rowspan=\"2\" bgcolor=\"#CCCCCC\" width=\"4%\" style=\"font-weight:bold\">Rekanan</td>
+					<td align=\"center\" rowspan=\"2\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">Nilai SP2D</td>
+					<td align=\"center\" colspan=\"6\" bgcolor=\"#CCCCCC\" width=\"40%\" style=\"font-weight:bold\">Potongan-Potongan</td>
+					<td align=\"center\" rowspan=\"2\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">Jumlah Potongan</td>
+				</tr>
+				<tr>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">IWP</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">TAPERUM</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">BPJS</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">BPJS Tenaga Kerja</td>					
+                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">PPH</td>
+                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">TASPEN</td>
+				</tr>
+				<tr>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">1</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">2</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">3</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">4</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">5</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">6</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">7</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">8</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">9</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">10</td>
+                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">11</td>                    
+                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">12</td>
+                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">13</td>
+				</tr>
+				</thead>"; 
+	
+				$sql = "SELECT a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d,a.nmrekan, ISNULL(a.nilai,0) as nilai,
+					ISNULL(iwp,0) iwp,
+					ISNULL(taperum,0) taperum,
+					ISNULL(hkpg,0) hkpg,
+                    ISNULL(bpjsk,0) bpjsk,
+					ISNULL(pph,0) pph,
+                    ISNULL(taspen,0) taspen,
+					iwp+taperum+hkpg+bpjsk+pph+taspen as jumlah_potongan
+					FROM
+					(SELECT a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d,a.nmrekan, SUM(d.nilai) as nilai FROM trhsp2d a
+					INNER JOIN trhspm b ON a.no_spm = b.no_spm AND a.kd_skpd = b.kd_skpd
+					INNER JOIN trhspp c ON b.no_spp = c.no_spp AND b.kd_skpd = c.kd_skpd
+					INNER JOIN trdspp d ON c.no_spp = d.no_spp AND c.kd_skpd = d.kd_skpd
+					WHERE (a.jns_spp='4' AND a.jenis_beban='1') AND (a.tgl_kas_bud >= '$tgl' AND  a.tgl_kas_bud <= '$tgl2') AND LEFT(a.kd_skpd,7)='$skpd' AND a.status_bud='1'
+					GROUP BY a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d,a.nmrekan
+					)a LEFT JOIN
+					(SELECT a.kd_skpd, a.nm_skpd, a.no_sp2d
+					,SUM(CASE WHEN kd_rek6 in ('2110701','2110401') THEN c.nilai ELSE 0 END) AS iwp 
+					,SUM(CASE WHEN kd_rek6 ='2110501' THEN c.nilai ELSE 0 END) AS taperum 
+					,SUM(CASE WHEN kd_rek6 in ('2110201') THEN c.nilai ELSE 0 END) AS hkpg 
+                    ,SUM(CASE WHEN kd_rek6 ='2110901' THEN c.nilai ELSE 0 END) AS bpjsk
+					,SUM(CASE WHEN kd_rek6 ='2130101' THEN c.nilai ELSE 0 END) AS pph
+                    ,SUM(CASE WHEN kd_rek6 ='2110101' THEN c.nilai ELSE 0 END) AS taspen 
+					FROM trhsp2d a
+					INNER JOIN trhspm b ON a.no_spm = b.no_spm AND a.kd_skpd = b.kd_skpd
+					INNER JOIN trspmpot c ON b.no_spm = c.no_spm AND b.kd_skpd = c.kd_skpd
+					WHERE (a.jns_spp='4' AND a.jenis_beban='1') AND (a.tgl_kas_bud >= '$tgl' AND  a.tgl_kas_bud <= '$tgl2') AND LEFT(a.kd_skpd,7)='$skpd' AND a.status_bud='1'
+					GROUP BY a.kd_skpd, a.nm_skpd, a.no_sp2d
+					) b ON a.kd_skpd=b.kd_skpd and a.no_sp2d=b.no_sp2d";
+			
+				$hasil = $this->db->query($sql);
+				
+				$nomor               ='0';
+				$jum_nilai           =0;
+				$jum_iwp             =0;
+				$jum_taperum         =0;
+				$jum_hkpg            =0;
+                $jum_bpjsk           =0;
+				$jum_pph             =0;
+                $jum_taspen          =0;
+				$jum_jumlah_potongan =0;
+				$jumlah_sp2d            =0;
+				$jumlah_iwp             =0;
+				$jumlah_sp2d            =0;
+				$jumlah_iwp             =0;
+				$jumlah_taperum         =0;
+				$jumlah_hkpg            =0;
+                $jumlah_bpjsk           =0;
+				$jumlah_pph             =0;
+                $jumlah_taspen          =0;
+				$jumlah_jumlah_potongan =0;
+				
+				foreach ($hasil->result() as $row){
+					$kd_skpd         = $row->kd_skpd;
+					$nm_skpd         = $row->nm_skpd;
+					$no_kas_bud      = $row->no_kas_bud;
+					$tgl_kas_bud     = $row->tgl_kas_bud;
+					$no_sp2d         = $row->no_sp2d;
+                    $nmrekan         = $row->nmrekan;
+					$tgl_sp2d        = $row->tgl_sp2d;
+					$nilai           = $row->nilai;
+					$iwp             = $row->iwp;
+					$taperum         = $row->taperum;
+					$hkpg            = $row->hkpg;
+                    $bpjsk           = $row->bpjsk;
+					$pph             = $row->pph;
+                    $taspen          = $row->taspen;
+					$jumlah_potongan = $row->jumlah_potongan;
+					
+					//TOTAL
+					$jum_nilai=$jum_nilai+$nilai;
+					$jumlah_sp2d=number_format($jum_nilai,"2",",",".");
+					
+					$jum_iwp=$jum_iwp+$iwp;
+					$jumlah_iwp=number_format($jum_iwp,"2",",",".");
+					
+					$jum_taperum=$jum_taperum+$taperum;
+					$jumlah_taperum=number_format($jum_taperum,"2",",",".");
+					
+					$jum_hkpg=$jum_hkpg+$hkpg;
+					$jumlah_hkpg=number_format($jum_hkpg,"2",",",".");
+					
+    	            $jum_bpjsk=$jum_bpjsk+$bpjsk;
+					$jumlah_bpjsk=number_format($jum_bpjsk,"2",",",".");
                     
-                    $cRet .="<tr>
-                                <td align=\"center\">$nomor</td>
-                                <td align=\"left\">$nm_skpd</td>
-                                <td align=\"right\">$nilai</td>
-                                <td align=\"right\">$iwp</td>
-                                <td align=\"right\">$taperum</td>
-                                <td align=\"right\">$hkpg</td>
-                                <td align=\"right\">$pph</td>
-                                <td align=\"right\">$jumlah_potongan</td>
-                            </tr>";
-                }   
-                
-                    $cRet .="<tr>
-                                <td colspan=\"2\" align=\"right\"><b>Jumlah</b></td>
-                                <td align=\"right\"><b>$jumlah_sp2d</b></td>
-                                <td align=\"right\"><b>$jumlah_iwp</b></td>
-                                <td align=\"right\"><b>$jumlah_taperum</b></td>
-                                <td align=\"right\"><b>$jumlah_hkpg</b></td>
-                                <td align=\"right\"><b>$jumlah_pph</b></td>
-                                <td align=\"right\"><b>$jumlah_jumlah_potongan</b></td>
-                            </tr>";
-            
-            
-            }else if($cetk=='1'){
-                //per SKPD
-                $cRet .="<table style=\"border-collapse:collapse;\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\">
-                <tr>
-                    <td align=\"center\" colspan=\"16\" style=\"font-size:14px;border: solid 1px white;\"><b>$prov<br>$judul</b></td>
-                </tr>
-                <tr>
-                    <td align=\"center\" colspan=\"16\" style=\"font-size:14px;border: solid 1px white;\"><b>DARI TANGGAL : $tanggal S/D $tanggal2</b></td>
-                </tr>
-                <tr>
-                    <td align=\"left\" colspan=\"12\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 1px black;\">&nbsp;</td>
-                    <td align=\"left\" colspan=\"4\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 1px black;\"></td>
-                </tr>
-                </table>
-                <table style=\"border-collapse:collapse; border-color: black;font-size:12px\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\" >
-                <thead> 
-                <tr>
-                    <td align=\"center\" rowspan=\"2\" bgcolor=\"#CCCCCC\" width=\"5%\" style=\"font-weight:bold;\">No. Urut</td>  
-                    <td align=\"center\" rowspan=\"2\" bgcolor=\"#CCCCCC\" width=\"15%\" style=\"font-weight:bold\">Nama Instansi</td>
-                    <td align=\"center\" rowspan=\"2\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">No Kas/Tanggal Kas</td>
-                    <td align=\"center\" rowspan=\"2\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">No SP2D/Tanggal SP2D</td>
+					$jum_pph=$jum_pph+$pph;
+					$jumlah_pph=number_format($jum_pph,"2",",",".");
+					
+                    $jum_taspen=$jum_taspen+$taspen;
+					$jumlah_taspen=number_format($jum_taspen,"2",",",".");
+                    
+					$jum_jumlah_potongan=$jum_jumlah_potongan+$jumlah_potongan;
+					$jumlah_jumlah_potongan=number_format($jum_jumlah_potongan,"2",",",".");
+					
+					$nomor=$nomor+1;
+					
+					$nilai=number_format($nilai,"2",",",".");
+					$iwp=number_format($iwp,"2",",",".");
+					$taperum=number_format($taperum,"2",",",".");
+					$hkpg=number_format($hkpg,"2",",",".");
+                    $bpjsk=number_format($bpjsk,"2",",",".");
+					$pph=number_format($pph,"2",",",".");
+                    $taspen=number_format($taspen,"2",",",".");
+					$jumlah_potongan=number_format($jumlah_potongan,"2",",",".");
+					
+					$cRet .="<tr>
+								<td align=\"center\">$nomor</td>
+								<td align=\"left\">$nm_skpd</td>
+								<td align=\"left\">$no_kas_bud<br/>$tgl_kas_bud</td>
+								<td align=\"left\">$no_sp2d<br/>$tgl_sp2d</td>
+                                <td align=\"left\">$nmrekan</td>
+								<td align=\"right\">$nilai</td>
+								<td align=\"right\">$iwp</td>
+								<td align=\"right\">$taperum</td>
+								<td align=\"right\">$hkpg</td>
+                                <td align=\"right\">$bpjsk</td>
+								<td align=\"right\">$pph</td>
+                                <td align=\"right\">$taspen</td>
+								<td align=\"right\">$jumlah_potongan</td>
+								
+							</tr>";
+				}	
+				
+					$cRet .="<tr>
+								<td colspan=\"2\" align=\"right\"><b>Jumlah</b></td>
+								<td align=\"right\"><b></b></td>
+								<td align=\"right\"><b></b></td>
+                                <td align=\"right\"><b></b></td>
+								<td align=\"right\"><b>$jumlah_sp2d</b></td>
+								<td align=\"right\"><b>$jumlah_iwp</b></td>
+								<td align=\"right\"><b>$jumlah_taperum</b></td>
+								<td align=\"right\"><b>$jumlah_hkpg</b></td>
+                                <td align=\"right\"><b>$jumlah_bpjsk</b></td>
+								<td align=\"right\"><b>$jumlah_pph</b></td>
+                                <td align=\"right\"><b>$jumlah_taspen</b></td>
+								<td align=\"right\"><b>$jumlah_jumlah_potongan</b></td>
+							</tr>";
+							
+			
+			}else if($cetk=='2'){
+				//per Unit
+				$cRet .="<table style=\"border-collapse:collapse;\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\">
+				<tr>
+					<td align=\"center\" colspan=\"17\" style=\"font-size:14px;border: solid 1px white;\"><b>$prov<br>$judul</b></td>
+				</tr>
+				<tr>
+					<td align=\"center\" colspan=\"17\" style=\"font-size:14px;border: solid 1px white;\"><b>DARI TANGGAL : $tanggal S/D $tanggal2</b></td>
+				</tr>
+				<tr>
+					<td align=\"left\" colspan=\"12\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 1px black;\">&nbsp;</td>
+					<td align=\"left\" colspan=\"5\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 1px black;\"></td>
+				</tr>
+				</table>
+				<table style=\"border-collapse:collapse; border-color: black;font-size:12px\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\" >
+				<thead> 
+				<tr>
+					<td align=\"center\" rowspan=\"2\" bgcolor=\"#CCCCCC\" width=\"3%\" style=\"font-weight:bold;\">No.</td>  
+					<td align=\"center\" rowspan=\"2\" bgcolor=\"#CCCCCC\" width=\"15%\" style=\"font-weight:bold\">Nama Instansi</td>
+					<td align=\"center\" rowspan=\"2\" bgcolor=\"#CCCCCC\" width=\"8%\" style=\"font-weight:bold\">No/Tanggal Kas</td>
+					<td align=\"center\" rowspan=\"2\" bgcolor=\"#CCCCCC\" width=\"8%\" style=\"font-weight:bold\">No/Tanggal SP2D</td>
+					<td align=\"center\" rowspan=\"2\" bgcolor=\"#CCCCCC\" width=\"8%\" style=\"font-weight:bold\">Rekanan</td>					
                     <td align=\"center\" rowspan=\"2\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">Nilai SP2D</td>
-                    <td align=\"center\" colspan=\"4\" bgcolor=\"#CCCCCC\" width=\"40%\" style=\"font-weight:bold\">Potongan-Potongan</td>
-                    <td align=\"center\" rowspan=\"2\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">Jumlah Potongan</td>
-                </tr>
-                <tr>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">IWP</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">TAPERUM</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">HKPG</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">PPH</td>
-                </tr>
-                <tr>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">1</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">2</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">3</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">4</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">5</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">6</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">7</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">8</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">9</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">10</td>
-                </tr>
-                </thead>"; 
-    
-                $sql = "SELECT a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, ISNULL(a.nilai,0) as nilai,
-                    ISNULL(iwp,0) iwp,
-                    ISNULL(taperum,0) taperum,
-                    ISNULL(hkpg,0) hkpg,
-                    ISNULL(pph,0) pph,
-                    iwp+taperum+hkpg+pph as jumlah_potongan
-                    FROM
-                    (SELECT a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, SUM(d.nilai) as nilai FROM trhsp2d a
-                    INNER JOIN trhspm b ON a.no_spm = b.no_spm AND a.kd_skpd = b.kd_skpd
-                    INNER JOIN trhspp c ON b.no_spp = c.no_spp AND b.kd_skpd = c.kd_skpd
-                    INNER JOIN trdspp d ON c.no_spp = d.no_spp AND c.kd_skpd = d.kd_skpd
-                    WHERE (a.jns_spp='4' AND a.jenis_beban='1') AND (a.tgl_kas_bud >= '$tgl' AND  a.tgl_kas_bud <= '$tgl2') AND LEFT(a.kd_skpd,7)='$skpd' AND a.status_bud='1'
-                    GROUP BY a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d
-                    )a LEFT JOIN
-                    (SELECT a.kd_skpd, a.nm_skpd
-                    ,SUM(CASE WHEN kd_rek5 in ('2110701','2110702','2110703') THEN c.nilai ELSE 0 END) AS iwp 
-                    ,SUM(CASE WHEN kd_rek5 ='2110501' THEN c.nilai ELSE 0 END) AS taperum 
-                    ,SUM(CASE WHEN kd_rek5 ='2110801' THEN c.nilai ELSE 0 END) AS hkpg 
-                    ,SUM(CASE WHEN kd_rek5 ='2130101' THEN c.nilai ELSE 0 END) AS pph 
-                    FROM trhsp2d a
-                    INNER JOIN trhspm b ON a.no_spm = b.no_spm AND a.kd_skpd = b.kd_skpd
-                    INNER JOIN trspmpot c ON b.no_spm = c.no_spm AND b.kd_skpd = c.kd_skpd
-                    WHERE (a.jns_spp='4' AND a.jenis_beban='1') AND (a.tgl_kas_bud >= '$tgl' AND  a.tgl_kas_bud <= '$tgl2') AND LEFT(a.kd_skpd,7)='$skpd' AND a.status_bud='1'
-                    GROUP BY a.kd_skpd, a.nm_skpd
-                    ) b ON a.kd_skpd=b.kd_skpd";
-            
-                $hasil = $this->db->query($sql);
-                
-                $nomor               ='0';
-                $jum_nilai           =0;
-                $jum_iwp             =0;
-                $jum_taperum         =0;
-                $jum_hkpg            =0;
-                $jum_pph             =0;
-                $jum_jumlah_potongan =0;
-                $jumlah_sp2d            =0;
-                $jumlah_iwp             =0;
-                $jumlah_sp2d            =0;
-                $jumlah_iwp             =0;
-                $jumlah_taperum         =0;
-                $jumlah_hkpg            =0;
-                $jumlah_pph             =0;
-                $jumlah_jumlah_potongan =0;
-                
-                foreach ($hasil->result() as $row){
-                    $kd_skpd         = $row->kd_skpd;
-                    $nm_skpd         = $row->nm_skpd;
-                    $no_kas_bud      = $row->no_kas_bud;
-                    $tgl_kas_bud     = $row->tgl_kas_bud;
-                    $no_sp2d         = $row->no_sp2d;
-                    $tgl_sp2d        = $row->tgl_sp2d;
-                    $nilai           = $row->nilai;
-                    $iwp             = $row->iwp;
-                    $taperum         = $row->taperum;
-                    $hkpg            = $row->hkpg;
-                    $pph             = $row->pph;
-                    $jumlah_potongan = $row->jumlah_potongan;
-                    
-                    //TOTAL
-                    $jum_nilai=$jum_nilai+$nilai;
-                    $jumlah_sp2d=number_format($jum_nilai,"2",",",".");
-                    
-                    $jum_iwp=$jum_iwp+$iwp;
-                    $jumlah_iwp=number_format($jum_iwp,"2",",",".");
-                    
-                    $jum_taperum=$jum_taperum+$taperum;
-                    $jumlah_taperum=number_format($jum_taperum,"2",",",".");
-                    
-                    $jum_hkpg=$jum_hkpg+$hkpg;
-                    $jumlah_hkpg=number_format($jum_hkpg,"2",",",".");
-                    
-                    $jum_pph=$jum_pph+$pph;
-                    $jumlah_pph=number_format($jum_pph,"2",",",".");
-                    
-                    $jum_jumlah_potongan=$jum_jumlah_potongan+$jumlah_potongan;
-                    $jumlah_jumlah_potongan=number_format($jum_jumlah_potongan,"2",",",".");
-                    
-                    $nomor=$nomor+1;
-                    
-                    $nilai=number_format($nilai,"2",",",".");
-                    $iwp=number_format($iwp,"2",",",".");
-                    $taperum=number_format($taperum,"2",",",".");
-                    $hkpg=number_format($hkpg,"2",",",".");
-                    $pph=number_format($pph,"2",",",".");
-                    $jumlah_potongan=number_format($jumlah_potongan,"2",",",".");
-                    
-                    $cRet .="<tr>
-                                <td align=\"center\">$nomor</td>
-                                <td align=\"left\">$nm_skpd</td>
-                                <td align=\"left\">$no_kas_bud $tgl_kas_bud</td>
-                                <td align=\"left\">$no_sp2d $tgl_sp2d</td>
-                                <td align=\"right\">$nilai</td>
-                                <td align=\"right\">$iwp</td>
-                                <td align=\"right\">$taperum</td>
-                                <td align=\"right\">$hkpg</td>
-                                <td align=\"right\">$pph</td>
-                                <td align=\"right\">$jumlah_potongan</td>
-                                
-                            </tr>";
-                }   
-                
-                    $cRet .="<tr>
-                                <td colspan=\"2\" align=\"right\"><b>Jumlah</b></td>
-                                <td align=\"right\"><b></b></td>
-                                <td align=\"right\"><b></b></td>
-                                <td align=\"right\"><b>$jumlah_sp2d</b></td>
-                                <td align=\"right\"><b>$jumlah_iwp</b></td>
-                                <td align=\"right\"><b>$jumlah_taperum</b></td>
-                                <td align=\"right\"><b>$jumlah_hkpg</b></td>
-                                <td align=\"right\"><b>$jumlah_pph</b></td>
-                                <td align=\"right\"><b>$jumlah_jumlah_potongan</b></td>
-                            </tr>";
-                            
-            
-            }else if($cetk=='2'){
-                //per Unit
-                $cRet .="<table style=\"border-collapse:collapse;\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\">
-                <tr>
-                    <td align=\"center\" colspan=\"16\" style=\"font-size:14px;border: solid 1px white;\"><b>$prov<br>$judul</b></td>
-                </tr>
-                <tr>
-                    <td align=\"center\" colspan=\"16\" style=\"font-size:14px;border: solid 1px white;\"><b>DARI TANGGAL : $tanggal S/D $tanggal2</b></td>
-                </tr>
-                <tr>
-                    <td align=\"left\" colspan=\"12\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 1px black;\">&nbsp;</td>
-                    <td align=\"left\" colspan=\"4\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 1px black;\"></td>
-                </tr>
-                </table>
-                <table style=\"border-collapse:collapse; border-color: black;font-size:12px\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\" >
-                <thead> 
-                <tr>
-                    <td align=\"center\" rowspan=\"2\" bgcolor=\"#CCCCCC\" width=\"5%\" style=\"font-weight:bold;\">No. Urut</td>  
-                    <td align=\"center\" rowspan=\"2\" bgcolor=\"#CCCCCC\" width=\"15%\" style=\"font-weight:bold\">Nama Instansi</td>
-                    <td align=\"center\" rowspan=\"2\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">No Kas/Tanggal Kas</td>
-                    <td align=\"center\" rowspan=\"2\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">No SP2D/Tanggal SP2D</td>
-                    <td align=\"center\" rowspan=\"2\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">Nilai SP2D</td>
-                    <td align=\"center\" colspan=\"4\" bgcolor=\"#CCCCCC\" width=\"40%\" style=\"font-weight:bold\">Potongan-Potongan</td>
-                    <td align=\"center\" rowspan=\"2\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">Jumlah Potongan</td>
-                </tr>
-                <tr>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">IWP</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">TAPERUM</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">HKPG</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">PPH</td>
-                </tr>
-                <tr>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">1</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">2</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">3</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">4</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">5</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">6</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">7</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">8</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">9</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">10</td>
-                </tr>
-                </thead>"; 
-    
-                $sql = "SELECT a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, ISNULL(a.nilai,0) as nilai,
-                    ISNULL(iwp,0) iwp,
-                    ISNULL(taperum,0) taperum,
-                    ISNULL(hkpg,0) hkpg,
-                    ISNULL(pph,0) pph,
-                    iwp+taperum+hkpg+pph as jumlah_potongan
-                    FROM
-                    (SELECT a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, SUM(d.nilai) as nilai FROM trhsp2d a
-                    INNER JOIN trhspm b ON a.no_spm = b.no_spm AND a.kd_skpd = b.kd_skpd
-                    INNER JOIN trhspp c ON b.no_spp = c.no_spp AND b.kd_skpd = c.kd_skpd
-                    INNER JOIN trdspp d ON c.no_spp = d.no_spp AND c.kd_skpd = d.kd_skpd
-                    WHERE (a.jns_spp='4' AND a.jenis_beban='1') AND (a.tgl_kas_bud >= '$tgl' AND  a.tgl_kas_bud <= '$tgl2') AND a.kd_skpd='$skpd' AND a.status_bud='1'
-                    GROUP BY a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d 
-                    )a LEFT JOIN
-                    (SELECT a.kd_skpd, a.nm_skpd
-                    ,SUM(CASE WHEN kd_rek5 in ('2110701','2110702','2110703') THEN c.nilai ELSE 0 END) AS iwp 
-                    ,SUM(CASE WHEN kd_rek5 ='2110501' THEN c.nilai ELSE 0 END) AS taperum 
-                    ,SUM(CASE WHEN kd_rek5 ='2110801' THEN c.nilai ELSE 0 END) AS hkpg 
-                    ,SUM(CASE WHEN kd_rek5 ='2130101' THEN c.nilai ELSE 0 END) AS pph 
-                    FROM trhsp2d a
-                    INNER JOIN trhspm b ON a.no_spm = b.no_spm AND a.kd_skpd = b.kd_skpd
-                    INNER JOIN trspmpot c ON b.no_spm = c.no_spm AND b.kd_skpd = c.kd_skpd
-                    WHERE (a.jns_spp='4' AND a.jenis_beban='1') AND (a.tgl_kas_bud >= '$tgl' AND  a.tgl_kas_bud <= '$tgl2') AND a.kd_skpd='$skpd' AND a.status_bud='1'
-                    GROUP BY a.kd_skpd, a.nm_skpd
-                    ) b ON a.kd_skpd=b.kd_skpd";
-            
-                $hasil = $this->db->query($sql);
-                
-                $nomor                  ='0';
-                $jum_nilai              =0;
-                $jum_iwp                =0;
-                $jum_taperum            =0;
-                $jum_hkpg               =0;
-                $jum_pph                =0;
-                $jum_jumlah_potongan    =0;
-                $jumlah_sp2d            =0;
-                $jumlah_iwp             =0;
-                $jumlah_sp2d            =0;
-                $jumlah_iwp             =0;
-                $jumlah_taperum         =0;
-                $jumlah_hkpg            =0;
-                $jumlah_pph             =0;
-                $jumlah_jumlah_potongan =0;
-                
-                
-                foreach ($hasil->result() as $row){
-                    $kd_skpd         = $row->kd_skpd;
-                    $nm_skpd         = $row->nm_skpd;
-                    $no_kas_bud      = $row->no_kas_bud;
-                    $tgl_kas_bud     = $row->tgl_kas_bud;
-                    $no_sp2d         = $row->no_sp2d;
-                    $tgl_sp2d        = $row->tgl_sp2d;
-                    $nilai           = $row->nilai;
-                    $iwp             = $row->iwp;
-                    $taperum         = $row->taperum;
-                    $hkpg            = $row->hkpg;
-                    $pph             = $row->pph;
-                    $jumlah_potongan = $row->jumlah_potongan;
-                    
-                    //TOTAL
-                    $jum_nilai=$jum_nilai+$nilai;
-                    $jumlah_sp2d=number_format($jum_nilai,"2",",",".");
-                    
-                    $jum_iwp=$jum_iwp+$iwp;
-                    $jumlah_iwp=number_format($jum_iwp,"2",",",".");
-                    
-                    $jum_taperum=$jum_taperum+$taperum;
-                    $jumlah_taperum=number_format($jum_taperum,"2",",",".");
-                    
-                    $jum_hkpg=$jum_hkpg+$hkpg;
-                    $jumlah_hkpg=number_format($jum_hkpg,"2",",",".");
-                    
-                    $jum_pph=$jum_pph+$pph;
-                    $jumlah_pph=number_format($jum_pph,"2",",",".");
-                    
-                    $jum_jumlah_potongan=$jum_jumlah_potongan+$jumlah_potongan;
-                    $jumlah_jumlah_potongan=number_format($jum_jumlah_potongan,"2",",",".");
-                    
-                    $nomor=$nomor+1;
-                    
-                    $nilai=number_format($nilai,"2",",",".");
-                    $iwp=number_format($iwp,"2",",",".");
-                    $taperum=number_format($taperum,"2",",",".");
-                    $hkpg=number_format($hkpg,"2",",",".");
-                    $pph=number_format($pph,"2",",",".");
-                    $jumlah_potongan=number_format($jumlah_potongan,"2",",",".");
-                    
-                    $cRet .="<tr>
-                                <td align=\"center\">$nomor</td>
-                                <td align=\"left\">$nm_skpd</td>
-                                <td align=\"left\">$no_kas_bud $tgl_kas_bud</td>
-                                <td align=\"left\">$no_sp2d $tgl_sp2d</td>
-                                <td align=\"right\">$nilai</td>
-                                <td align=\"right\">$iwp</td>
-                                <td align=\"right\">$taperum</td>
-                                <td align=\"right\">$hkpg</td>
-                                <td align=\"right\">$pph</td>
-                                <td align=\"right\">$jumlah_potongan</td>
-                                
-                            </tr>";
-                }   
-                
-                    $cRet .="<tr>
-                                <td colspan=\"2\" align=\"right\"><b>Jumlah</b></td>
-                                <td align=\"right\"><b></b></td>
-                                <td align=\"right\"><b></b></td>
-                                <td align=\"right\"><b>$jumlah_sp2d</b></td>
-                                <td align=\"right\"><b>$jumlah_iwp</b></td>
-                                <td align=\"right\"><b>$jumlah_taperum</b></td>
-                                <td align=\"right\"><b>$jumlah_hkpg</b></td>
-                                <td align=\"right\"><b>$jumlah_pph</b></td>
-                                <td align=\"right\"><b>$jumlah_jumlah_potongan</b></td>
-                            </tr>";
-                            
-            
-            }else{
-                //Keseluruhan
-                $cRet .="<table style=\"border-collapse:collapse;\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\">
-                <tr>
-                    <td align=\"center\" colspan=\"16\" style=\"font-size:14px;border: solid 1px white;\"><b>$prov<br>$judul</b></td>
-                </tr>
-                <tr>
-                    <td align=\"center\" colspan=\"16\" style=\"font-size:14px;border: solid 1px white;\"><b>DARI TANGGAL : $tanggal S/D $tanggal2</b></td>
-                </tr>
-                <tr>
-                    <td align=\"left\" colspan=\"12\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 1px black;\">&nbsp;</td>
-                    <td align=\"left\" colspan=\"4\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 1px black;\"></td>
-                </tr>
-                </table>
-                <table style=\"border-collapse:collapse; border-color: black;font-size:12px\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\" >
-                <thead> 
-                <tr>
-                    <td align=\"center\" rowspan=\"2\" bgcolor=\"#CCCCCC\" width=\"5%\" style=\"font-weight:bold;\">No. Urut</td>  
-                    <td align=\"center\" rowspan=\"2\" bgcolor=\"#CCCCCC\" width=\"15%\" style=\"font-weight:bold\">Nama Instansi</td>
-                    <td align=\"center\" rowspan=\"2\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">No Kas/Tanggal Kas</td>
-                    <td align=\"center\" rowspan=\"2\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">No SP2D/Tanggal SP2D</td>
-                    <td align=\"center\" rowspan=\"2\" bgcolor=\"#CCCCCC\" width=\"12%\" style=\"font-weight:bold\">Nilai SP2D</td>
-                    <td align=\"center\" colspan=\"4\" bgcolor=\"#CCCCCC\" width=\"40%\" style=\"font-weight:bold\">Potongan-Potongan</td>
-                    <td align=\"center\" rowspan=\"2\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">Jumlah Potongan</td>
-                </tr>
-                <tr>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">IWP</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">TAPERUM</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"8%\" style=\"font-weight:bold\">HKPG</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">PPH</td>
-                </tr>
-                <tr>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">1</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">2</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">3</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">4</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">5</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">6</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">7</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">8</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">9</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">10</td>
-                </tr>
-                </thead>"; 
-    
-                $sql = "SELECT a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, ISNULL(a.nilai,0) as nilai,
-                    ISNULL(iwp,0) iwp,
-                    ISNULL(taperum,0) taperum,
-                    ISNULL(hkpg,0) hkpg,
-                    ISNULL(pph,0) pph,
-                    iwp+taperum+hkpg+pph as jumlah_potongan
-                    FROM
-                    (SELECT a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, SUM(d.nilai) as nilai FROM trhsp2d a
-                    INNER JOIN trhspm b ON a.no_spm = b.no_spm AND a.kd_skpd = b.kd_skpd
-                    INNER JOIN trhspp c ON b.no_spp = c.no_spp AND b.kd_skpd = c.kd_skpd
-                    INNER JOIN trdspp d ON c.no_spp = d.no_spp AND c.kd_skpd = d.kd_skpd
-                    WHERE (a.jns_spp='4' AND a.jenis_beban='1') AND (a.tgl_kas_bud >= '$tgl' AND  a.tgl_kas_bud <= '$tgl2') AND a.status_bud='1'
-                    GROUP BY a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d
-                    )a LEFT JOIN
-                    (SELECT a.kd_skpd, a.nm_skpd, a.no_sp2d
-                    ,SUM(CASE WHEN kd_rek5 in ('2110701','2110702','2110703') THEN c.nilai ELSE 0 END) AS iwp 
-                    ,SUM(CASE WHEN kd_rek5 ='2110501' THEN c.nilai ELSE 0 END) AS taperum 
-                    ,SUM(CASE WHEN kd_rek5 ='2110801' THEN c.nilai ELSE 0 END) AS hkpg 
-                    ,SUM(CASE WHEN kd_rek5 ='2130101' THEN c.nilai ELSE 0 END) AS pph 
-                    FROM trhsp2d a
-                    INNER JOIN trhspm b ON a.no_spm = b.no_spm AND a.kd_skpd = b.kd_skpd
-                    INNER JOIN trspmpot c ON b.no_spm = c.no_spm AND b.kd_skpd = c.kd_skpd
-                    WHERE (a.jns_spp='4' AND a.jenis_beban='1') AND (a.tgl_kas_bud >= '$tgl' AND  a.tgl_kas_bud <= '$tgl2') AND a.status_bud='1'
-                    GROUP BY a.kd_skpd, a.nm_skpd, a.no_sp2d
-                    ) b ON a.kd_skpd=b.kd_skpd
-                    ORDER BY cast(no_kas_bud as int)";
-            
-                $hasil = $this->db->query($sql);
-                
-                $nomor               ='0';
-                $jum_nilai           =0;
-                $jum_iwp             =0;
-                $jum_taperum         =0;
-                $jum_hkpg            =0;
-                $jum_pph             =0;
-                $jum_jumlah_potongan =0;
-                $jumlah_sp2d            =0;
-                $jumlah_iwp             =0;
-                $jumlah_sp2d            =0;
-                $jumlah_iwp             =0;
-                $jumlah_taperum         =0;
-                $jumlah_hkpg            =0;
-                $jumlah_pph             =0;
-                $jumlah_jumlah_potongan =0;
-                
-                foreach ($hasil->result() as $row){
-                    $kd_skpd         = $row->kd_skpd;
-                    $nm_skpd         = $row->nm_skpd;
-                    $no_kas_bud      = $row->no_kas_bud;
-                    $tgl_kas_bud     = $row->tgl_kas_bud;
-                    $no_sp2d         = $row->no_sp2d;
-                    $tgl_sp2d        = $row->tgl_sp2d;
-                    $nilai           = $row->nilai;
-                    $iwp             = $row->iwp;
-                    $taperum         = $row->taperum;
-                    $hkpg            = $row->hkpg;
-                    $pph             = $row->pph;
-                    $jumlah_potongan = $row->jumlah_potongan;
-                    
-                    //TOTAL
-                    $jum_nilai=$jum_nilai+$nilai;
-                    $jumlah_sp2d=number_format($jum_nilai,"2",",",".");
-                    
-                    $jum_iwp=$jum_iwp+$iwp;
-                    $jumlah_iwp=number_format($jum_iwp,"2",",",".");
-                    
-                    $jum_taperum=$jum_taperum+$taperum;
-                    $jumlah_taperum=number_format($jum_taperum,"2",",",".");
-                    
-                    $jum_hkpg=$jum_hkpg+$hkpg;
-                    $jumlah_hkpg=number_format($jum_hkpg,"2",",",".");
-                    
-                    $jum_pph=$jum_pph+$pph;
-                    $jumlah_pph=number_format($jum_pph,"2",",",".");
-                    
-                    $jum_jumlah_potongan=$jum_jumlah_potongan+$jumlah_potongan;
-                    $jumlah_jumlah_potongan=number_format($jum_jumlah_potongan,"2",",",".");
-                    
-                    $nomor=$nomor+1;
-                    
-                    $nilai=number_format($nilai,"2",",",".");
-                    $iwp=number_format($iwp,"2",",",".");
-                    $taperum=number_format($taperum,"2",",",".");
-                    $hkpg=number_format($hkpg,"2",",",".");
-                    $pph=number_format($pph,"2",",",".");
-                    $jumlah_potongan=number_format($jumlah_potongan,"2",",",".");
-                    
-                    $cRet .="<tr>
-                                <td align=\"center\">$nomor</td>
-                                <td align=\"left\">$nm_skpd</td>
-                                <td align=\"left\">$no_kas_bud $tgl_kas_bud</td>
-                                <td align=\"left\">$no_sp2d $tgl_sp2d</td>
-                                <td align=\"right\">$nilai</td>
-                                <td align=\"right\">$iwp</td>
-                                <td align=\"right\">$taperum</td>
-                                <td align=\"right\">$hkpg</td>
-                                <td align=\"right\">$pph</td>
-                                <td align=\"right\">$jumlah_potongan</td>
-                                
-                            </tr>";
-                }   
-                
-                    $cRet .="<tr>
-                                <td colspan=\"2\" align=\"right\"><b>Jumlah</b></td>
-                                <td align=\"right\"><b></b></td>
-                                <td align=\"right\"><b></b></td>
-                                <td align=\"right\"><b>$jumlah_sp2d</b></td>
-                                <td align=\"right\"><b>$jumlah_iwp</b></td>
-                                <td align=\"right\"><b>$jumlah_taperum</b></td>
-                                <td align=\"right\"><b>$jumlah_hkpg</b></td>
-                                <td align=\"right\"><b>$jumlah_pph</b></td>
-                                <td align=\"right\"><b>$jumlah_jumlah_potongan</b></td>
-                            </tr>";
-            
-            }
-            
-        //Non Gaji
-        }else{
-            //Rekap per SKPD
-            if($cetk=='0'){ 
-             $cRet .="<table style=\"border-collapse:collapse;\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\">
-                <tr>
-                    <td align=\"center\" colspan=\"16\" style=\"font-size:14px;border: solid 1px white;\"><b>$prov<br>$judul</b></td>
-                </tr>
-                <tr>
-                    <td align=\"center\" colspan=\"16\" style=\"font-size:14px;border: solid 1px white;\"><b>DARI TANGGAL : $tanggal S/D $tanggal2</b></td>
-                </tr>
-                <tr>
-                    <td align=\"left\" colspan=\"12\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 1px black;\">&nbsp;</td>
-                    <td align=\"left\" colspan=\"4\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 1px black;\"></td>
-                </tr>
-                </table>
-                <table style=\"border-collapse:collapse; border-color: black;font-size:12px\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\" >
-                <thead> 
-                <tr>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"3%\" style=\"font-weight:bold\">NO</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">NAMA INSTANSI</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">NILAI SP2D</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"9%\" style=\"font-weight:bold\">PPN</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"8%\" style=\"font-weight:bold\">PPH 21</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"8%\" style=\"font-weight:bold\">PPH 22</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"8%\" style=\"font-weight:bold\">PPH 23</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"9%\" style=\"font-weight:bold\">Pasal 4 ayat 2</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"8%\" style=\"font-weight:bold\">Iuran Wajib PPNPN</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"7%\" style=\"font-weight:bold\">Pot Lain-lain</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">JUMLAH POTONGAN</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">NILAI BERSIH</td>
-                </tr>
-                <tr>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">1</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">2</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">3</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">4</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">5</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">6</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">7</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">8</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">9</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">10</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">11</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">12</td>
-                </tr>
-                </thead>"; 
-                
-                $sql = "SELECT a.kd_skpd, a.nm_skpd, ISNULL(a.nilai,0) as nilai,
-                    ISNULL(ppn,0) ppn,
-                    ISNULL(pph21,0) pph21,
-                    ISNULL(pph22,0) pph22,
-                    ISNULL(pph23,0) pph23,
-                    ISNULL(psl4_a2,0) psl4_a2,
-                    ISNULL(iwppnpn,0) iwppnpn,
-                    ISNULL(pot_lain,0) pot_lain,
-                    ppn+pph21+pph22+pph23+psl4_a2+iwppnpn+pot_lain as jumlah_potongan
-                    FROM
-                    (SELECT a.kd_skpd, a.nm_skpd, SUM(d.nilai) as nilai FROM trhsp2d a
-                    INNER JOIN trhspm b ON a.no_spm = b.no_spm AND a.kd_skpd = b.kd_skpd
-                    INNER JOIN trhspp c ON b.no_spp = c.no_spp AND b.kd_skpd = c.kd_skpd
-                    INNER JOIN trdspp d ON c.no_spp = d.no_spp AND c.kd_skpd = d.kd_skpd
-                    WHERE (a.jns_spp!='4' AND a.jenis_beban!='1') AND (a.tgl_kas_bud >= '$tgl' AND  a.tgl_kas_bud <= '$tgl2') AND a.status_bud='1'
-                    GROUP BY a.kd_skpd, a.nm_skpd
-                    )a LEFT JOIN
-                    (SELECT a.kd_skpd, a.nm_skpd
-                    ,SUM(CASE WHEN kd_rek5 ='2130301' THEN c.nilai ELSE 0 END) AS ppn 
-                    ,SUM(CASE WHEN kd_rek5 ='2130101' THEN c.nilai ELSE 0 END) AS pph21 
-                    ,SUM(CASE WHEN kd_rek5 ='2130201' THEN c.nilai ELSE 0 END) AS pph22 
-                    ,SUM(CASE WHEN kd_rek5 ='2130401' THEN c.nilai ELSE 0 END) AS pph23
-                    ,SUM(CASE WHEN kd_rek5 ='2130501' THEN c.nilai ELSE 0 END) AS psl4_a2
-                    ,SUM(CASE WHEN kd_rek5 ='2110901' THEN c.nilai ELSE 0 END) AS iwppnpn
-                    ,SUM(CASE WHEN kd_rek5 not in ('2130301','2130101','2130201','2130401','2130501','2110901') THEN c.nilai ELSE 0 END) AS pot_lain
-                    FROM trhsp2d a
-                    INNER JOIN trhspm b ON a.no_spm = b.no_spm AND a.kd_skpd = b.kd_skpd
-                    INNER JOIN trspmpot c ON b.no_spm = c.no_spm AND b.kd_skpd = c.kd_skpd
-                    WHERE (a.jns_spp!='4' AND a.jenis_beban!='1') AND (a.tgl_kas_bud >= '$tgl' AND  a.tgl_kas_bud <= '$tgl2') AND a.status_bud='1'
-                    GROUP BY a.kd_skpd, a.nm_skpd
-                    ) b ON a.kd_skpd=b.kd_skpd";
-            
-                $hasil = $this->db->query($sql);
-                
-                $nomor                  ='0';
-                $jum_nilai              =0;
-                $jum_ppn                =0;
-                $jum_pph21              =0;
-                $jum_pph22              =0;
-                $jum_pph23              =0;
-                $jum_psl4_a2            =0;
-                $jum_iwppnpn            =0;
-                $jum_pot_lain           =0;
-                $jum_jumlah_potongan    =0;
-                $jum_nilai_bersih       =0;
-                $jumlah_sp2d            =0;
-                $jumlah_ppn             =0;
-                $jumlah_pph21           =0;
-                $jumlah_pph22           =0;
-                $jumlah_pph23           =0;
-                $jumlah_psl4_a2         =0;
-                $jumlah_iwppnpn         =0;
-                $jumlah_pot_lain        =0;
-                $jumlah_jumlah_potongan =0;
-                $jumlah_nilai_bersih    =0;
-                
-                
-                foreach ($hasil->result() as $row){
-                    $kd_skpd         = $row->kd_skpd;
-                    $nm_skpd         = $row->nm_skpd;
-                    $nilai           = $row->nilai;
-                    $ppn             = $row->ppn;
-                    $pph21           = $row->pph21;
-                    $pph22           = $row->pph22;
-                    $pph23           = $row->pph23;
-                    $psl4_a2         = $row->psl4_a2;
-                    $iwppnpn         = $row->iwppnpn;
-                    $pot_lain        = $row->pot_lain;
-                    $jumlah_potongan = $row->jumlah_potongan;
-                    $nilai_bersih    = $nilai-$jumlah_potongan;
-                    
-                    //Total
-                    $jum_nilai=$jum_nilai+$nilai;
-                    $jumlah_sp2d=number_format($jum_nilai,"2",",",".");
-                    
-                    $jum_ppn=$jum_ppn+$ppn;
-                    $jumlah_ppn=number_format($jum_ppn,"2",",",".");
-                    
-                    $jum_pph21=$jum_pph21+$pph21;
-                    $jumlah_pph21=number_format($jum_pph21,"2",",",".");
-                    
-                    $jum_pph22=$jum_pph22+$pph22;
-                    $jumlah_pph22=number_format($jum_pph22,"2",",",".");
-                    
-                    $jum_pph23=$jum_pph23+$pph23;
-                    $jumlah_pph23=number_format($jum_pph23,"2",",",".");
-                    
-                    $jum_psl4_a2=$jum_psl4_a2+$psl4_a2;
-                    $jumlah_psl4_a2=number_format($jum_psl4_a2,"2",",",".");
-                    
-                    $jum_iwppnpn=$jum_iwppnpn+$iwppnpn;
-                    $jumlah_iwppnpn=number_format($jum_iwppnpn,"2",",",".");
-                    
-                    $jum_pot_lain=$jum_pot_lain+$pot_lain;
-                    $jumlah_pot_lain=number_format($jum_pot_lain,"2",",",".");
-                    
-                    $jum_jumlah_potongan=$jum_jumlah_potongan+$jumlah_potongan;
-                    $jumlah_jumlah_potongan=number_format($jum_jumlah_potongan,"2",",",".");
-                    
-                    $jum_nilai_bersih=$jum_nilai_bersih+$nilai_bersih;
-                    $jumlah_nilai_bersih=number_format($jum_nilai_bersih,"2",",",".");
-                    
-                    $nomor=$nomor+1;
-                    
-                    $nilai=number_format($nilai,"2",",",".");
-                    $ppn=number_format($ppn,"2",",",".");
-                    $pph21=number_format($pph21,"2",",",".");
-                    $pph22=number_format($pph22,"2",",",".");
-                    $pph23=number_format($pph23,"2",",",".");
-                    $psl4_a2=number_format($psl4_a2,"2",",",".");
-                    $iwppnpn=number_format($iwppnpn,"2",",",".");
-                    $pot_lain=number_format($pot_lain,"2",",",".");
-                    $jumlah_potongan=number_format($jumlah_potongan,"2",",",".");
-                    $nilai_bersih=number_format($nilai_bersih,"2",",",".");
-                    
-                    
-                    
-                    
-                    $cRet .="<tr>
-                                <td align=\"center\">$nomor</td>
-                                <td align=\"left\">$kd_skpd-$nm_skpd</td>
-                                <td align=\"right\">$nilai</td>
-                                <td align=\"right\">$ppn</td>
-                                <td align=\"right\">$pph21</td>
-                                <td align=\"right\">$pph22</td>
-                                <td align=\"right\">$pph23</td>
-                                <td align=\"right\">$psl4_a2</td>
-                                <td align=\"right\">$iwppnpn</td>
-                                <td align=\"right\">$pot_lain</td>
-                                <td align=\"right\">$jumlah_potongan</td>
-                                <td align=\"right\">$nilai_bersih</td>
-                            </tr>";
-                }   
-            
-                $cRet .="<tr>
-                            <td colspan=\"2\" align=\"right\"><b>Jumlah</b></td>
-                            <td align=\"center\"><b>$jumlah_sp2d</b></td>
-                            <td align=\"center\"><b>$jumlah_ppn</b></td>
-                            <td align=\"right\"><b>$jumlah_pph21</b></td>
-                            <td align=\"center\"><b>$jumlah_pph22</b></td>
-                            <td align=\"center\"><b>$jumlah_pph23</b></td>
-                            <td align=\"right\"><b>$jumlah_psl4_a2</b></td>
-                            <td align=\"right\"><b>$jumlah_iwppnpn</b></td>
-                            <td align=\"center\"><b>$jumlah_pot_lain</b></td>
-                            <td align=\"center\"><b>$jumlah_jumlah_potongan</b></td>
-                            <td align=\"right\"><b>$jumlah_nilai_bersih</b></td>
-                        </tr>";
-            }else if($cetk=='1'){
-              //Rekap Per SKPD
-              $cRet .="<table style=\"border-collapse:collapse;\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\">
-                <tr>
-                    <td align=\"center\" colspan=\"16\" style=\"font-size:14px;border: solid 1px white;\"><b>$prov<br>$judul</b></td>
-                </tr>
-                <tr>
-                    <td align=\"center\" colspan=\"16\" style=\"font-size:14px;border: solid 1px white;\"><b>DARI TANGGAL : $tanggal S/D $tanggal2</b></td>
-                </tr>
-                <tr>
-                    <td align=\"left\" colspan=\"12\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 1px black;\">&nbsp;</td>
-                    <td align=\"left\" colspan=\"4\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 1px black;\"></td>
-                </tr>
-                </table>
-                <table style=\"border-collapse:collapse; border-color: black;font-size:11px\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\" >
-                <thead> 
-                <tr>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"3%\" style=\"font-weight:bold\">NO</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">NAMA INSTANSI</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"5%\" style=\"font-weight:bold\">NO. KAS/TGL. KAS</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"5%\" style=\"font-weight:bold\">NO. SP2D/TGL. SP2D</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">NILAI SP2D</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"8%\" style=\"font-weight:bold\">PPN</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"5%\" style=\"font-weight:bold\">PPH 21</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"5%\" style=\"font-weight:bold\">PPH 22</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"5%\" style=\"font-weight:bold\">PPH 23</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"8%\" style=\"font-weight:bold\">Pasal 4 ayat 2</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"5%\" style=\"font-weight:bold\">Iuran Wajib PPNPN</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"7%\" style=\"font-weight:bold\">Pot Lian-lain</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">JUMLAH POTONGAN &nbsp; (Kol.6 s.d 12)</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">NILAI BERSIH &nbsp; (Kol.5 - 13)</td>
-                </tr>
-                <tr>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">1</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">2</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">3</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">4</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">5</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">6</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">7</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">8</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">9</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">10</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">11</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">12</td>
+					<td align=\"center\" colspan=\"6\" bgcolor=\"#CCCCCC\" width=\"40%\" style=\"font-weight:bold\">Potongan-Potongan</td>
+					<td align=\"center\" rowspan=\"2\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">Jumlah Potongan</td>
+				</tr>
+				<tr>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">IWP</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">TAPERUM</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">BPJS</td>
+                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">BPJS Tenaga Kerja</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">PPH</td>
+                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">TASPEN</td>
+				</tr>
+				<tr>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">1</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">2</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">3</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">4</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">5</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">6</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">7</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">8</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">9</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">10</td>
+                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">11</td>                    
+                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">12</td>                                        
                     <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">13</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">14</td>
-                </tr>
-                </thead>"; 
-                
-                //isi
-                $sql = "SELECT a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, 
-                    ISNULL(a.nilai,0) as nilai,
-                    ISNULL(ppn,0) ppn,
-                    ISNULL(pph21,0) pph21,
-                    ISNULL(pph22,0) pph22,
-                    ISNULL(pph23,0) pph23,
-                    ISNULL(psl4_a2,0) psl4_a2,
-                    ISNULL(iwppnpn,0) iwppnpn,
-                    ISNULL(pot_lain,0) pot_lain,
-                    ppn+pph21+pph22+pph23+psl4_a2+iwppnpn+pot_lain as jumlah_potongan
-                    FROM
-                    (SELECT a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, SUM(d.nilai) as nilai FROM trhsp2d a
-                    INNER JOIN trhspm b ON a.no_spm = b.no_spm AND a.kd_skpd = b.kd_skpd
-                    INNER JOIN trhspp c ON b.no_spp = c.no_spp AND b.kd_skpd = c.kd_skpd
-                    INNER JOIN trdspp d ON c.no_spp = d.no_spp AND c.kd_skpd = d.kd_skpd
-                    WHERE (a.jns_spp!='4' AND a.jenis_beban!='1') AND (a.tgl_kas_bud >= '$tgl' AND  a.tgl_kas_bud <= '$tgl2') AND a.status_bud='1' AND LEFT(a.kd_skpd,7)='$skpd'
-                    GROUP BY a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d
-                    )a LEFT JOIN
-                    (SELECT a.kd_skpd, a.nm_skpd, a.no_sp2d
-                    ,SUM(CASE WHEN kd_rek5 ='2130301' THEN c.nilai ELSE 0 END) AS ppn 
-                    ,SUM(CASE WHEN kd_rek5 ='2130101' THEN c.nilai ELSE 0 END) AS pph21 
-                    ,SUM(CASE WHEN kd_rek5 ='2130201' THEN c.nilai ELSE 0 END) AS pph22 
-                    ,SUM(CASE WHEN kd_rek5 ='2130401' THEN c.nilai ELSE 0 END) AS pph23
-                    ,SUM(CASE WHEN kd_rek5 ='2130501' THEN c.nilai ELSE 0 END) AS psl4_a2
-                    ,SUM(CASE WHEN kd_rek5 ='2110901' THEN c.nilai ELSE 0 END) AS iwppnpn
-                    ,SUM(CASE WHEN kd_rek5 not in ('2130301','2130101','2130201','2130401','2130501','2110901') THEN c.nilai ELSE 0 END) AS pot_lain
-                    FROM trhsp2d a
-                    INNER JOIN trhspm b ON a.no_spm = b.no_spm AND a.kd_skpd = b.kd_skpd
-                    INNER JOIN trspmpot c ON b.no_spm = c.no_spm AND b.kd_skpd = c.kd_skpd
-                    WHERE (a.jns_spp!='4' AND a.jenis_beban!='1') AND (a.tgl_kas_bud >= '$tgl' AND  a.tgl_kas_bud <= '$tgl2') AND a.status_bud='1' AND LEFT(a.kd_skpd,7)='$skpd'
-                    GROUP BY a.kd_skpd, a.nm_skpd,a.no_sp2d
-                    ) b ON a.kd_skpd=b.kd_skpd AND a.no_sp2d=b.no_sp2d
-                    ORDER BY cast(no_kas_bud as int)";
-            
-                $hasil = $this->db->query($sql);
-                
-                $nomor              ='0';
-                $jum_nilai          =0;
-                $jum_ppn            =0;
-                $jum_pph21          =0;
-                $jum_pph22          =0;
-                $jum_pph23          =0;
-                $jum_psl4_a2        =0;
-                $jum_iwppnpn        =0;
-                $jum_pot_lain       =0;
-                $jum_jumlah_potongan=0;
-                $jum_nilai_bersih   =0;
-                $jumlah_sp2d            =0;
-                $jumlah_ppn             =0;
-                $jumlah_pph21           =0;
-                $jumlah_pph22           =0;
-                $jumlah_pph23           =0;
-                $jumlah_psl4_a2         =0;
-                $jumlah_iwppnpn         =0;
-                $jumlah_pot_lain        =0;
-                $jumlah_jumlah_potongan =0;
-                $jumlah_nilai_bersih    =0;
-                
-                foreach ($hasil->result() as $row){
-                    $kd_skpd         = $row->kd_skpd;
-                    $nm_skpd         = $row->nm_skpd;
-                    $no_kas_bud      = $row->no_kas_bud;
-                    $tgl_kas_bud     = $row->tgl_kas_bud;
-                    $no_sp2d         = $row->no_sp2d;
-                    $tgl_sp2d        = $row->tgl_sp2d;
-                    $nilai           = $row->nilai;
-                    $ppn             = $row->ppn;
-                    $pph21           = $row->pph21;
-                    $pph22           = $row->pph22;
-                    $pph23           = $row->pph23;
-                    $psl4_a2         = $row->psl4_a2;
-                    $iwppnpn         = $row->iwppnpn;
-                    $pot_lain        = $row->pot_lain;
-                    $jumlah_potongan = $row->jumlah_potongan;
-                    $nilai_bersih    = $nilai-$jumlah_potongan;
+				</tr>
+				</thead>"; 
+	
+				$sql = "SELECT a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d,a.nmrekan, ISNULL(a.nilai,0) as nilai,
+					ISNULL(iwp,0) iwp,
+					ISNULL(taperum,0) taperum,
+					ISNULL(hkpg,0) hkpg,
+                    ISNULL(bpjsk,0) bpjsk,
+					ISNULL(pph,0) pph,
+                    ISNULL(taspen,0) taspen,
+					iwp+taperum+hkpg+bpjsk+pph+taspen as jumlah_potongan
+					FROM
+					(SELECT a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d,a.nmrekan, SUM(d.nilai) as nilai FROM trhsp2d a
+					INNER JOIN trhspm b ON a.no_spm = b.no_spm AND a.kd_skpd = b.kd_skpd
+					INNER JOIN trhspp c ON b.no_spp = c.no_spp AND b.kd_skpd = c.kd_skpd
+					INNER JOIN trdspp d ON c.no_spp = d.no_spp AND c.kd_skpd = d.kd_skpd
+					WHERE (a.jns_spp='4' AND a.jenis_beban='1') AND (a.tgl_kas_bud >= '$tgl' AND  a.tgl_kas_bud <= '$tgl2') AND a.kd_skpd='$skpd' AND a.status_bud='1'
+					GROUP BY a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, a.nmrekan 
+					)a LEFT JOIN
+					(SELECT a.kd_skpd, a.nm_skpd, a.no_sp2d
+					,SUM(CASE WHEN kd_rek6 in ('2110701','2110401') THEN c.nilai ELSE 0 END) AS iwp 
+					,SUM(CASE WHEN kd_rek6 ='2110501' THEN c.nilai ELSE 0 END) AS taperum 
+					,SUM(CASE WHEN kd_rek6 in ('2110201') THEN c.nilai ELSE 0 END) AS hkpg 
+                    ,SUM(CASE WHEN kd_rek6 ='2110901' THEN c.nilai ELSE 0 END) AS bpjsk 
+					,SUM(CASE WHEN kd_rek6 ='2130101' THEN c.nilai ELSE 0 END) AS pph 
+                    ,SUM(CASE WHEN kd_rek6 ='2110101' THEN c.nilai ELSE 0 END) AS taspen
+					FROM trhsp2d a
+					INNER JOIN trhspm b ON a.no_spm = b.no_spm AND a.kd_skpd = b.kd_skpd
+					INNER JOIN trspmpot c ON b.no_spm = c.no_spm AND b.kd_skpd = c.kd_skpd
+					WHERE (a.jns_spp='4' AND a.jenis_beban='1') AND (a.tgl_kas_bud >= '$tgl' AND  a.tgl_kas_bud <= '$tgl2') AND a.kd_skpd='$skpd' AND a.status_bud='1'
+					GROUP BY a.kd_skpd, a.nm_skpd, a.no_sp2d
+					) b ON a.kd_skpd=b.kd_skpd and a.no_sp2d=b.no_sp2d";
+			
+				$hasil = $this->db->query($sql);
+				
+				$nomor                  ='0';
+				$jum_nilai              =0;
+				$jum_iwp                =0;
+				$jum_taperum            =0;
+				$jum_hkpg               =0;
+   	            $jum_bpjsk              =0;
+				$jum_pph                =0;
+                $jum_taspen             =0;
+				$jum_jumlah_potongan    =0;
+				$jumlah_sp2d            =0;
+				$jumlah_iwp             =0;
+				$jumlah_sp2d            =0;
+				$jumlah_iwp             =0;
+				$jumlah_taperum         =0;
+				$jumlah_hkpg            =0;
+                $jumlah_bpjsk           =0;
+				$jumlah_pph             =0;
+                $jumlah_taspen          =0;
+				$jumlah_jumlah_potongan =0;
+				
+				
+				foreach ($hasil->result() as $row){
+					$kd_skpd         = $row->kd_skpd;
+					$nm_skpd         = $row->nm_skpd;
+					$no_kas_bud      = $row->no_kas_bud;
+					$tgl_kas_bud     = $row->tgl_kas_bud;
+					$no_sp2d         = $row->no_sp2d;
+                    $nmrekan         = $row->nmrekan;
+					$tgl_sp2d        = $row->tgl_sp2d;
+					$nilai           = $row->nilai;
+					$iwp             = $row->iwp;
+					$taperum         = $row->taperum;
+					$hkpg            = $row->hkpg;
+                    $bpjsk           = $row->bpjsk;
+					$pph             = $row->pph;
+                    $taspen          = $row->taspen;
+					$jumlah_potongan = $row->jumlah_potongan;
+					
+					//TOTAL
+					$jum_nilai=$jum_nilai+$nilai;
+					$jumlah_sp2d=number_format($jum_nilai,"2",",",".");
+					
+					$jum_iwp=$jum_iwp+$iwp;
+					$jumlah_iwp=number_format($jum_iwp,"2",",",".");
+					
+					$jum_taperum=$jum_taperum+$taperum;
+					$jumlah_taperum=number_format($jum_taperum,"2",",",".");
+					
+					$jum_hkpg=$jum_hkpg+$hkpg;
+					$jumlah_hkpg=number_format($jum_hkpg,"2",",",".");
+					
+                    $jum_bpjsk=$jum_bpjsk+$bpjsk;
+					$jumlah_bpjsk=number_format($jum_bpjsk,"2",",",".");
                     
-                    //Total
-                    $jum_nilai=$jum_nilai+$nilai;
-                    $jumlah_sp2d=number_format($jum_nilai,"2",",",".");
+					$jum_pph=$jum_pph+$pph;
+					$jumlah_pph=number_format($jum_pph,"2",",",".");
+					
+                    $jum_taspen=$jum_taspen+$taspen;
+					$jumlah_taspen=number_format($jum_taspen,"2",",",".");
                     
-                    $jum_ppn=$jum_ppn+$ppn;
-                    $jumlah_ppn=number_format($jum_ppn,"2",",",".");
-                    
-                    $jum_pph21=$jum_pph21+$pph21;
-                    $jumlah_pph21=number_format($jum_pph21,"2",",",".");
-                    
-                    $jum_pph22=$jum_pph22+$pph22;
-                    $jumlah_pph22=number_format($jum_pph22,"2",",",".");
-                    
-                    $jum_pph23=$jum_pph23+$pph23;
-                    $jumlah_pph23=number_format($jum_pph23,"2",",",".");
-                    
-                    $jum_psl4_a2=$jum_psl4_a2+$psl4_a2;
-                    $jumlah_psl4_a2=number_format($jum_psl4_a2,"2",",",".");
-                    
-                    $jum_iwppnpn=$jum_iwppnpn+$iwppnpn;
-                    $jumlah_iwppnpn=number_format($jum_iwppnpn,"2",",",".");
-                    
-                    $jum_pot_lain=$jum_pot_lain+$pot_lain;
-                    $jumlah_pot_lain=number_format($jum_pot_lain,"2",",",".");
-                    
-                    $jum_jumlah_potongan=$jum_jumlah_potongan+$jumlah_potongan;
-                    $jumlah_jumlah_potongan=number_format($jum_jumlah_potongan,"2",",",".");
-                    
-                    $jum_nilai_bersih=$jum_nilai_bersih+$nilai_bersih;
-                    $jumlah_nilai_bersih=number_format($jum_nilai_bersih,"2",",",".");
-                    
-                    $nomor=$nomor+1;
-                    
-                    $nilai=number_format($nilai,"2",",",".");
-                    $ppn=number_format($ppn,"2",",",".");
-                    $pph21=number_format($pph21,"2",",",".");
-                    $pph22=number_format($pph22,"2",",",".");
-                    $pph23=number_format($pph23,"2",",",".");
-                    $psl4_a2=number_format($psl4_a2,"2",",",".");
-                    $iwppnpn=number_format($iwppnpn,"2",",",".");
-                    $pot_lain=number_format($pot_lain,"2",",",".");
-                    $jumlah_potongan=number_format($jumlah_potongan,"2",",",".");
-                    $nilai_bersih=number_format($nilai_bersih,"2",",",".");
-                    
-                    
-                    
-                    
-                    $cRet .="<tr>
-                                <td align=\"center\">$nomor</td>
-                                <td align=\"left\">$nm_skpd</td>
-                                <td align=\"left\">$no_kas_bud $tgl_kas_bud</td>
-                                <td align=\"left\">$no_sp2d $tgl_sp2d</td>
-                                <td align=\"right\">$nilai</td>
-                                <td align=\"right\">$ppn</td>
-                                <td align=\"right\">$pph21</td>
-                                <td align=\"right\">$pph22</td>
-                                <td align=\"right\">$pph23</td>
-                                <td align=\"right\">$psl4_a2</td>
-                                <td align=\"right\">$iwppnpn</td>
-                                <td align=\"right\">$pot_lain</td>
-                                <td align=\"right\">$jumlah_potongan</td>
-                                <td align=\"right\">$nilai_bersih</td>
-                            </tr>";
-                }   
-            
-                $cRet .="<tr>
-                            <td colspan=\"2\" align=\"right\"><b>Jumlah</b></td>
-                            <td align=\"center\"><b></b></td>
-                            <td align=\"center\"><b></b></td>
-                            <td align=\"center\"><b>$jumlah_sp2d</b></td>
-                            <td align=\"center\"><b>$jumlah_ppn</b></td>
-                            <td align=\"right\"><b>$jumlah_pph21</b></td>
-                            <td align=\"center\"><b>$jumlah_pph22</b></td>
-                            <td align=\"center\"><b>$jumlah_pph23</b></td>
-                            <td align=\"right\"><b>$jumlah_psl4_a2</b></td>
-                            <td align=\"right\"><b>$jumlah_iwppnpn</b></td>
-                            <td align=\"center\"><b>$jumlah_pot_lain</b></td>
-                            <td align=\"center\"><b>$jumlah_jumlah_potongan</b></td>
-                            <td align=\"right\"><b>$jumlah_nilai_bersih</b></td>
-                        </tr>";
-            }else if($cetk=='2'){
-              //Rekap Per Unit
-              $cRet .="<table style=\"border-collapse:collapse;\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\">
-                <tr>
-                    <td align=\"center\" colspan=\"16\" style=\"font-size:14px;border: solid 1px white;\"><b>$prov<br>$judul</b></td>
-                </tr>
-                <tr>
-                    <td align=\"center\" colspan=\"16\" style=\"font-size:14px;border: solid 1px white;\"><b>DARI TANGGAL : $tanggal S/D $tanggal2</b></td>
-                </tr>
-                <tr>
-                    <td align=\"left\" colspan=\"12\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 1px black;\">&nbsp;</td>
-                    <td align=\"left\" colspan=\"4\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 1px black;\"></td>
-                </tr>
-                </table>
-                <table style=\"border-collapse:collapse; border-color: black;font-size:11px\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\" >
-                <thead> 
-                <tr>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"3%\" style=\"font-weight:bold\">NO</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">NAMA INSTANSI</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"5%\" style=\"font-weight:bold\">NO. KAS/TGL. KAS</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"5%\" style=\"font-weight:bold\">NO. SP2D/TGL. SP2D</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">NILAI SP2D</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"8%\" style=\"font-weight:bold\">PPN</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"5%\" style=\"font-weight:bold\">PPH 21</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"5%\" style=\"font-weight:bold\">PPH 22</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"5%\" style=\"font-weight:bold\">PPH 23</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"8%\" style=\"font-weight:bold\">Pasal 4 ayat 2</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"5%\" style=\"font-weight:bold\">Iuran Wajib PPNPN</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"7%\" style=\"font-weight:bold\">Pot Lian-lain</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">JUMLAH POTONGAN &nbsp; (Kol.6 s.d 12)</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">NILAI BERSIH &nbsp; (Kol.5 - 13)</td>
-                </tr>
-                <tr>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">1</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">2</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">3</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">4</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">5</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">6</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">7</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">8</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">9</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">10</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">11</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">12</td>
+					$jum_jumlah_potongan=$jum_jumlah_potongan+$jumlah_potongan;
+					$jumlah_jumlah_potongan=number_format($jum_jumlah_potongan,"2",",",".");
+					
+					$nomor=$nomor+1;
+					
+					$nilai=number_format($nilai,"2",",",".");
+					$iwp=number_format($iwp,"2",",",".");
+					$taperum=number_format($taperum,"2",",",".");
+					$hkpg=number_format($hkpg,"2",",",".");
+                    $bpjsk=number_format($bpjsk,"2",",",".");
+					$pph=number_format($pph,"2",",",".");
+                    $taspen=number_format($taspen,"2",",",".");
+					$jumlah_potongan=number_format($jumlah_potongan,"2",",",".");
+					
+					$cRet .="<tr>
+								<td align=\"center\">$nomor</td>
+								<td align=\"left\">$nm_skpd</td>
+								<td align=\"left\">$no_kas_bud<br/>$tgl_kas_bud</td>
+								<td align=\"left\">$no_sp2d<br/>$tgl_sp2d</td>
+                                <td align=\"left\">$nmrekan</td>
+								<td align=\"right\">$nilai</td>
+								<td align=\"right\">$iwp</td>
+								<td align=\"right\">$taperum</td>
+								<td align=\"right\">$hkpg</td>
+                                <td align=\"right\">$bpjsk</td>
+								<td align=\"right\">$pph</td>
+                                <td align=\"right\">$taspen</td>
+								<td align=\"right\">$jumlah_potongan</td>
+								
+							</tr>";
+				}	
+				
+					$cRet .="<tr>
+								<td colspan=\"2\" align=\"right\"><b>Jumlah</b></td>
+								<td align=\"right\"><b></b></td>
+								<td align=\"right\"><b></b></td>
+								<td align=\"right\"><b>$jumlah_sp2d</b></td>
+								<td align=\"right\"><b>$jumlah_iwp</b></td>
+								<td align=\"right\"><b>$jumlah_taperum</b></td>
+								<td align=\"right\"><b>$jumlah_hkpg</b></td>
+                                <td align=\"right\"><b>$jumlah_bpjsk</b></td>
+								<td align=\"right\"><b>$jumlah_pph</b></td>
+                                <td align=\"right\"><b>$jumlah_taspen</b></td>
+								<td align=\"right\"><b>$jumlah_jumlah_potongan</b></td>
+							</tr>";
+							
+			
+			}else{
+			//Keseluruhan
+			$cRet .="<table style=\"border-collapse:collapse;\" width=\"80%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\">
+				<tr>
+					<td align=\"center\" colspan=\"17\" style=\"font-size:14px;border: solid 1px white;\"><b>$prov<br>$judul</b></td>
+				</tr>
+				<tr>
+					<td align=\"center\" colspan=\"17\" style=\"font-size:14px;border: solid 1px white;\"><b>DARI TANGGAL : $tanggal S/D $tanggal2</b></td>
+				</tr>
+				<tr>
+					<td align=\"left\" colspan=\"12\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 0px white;\">&nbsp;</td>
+					<td align=\"left\" colspan=\"5\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 0px white;\"></td>
+				</tr>
+				</table>
+				<table style=\"border-collapse:collapse; border-color: black;font-size:12px\" width=\"80%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\" >
+				<thead> 
+				<tr>
+					<td align=\"center\" rowspan=\"3\" bgcolor=\"#ffffff\" width=\"10%\" style=\"font-weight:bold; border: solid 1px white;\">&nbsp;</td>  
+					<td align=\"center\" rowspan=\"3\" bgcolor=\"#CCCCCC\" width=\"3%\" style=\"font-weight:bold;\">No.</td>  
+					<td align=\"center\" rowspan=\"3\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">Nama Instansi</td>
+					<td align=\"center\" rowspan=\"3\" bgcolor=\"#CCCCCC\" width=\"8%\" style=\"font-weight:bold\">No/Tanggal Kas</td>
+					<td align=\"center\" rowspan=\"3\" bgcolor=\"#CCCCCC\" width=\"13%\" style=\"font-weight:bold\">No/Tanggal SP2D</td>
+					<td align=\"center\" rowspan=\"3\" bgcolor=\"#CCCCCC\" width=\"8%\" style=\"font-weight:bold\">Rekanan</td>					
+                    <td align=\"center\" rowspan=\"3\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">Nilai SP2D</td>
+					<td align=\"center\" colspan=\"8\" bgcolor=\"#CCCCCC\" width=\"40%\" style=\"font-weight:bold\">Potongan-Potongan</td>
+					<td align=\"center\" rowspan=\"3\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">Jumlah Potongan</td>
+				</tr>
+				<tr>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" rowspan=\"2\"  width=\"10%\" style=\"font-weight:bold\">TAPERUM</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" rowspan=\"2\" width=\"10%\" style=\"font-weight:bold\">IWP 2%</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" rowspan=\"2\" width=\"10%\" style=\"font-weight:bold\">IWP 8%</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" rowspan=\"2\" width=\"10%\" style=\"font-weight:bold\">BPJS/ASKES</td>
+                    <td align=\"center\" bgcolor=\"#CCCCCC\" rowspan=\"2\" width=\"10%\" style=\"font-weight:bold\">BPJS Tenaga Kerja</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" rowspan=\"2\" width=\"10%\" style=\"font-weight:bold\">PPH</td>
+                    <td align=\"center\" bgcolor=\"#CCCCCC\" colspan=\"2\" width=\"10%\" style=\"font-weight:bold\">TASPEN</td>
+				</tr>
+				<tr>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">JKK</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">JKM</td>
+				</tr>
+				<tr>
+                    <td align=\"center\" bgcolor=\"#ffffff\" style=\"border:solid 1px white\">&nbsp;</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">1</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">2</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">3</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">4</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">5</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">6</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">7</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">8</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">9</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">10</td>
+                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">11</td>                    
+                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">12</td>                                        
                     <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">13</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">14</td>
-                </tr>
-                </thead>"; 
-                
-                //isi
-                $sql = "SELECT a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, 
-                    ISNULL(a.nilai,0) as nilai,
-                    ISNULL(ppn,0) ppn,
-                    ISNULL(pph21,0) pph21,
-                    ISNULL(pph22,0) pph22,
-                    ISNULL(pph23,0) pph23,
-                    ISNULL(psl4_a2,0) psl4_a2,
-                    ISNULL(iwppnpn,0) iwppnpn,
-                    ISNULL(pot_lain,0) pot_lain,
-                    ppn+pph21+pph22+pph23+psl4_a2+iwppnpn+pot_lain as jumlah_potongan
-                    FROM
-                    (SELECT a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, SUM(d.nilai) as nilai FROM trhsp2d a
-                    INNER JOIN trhspm b ON a.no_spm = b.no_spm AND a.kd_skpd = b.kd_skpd
-                    INNER JOIN trhspp c ON b.no_spp = c.no_spp AND b.kd_skpd = c.kd_skpd
-                    INNER JOIN trdspp d ON c.no_spp = d.no_spp AND c.kd_skpd = d.kd_skpd
-                    WHERE (a.jns_spp!='4' AND a.jenis_beban!='1') AND (a.tgl_kas_bud >= '$tgl' AND  a.tgl_kas_bud <= '$tgl2') AND a.status_bud='1' AND a.kd_skpd='$skpd'
-                    GROUP BY a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d
-                    )a LEFT JOIN
-                    (SELECT a.kd_skpd, a.nm_skpd, a.no_sp2d
-                    ,SUM(CASE WHEN kd_rek5 ='2130301' THEN c.nilai ELSE 0 END) AS ppn 
-                    ,SUM(CASE WHEN kd_rek5 ='2130101' THEN c.nilai ELSE 0 END) AS pph21 
-                    ,SUM(CASE WHEN kd_rek5 ='2130201' THEN c.nilai ELSE 0 END) AS pph22 
-                    ,SUM(CASE WHEN kd_rek5 ='2130401' THEN c.nilai ELSE 0 END) AS pph23
-                    ,SUM(CASE WHEN kd_rek5 ='2130501' THEN c.nilai ELSE 0 END) AS psl4_a2
-                    ,SUM(CASE WHEN kd_rek5 ='2110901' THEN c.nilai ELSE 0 END) AS iwppnpn
-                    ,SUM(CASE WHEN kd_rek5 not in ('2130301','2130101','2130201','2130401','2130501','2110901') THEN c.nilai ELSE 0 END) AS pot_lain
-                    FROM trhsp2d a
-                    INNER JOIN trhspm b ON a.no_spm = b.no_spm AND a.kd_skpd = b.kd_skpd
-                    INNER JOIN trspmpot c ON b.no_spm = c.no_spm AND b.kd_skpd = c.kd_skpd
-                    WHERE (a.jns_spp!='4' AND a.jenis_beban!='1') AND (a.tgl_kas_bud >= '$tgl' AND  a.tgl_kas_bud <= '$tgl2') AND a.status_bud='1' AND a.kd_skpd='$skpd'
-                    GROUP BY a.kd_skpd, a.nm_skpd,a.no_sp2d
-                    ) b ON a.kd_skpd=b.kd_skpd AND a.no_sp2d=b.no_sp2d
-                    ORDER BY cast(no_kas_bud as int)";
-            
-                $hasil = $this->db->query($sql);
-                
-                $nomor              ='0';
-                $jum_nilai          =0;
-                $jum_ppn            =0;
-                $jum_pph21          =0;
-                $jum_pph22          =0;
-                $jum_pph23          =0;
-                $jum_psl4_a2        =0;
-                $jum_iwppnpn        =0;
-                $jum_pot_lain       =0;
-                $jum_jumlah_potongan=0;
-                $jum_nilai_bersih   =0;
-                $jumlah_sp2d            =0;
-                $jumlah_ppn             =0;
-                $jumlah_pph21           =0;
-                $jumlah_pph22           =0;
-                $jumlah_pph23           =0;
-                $jumlah_psl4_a2         =0;
-                $jumlah_iwppnpn         =0;
-                $jumlah_pot_lain        =0;
-                $jumlah_jumlah_potongan =0;
-                $jumlah_nilai_bersih    =0;
-                
-                foreach ($hasil->result() as $row){
-                    $kd_skpd         = $row->kd_skpd;
-                    $nm_skpd         = $row->nm_skpd;
-                    $no_kas_bud      = $row->no_kas_bud;
-                    $tgl_kas_bud     = $row->tgl_kas_bud;
-                    $no_sp2d         = $row->no_sp2d;
-                    $tgl_sp2d        = $row->tgl_sp2d;
-                    $nilai           = $row->nilai;
-                    $ppn             = $row->ppn;
-                    $pph21           = $row->pph21;
-                    $pph22           = $row->pph22;
-                    $pph23           = $row->pph23;
-                    $psl4_a2         = $row->psl4_a2;
-                    $iwppnpn         = $row->iwppnpn;
-                    $pot_lain        = $row->pot_lain;
-                    $jumlah_potongan = $row->jumlah_potongan;
-                    $nilai_bersih    = $nilai-$jumlah_potongan;
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">14</td>
+                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">15</td>
+				</tr>
+				</thead>"; 
+	
+				$sql = "
+                SELECT a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, a.nmrekan, ISNULL(a.nilai,0) as nilai,
+					ISNULL(iwp,0) iwp,
+					ISNULL(iwp8,0) iwp8,
+					ISNULL(taperum,0) taperum,
+					ISNULL(hkpg,0) hkpg,
+					ISNULL(bpjsk,0) bpjsk,
+					ISNULL(pph,0) pph,
+					ISNULL(jamcelaka,0) jamcelaka,
+					ISNULL(jammati,0) jammati,
+					iwp+iwp8+taperum+hkpg+bpjsk+pph+jamcelaka+jammati as jumlah_potongan
+					FROM
+					(SELECT a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, a.nmrekan, SUM(d.nilai) as nilai FROM trhsp2d a
+					INNER JOIN trhspm b ON a.no_spm = b.no_spm AND a.kd_skpd = b.kd_skpd
+					INNER JOIN trhspp c ON b.no_spp = c.no_spp AND b.kd_skpd = c.kd_skpd
+					INNER JOIN trdspp d ON c.no_spp = d.no_spp AND c.kd_skpd = d.kd_skpd
+					WHERE (a.jns_spp='4' AND a.jenis_beban='1') AND (a.tgl_kas_bud >= '$tgl' AND  a.tgl_kas_bud <= '$tgl2') AND a.status_bud='1'
+					GROUP BY a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, a.nmrekan
+					)a LEFT JOIN
+					(SELECT a.kd_skpd, a.nm_skpd, a.no_sp2d
+					,SUM(CASE WHEN kd_rek6 in ('2110701','2110401') THEN c.nilai ELSE 0 END) AS iwp
+					,SUM(CASE WHEN kd_rek6 in ('2110101') THEN c.nilai ELSE 0 END) AS iwp8
+					,SUM(CASE WHEN kd_rek6 ='2110501' THEN c.nilai ELSE 0 END) AS taperum 
+					,SUM(CASE WHEN kd_rek6 in ('2110201') THEN c.nilai ELSE 0 END) AS hkpg 
+					,SUM(CASE WHEN kd_rek6 ='2110901' THEN c.nilai ELSE 0 END) AS bpjsk 
+					,SUM(CASE WHEN kd_rek6 ='2130101' THEN c.nilai ELSE 0 END) AS pph
+					,SUM(CASE WHEN kd_rek6 ='2111001' THEN c.nilai ELSE 0 END) AS jamcelaka
+					,SUM(CASE WHEN kd_rek6 ='2111101' THEN c.nilai ELSE 0 END) AS jammati
+					FROM trhsp2d a
+					INNER JOIN trhspm b ON a.no_spm = b.no_spm AND a.kd_skpd = b.kd_skpd
+					INNER JOIN trspmpot c ON b.no_spm = c.no_spm AND b.kd_skpd = c.kd_skpd
+					WHERE (a.jns_spp='4' AND a.jenis_beban='1') AND (a.tgl_kas_bud >= '$tgl' AND  a.tgl_kas_bud <= '$tgl2') AND a.status_bud='1'
+					GROUP BY a.kd_skpd, a.nm_skpd, a.no_sp2d
+					) b ON a.kd_skpd=b.kd_skpd and a.no_sp2d = b.no_sp2d
+					ORDER BY no_kas_bud";
+			
+				$hasil = $this->db->query($sql);
+				
+				$nomor               ='0';
+				$jum_nilai           =0;
+				$jum_iwp             =0;
+				$jum_iwp8             =0;
+				$jum_jamcelaka         =0;
+				$jum_jammati         =0;
+				$jum_hkpg            =0;
+                $jum_bpjsk           =0;
+				$jum_pph             =0;
+                $jum_taperum          =0;
+				$jum_jumlah_potongan =0;
+				$jumlah_sp2d            =0;
+				$jumlah_iwp             =0;
+				$jumlah_iwp8             =0;
+				$jumlah_sp2d            =0;
+				$jumlah_iwp             =0;
+				$jumlah_taperum         =0;
+				$jumlah_hkpg            =0;
+                $jumlah_bpjsk           =0;
+				$jumlah_pph             =0;
+                $jumlah_taspen          =0;
+				$jumlah_jamcelaka          =0;
+				$jumlah_jammati          =0;
+				$jumlah_jumlah_potongan =0;
+				
+				foreach ($hasil->result() as $row){
+					$kd_skpd         = $row->kd_skpd;
+					$nm_skpd         = $row->nm_skpd;
+					$no_kas_bud      = $row->no_kas_bud;
+					$tgl_kas_bud     = $row->tgl_kas_bud;
+					$no_sp2d         = $row->no_sp2d;
+					$tgl_sp2d        = $row->tgl_sp2d;
+                    $nmrekan         = $row->nmrekan;
+					$nilai           = $row->nilai;
+					$iwp             = $row->iwp;
+					$iwp8             = $row->iwp8;
+					$taperum         = $row->taperum;
+					$hkpg            = $row->hkpg;
+                    $bpjsk           = $row->bpjsk;
+					$pph             = $row->pph;
+                    $jamcelaka          = $row->jamcelaka;
+					$jammati          = $row->jammati;
+					$jumlah_potongan = $row->jumlah_potongan;
+					                    
+					//TOTAL
+					$jum_nilai=$jum_nilai+$nilai;
+					$jumlah_sp2d=number_format($jum_nilai,"2",",",".");
+					
+					$jum_iwp=$jum_iwp+$iwp;
+					$jumlah_iwp=number_format($jum_iwp,"2",",",".");
+					
+					$jum_iwp8=$jum_iwp8+$iwp8;
+					$jumlah_iwp8=number_format($jum_iwp8,"2",",",".");
+					
+					$jum_taperum=$jum_taperum+$taperum;
+					$jumlah_taperum=number_format($jum_taperum,"2",",",".");
+					
+					$jum_hkpg=$jum_hkpg+$hkpg;
+					$jumlah_hkpg=number_format($jum_hkpg,"2",",",".");
                     
-                    //Total
-                    $jum_nilai=$jum_nilai+$nilai;
-                    $jumlah_sp2d=number_format($jum_nilai,"2",",",".");
+                    $jum_bpjsk=$jum_bpjsk+$bpjsk;
+					$jumlah_bpjsk=number_format($jum_bpjsk,"2",",",".");
+					
+					$jum_pph=$jum_pph+$pph;
+					$jumlah_pph=number_format($jum_pph,"2",",",".");
+					
+                    $jum_jamcelaka=$jum_jamcelaka+$jamcelaka;
+					$jumlah_jamcelaka=number_format($jum_jamcelaka,"2",",",".");
                     
-                    $jum_ppn=$jum_ppn+$ppn;
-                    $jumlah_ppn=number_format($jum_ppn,"2",",",".");
+					$jum_jammati=$jum_jammati+$jammati;
+					$jumlah_jammati=number_format($jum_jammati,"2",",",".");
                     
-                    $jum_pph21=$jum_pph21+$pph21;
-                    $jumlah_pph21=number_format($jum_pph21,"2",",",".");
-                    
-                    $jum_pph22=$jum_pph22+$pph22;
-                    $jumlah_pph22=number_format($jum_pph22,"2",",",".");
-                    
-                    $jum_pph23=$jum_pph23+$pph23;
-                    $jumlah_pph23=number_format($jum_pph23,"2",",",".");
-                    
-                    $jum_psl4_a2=$jum_psl4_a2+$psl4_a2;
-                    $jumlah_psl4_a2=number_format($jum_psl4_a2,"2",",",".");
-                    
-                    $jum_iwppnpn=$jum_iwppnpn+$iwppnpn;
-                    $jumlah_iwppnpn=number_format($jum_iwppnpn,"2",",",".");
-                    
-                    $jum_pot_lain=$jum_pot_lain+$pot_lain;
-                    $jumlah_pot_lain=number_format($jum_pot_lain,"2",",",".");
-                    
-                    $jum_jumlah_potongan=$jum_jumlah_potongan+$jumlah_potongan;
-                    $jumlah_jumlah_potongan=number_format($jum_jumlah_potongan,"2",",",".");
-                    
-                    $jum_nilai_bersih=$jum_nilai_bersih+$nilai_bersih;
-                    $jumlah_nilai_bersih=number_format($jum_nilai_bersih,"2",",",".");
-                    
-                    $nomor=$nomor+1;
-                    
-                    $nilai=number_format($nilai,"2",",",".");
-                    $ppn=number_format($ppn,"2",",",".");
-                    $pph21=number_format($pph21,"2",",",".");
-                    $pph22=number_format($pph22,"2",",",".");
-                    $pph23=number_format($pph23,"2",",",".");
-                    $psl4_a2=number_format($psl4_a2,"2",",",".");
-                    $iwppnpn=number_format($iwppnpn,"2",",",".");
-                    $pot_lain=number_format($pot_lain,"2",",",".");
-                    $jumlah_potongan=number_format($jumlah_potongan,"2",",",".");
-                    $nilai_bersih=number_format($nilai_bersih,"2",",",".");
-                    
-                    
-                    
-                    
-                    $cRet .="<tr>
+					$jum_jumlah_potongan=$jum_jumlah_potongan+$jumlah_potongan;
+					$jumlah_jumlah_potongan=number_format($jum_jumlah_potongan,"2",",",".");
+					
+					$nomor=$nomor+1;
+					
+					$nilai=number_format($nilai,"2",",",".");
+					$iwp=number_format($iwp,"2",",",".");
+					$iwp8=number_format($iwp8,"2",",",".");
+					$taperum=number_format($taperum,"2",",",".");
+					$hkpg=number_format($hkpg,"2",",",".");
+                    $bpjsk=number_format($bpjsk,"2",",",".");
+					$pph=number_format($pph,"2",",",".");
+                    $jamcelaka=number_format($jamcelaka,"2",",",".");
+					$jammati=number_format($jammati,"2",",",".");
+					$jumlah_potongan=number_format($jumlah_potongan,"2",",",".");
+					
+					$cRet .="<tr>
+								<td align=\"center\" style=\"border:solid 1px white\">&nbsp;</td>
                                 <td align=\"center\">$nomor</td>
-                                <td align=\"left\">$nm_skpd</td>
-                                <td align=\"left\">$no_kas_bud $tgl_kas_bud</td>
-                                <td align=\"left\">$no_sp2d $tgl_sp2d</td>
-                                <td align=\"right\">$nilai</td>
-                                <td align=\"right\">$ppn</td>
-                                <td align=\"right\">$pph21</td>
-                                <td align=\"right\">$pph22</td>
-                                <td align=\"right\">$pph23</td>
-                                <td align=\"right\">$psl4_a2</td>
-                                <td align=\"right\">$iwppnpn</td>
-                                <td align=\"right\">$pot_lain</td>
-                                <td align=\"right\">$jumlah_potongan</td>
-                                <td align=\"right\">$nilai_bersih</td>
-                            </tr>";
-                }   
-            
-                $cRet .="<tr>
-                            <td colspan=\"2\" align=\"right\"><b>Jumlah</b></td>
+								<td align=\"left\">$nm_skpd</td>
+								<td align=\"left\">$no_kas_bud <br/>$tgl_kas_bud</td>
+								<td align=\"left\">$no_sp2d <br/>$tgl_sp2d</td>
+                                <td align=\"left\">$nmrekan</td>
+								<td align=\"right\">$nilai</td>
+								<td align=\"right\">$iwp</td>
+								<td align=\"right\">$iwp8</td>
+								<td align=\"right\">$taperum</td>
+								<td align=\"right\">$hkpg</td>
+                                <td align=\"right\">$bpjsk</td>
+								<td align=\"right\">$pph</td>
+                                <td align=\"right\">$jamcelaka</td>
+								<td align=\"right\">$jammati</td>
+								<td align=\"right\">$jumlah_potongan</td>
+								
+							</tr>";
+				}	
+				
+					$cRet .="<tr>
+                                <td align=\"center\" style=\"border:solid 1px white\">&nbsp;</td>
+								<td colspan=\"2\" align=\"right\"><b>Jumlah</b></td>
+								<td align=\"right\"><b></b></td>
+								<td align=\"right\"><b></b></td>
+                                <td align=\"right\"><b></b></td>
+								<td align=\"right\"><b>$jumlah_sp2d</b></td>
+								<td align=\"right\"><b>$jumlah_taperum</b></td>
+								<td align=\"right\"><b>$jumlah_iwp</b></td>
+								<td align=\"right\"><b>$jumlah_iwp8</b></td>
+								<td align=\"right\"><b>$jumlah_hkpg</b></td>
+                                <td align=\"right\"><b>$jumlah_bpjsk</b></td>
+								<td align=\"right\"><b>$jumlah_pph</b></td>
+                                <td align=\"right\"><b>$jumlah_jamcelaka</b></td>
+								<td align=\"right\"><b>$jumlah_jammati</b></td>
+								<td align=\"right\"><b>$jumlah_jumlah_potongan</b></td>
+							</tr>";
+			
+			}
+			
+		//Non Gaji
+		}else{
+		  
+          $insp2dd = "'3488'";
+          $outsp2dd = "'1288'";
+          
+			//Rekap per SKPD
+			if($cetk=='0'){ 
+			 $cRet .="<table style=\"border-collapse:collapse;\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\">
+				<tr>
+					<td align=\"center\" colspan=\"16\" style=\"font-size:14px;border: solid 1px white;\"><b>$prov<br>$judul</b></td>
+				</tr>
+				<tr>
+					<td align=\"center\" colspan=\"16\" style=\"font-size:14px;border: solid 1px white;\"><b>DARI TANGGAL : $tanggal S/D $tanggal2</b></td>
+				</tr>
+				<tr>
+					<td align=\"left\" colspan=\"12\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 1px black;\">&nbsp;</td>
+					<td align=\"left\" colspan=\"4\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 1px black;\"></td>
+				</tr>
+				</table>
+				<table style=\"border-collapse:collapse; border-color: black;font-size:12px\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\" >
+				<thead> 
+				<tr>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"3%\" style=\"font-weight:bold\">NO</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">NAMA INSTANSI</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">NILAI SP2D</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"9%\" style=\"font-weight:bold\">PPN</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"8%\" style=\"font-weight:bold\">PPH 21</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"8%\" style=\"font-weight:bold\">PPH 22</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"8%\" style=\"font-weight:bold\">PPH 23</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"9%\" style=\"font-weight:bold\">Pasal 4 ayat 2</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"8%\" style=\"font-weight:bold\">Iuran Wajib PPNPN</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"7%\" style=\"font-weight:bold\">Pot Lain-lain</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">JUMLAH POTONGAN</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">NILAI BERSIH</td>
+				</tr>
+				<tr>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">1</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">2</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">3</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">4</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">5</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">6</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">7</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">8</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">9</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">10</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">11</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">12</td>
+				</tr>
+				</thead>"; 
+				
+				$sql = "SELECT
+	z.kd_skpd,
+	z.nm_skpd,
+	ISNULL(sum(z.nilai), 0) AS nilai,
+	ISNULL(sum(z.ppn), 0) ppn,
+	ISNULL(sum(z.pph21), 0) pph21,
+	ISNULL(sum(z.pph22), 0) pph22,
+	ISNULL(sum(z.pph23), 0) pph23,
+	ISNULL(sum(z.psl4_a2), 0) psl4_a2,
+	ISNULL(sum(z.iwppnpn), 0) iwppnpn,
+	ISNULL(sum(z.pot_lain), 0) pot_lain,
+	ISNULL(sum(z.ppn + z.pph21 + z.pph22 + z.pph23 + z.psl4_a2 + z.iwppnpn + z.pot_lain),0) AS jumlah_potongan
+FROM
+	(
+SELECT
+	a.kd_skpd,
+	a.nm_skpd,
+	a.no_kas_bud,
+	a.tgl_kas_bud,
+	a.no_sp2d,
+	a.tgl_sp2d,
+	ISNULL(a.nilai, 0) AS nilai,
+	ISNULL(ppn, 0) ppn,
+	ISNULL(pph21, 0) pph21,
+	ISNULL(pph22, 0) pph22,
+	ISNULL(pph23, 0) pph23,
+	ISNULL(psl4_a2, 0) psl4_a2,
+	ISNULL(iwppnpn, 0) iwppnpn,
+	ISNULL(pot_lain, 0) pot_lain,
+	ppn + pph21 + pph22 + pph23 + psl4_a2 + iwppnpn + pot_lain AS jumlah_potongan
+FROM
+	(
+		SELECT
+			a.kd_skpd,
+			a.nm_skpd,
+			a.no_kas_bud,
+			a.tgl_kas_bud,
+			a.no_sp2d,
+			a.tgl_sp2d,
+			ISNULL(a.nilai, 0) AS nilai,
+			ISNULL(ppn, 0) ppn,
+			ISNULL(pph21, 0) pph21,
+			ISNULL(pph22, 0) pph22,
+			ISNULL(pph23, 0) pph23,
+			ISNULL(psl4_a2, 0) psl4_a2,
+			ISNULL(iwppnpn, 0) iwppnpn,
+			ISNULL(pot_lain, 0) pot_lain,
+			ppn + pph21 + pph22 + pph23 + psl4_a2 + iwppnpn + pot_lain AS jumlah_potongan
+		FROM
+			(
+				SELECT
+					a.kd_skpd,
+					a.nm_skpd,
+					a.no_kas_bud,
+					a.tgl_kas_bud,
+					a.no_sp2d,
+					a.tgl_sp2d,
+					a.nilai AS nilai
+				FROM
+					trhsp2d a
+				INNER JOIN trdspp d ON a.no_spp = d.no_spp
+				AND a.kd_skpd = d.kd_skpd
+				INNER JOIN trspmpot e ON e.no_spm = a.no_spm
+				AND e.kd_skpd = a.kd_skpd
+				WHERE
+					(
+						(
+							a.jns_spp = '4'
+							AND a.jenis_beban IN ('2', '9')
+						)
+						OR a.jns_spp IN ('6', '5', '3')
+					)
+				AND (
+					a.tgl_kas_bud >= '$tgl'
+					AND a.tgl_kas_bud <= '$tgl2'
+				)
+				AND a.status_bud = '1'
+				GROUP BY
+					a.kd_skpd,
+					a.nm_skpd,
+					a.no_kas_bud,
+					a.tgl_kas_bud,
+					a.no_sp2d,
+					a.tgl_sp2d,
+					a.nilai
+			) a
+		LEFT JOIN (
+			SELECT
+				a.kd_skpd,
+				a.nm_skpd,
+				a.no_sp2d,
+				SUM (
+					CASE
+					WHEN kd_rek6 = '2130301' THEN
+						c.nilai
+					ELSE
+						0
+					END
+				) AS ppn,
+				SUM (
+					CASE
+					WHEN kd_rek6 = '2130101' THEN
+						c.nilai
+					ELSE
+						0
+					END
+				) AS pph21,
+				SUM (
+					CASE
+					WHEN kd_rek6 = '2130201' THEN
+						c.nilai
+					ELSE
+						0
+					END
+				) AS pph22,
+				SUM (
+					CASE
+					WHEN kd_rek6 = '2130401' THEN
+						c.nilai
+					ELSE
+						0
+					END
+				) AS pph23,
+				SUM (
+					CASE
+					WHEN kd_rek6 = '2130501' THEN
+						c.nilai
+					ELSE
+						0
+					END
+				) AS psl4_a2,
+				SUM (
+					CASE
+					WHEN kd_rek6 = '2110901' THEN
+						c.nilai
+					ELSE
+						0
+					END
+				) AS iwppnpn,
+				SUM (
+					CASE
+					WHEN kd_rek6 NOT IN (
+						'2130301',
+						'2130101',
+						'2130201',
+						'2130401',
+						'2130501',
+						'2110901'
+					) THEN
+						c.nilai
+					ELSE
+						0
+					END
+				) AS pot_lain
+			FROM
+				trhsp2d a
+			INNER JOIN trspmpot c ON a.no_spm = c.no_spm
+			AND a.kd_skpd = c.kd_skpd
+			WHERE
+				(
+					(
+						a.jns_spp = '4'
+						AND a.jenis_beban IN ('2', '9')
+					)
+					OR a.jns_spp IN ('6', '5', '3')
+				)
+			AND (
+				a.tgl_kas_bud >= '$tgl'
+				AND a.tgl_kas_bud <= '$tgl2'
+			)
+			AND a.status_bud = '1'
+			GROUP BY
+				a.kd_skpd,
+				a.nm_skpd,
+				a.no_sp2d
+		) b ON a.kd_skpd = b.kd_skpd
+		AND a.no_sp2d = b.no_sp2d
+		UNION
+			SELECT
+				a.kd_skpd,
+				a.nm_skpd,
+				a.no_kas_bud,
+				a.tgl_kas_bud,
+				a.no_sp2d,
+				a.tgl_sp2d,
+				ISNULL(a.nilai, 0) AS nilai,
+				ISNULL(0, 0) ppn,
+				ISNULL(0, 0) pph21,
+				ISNULL(0, 0) pph22,
+				ISNULL(0, 0) pph23,
+				ISNULL(0, 0) psl4_a2,
+				ISNULL(0, 0) iwppnpn,
+				ISNULL(0, 0) pot_lain,
+				ISNULL(0, 0) AS jumlah_potongan
+			FROM
+				(
+					SELECT
+						a.kd_skpd,
+						a.nm_skpd,
+						a.no_kas_bud,
+						a.tgl_kas_bud,
+						a.no_sp2d,
+						a.tgl_sp2d,
+						a.nilai AS nilai
+					FROM
+						trhsp2d a
+					INNER JOIN trdspp d ON a.no_spp = d.no_spp
+					AND a.kd_skpd = d.kd_skpd
+					WHERE
+						d.kd_rek6 IN (
+							'5110122',
+							'5110123',
+							'5110109',
+							'5220401',
+							'5220404'
+						)
+					AND (
+						a.tgl_kas_bud >= '$tgl'
+						AND a.tgl_kas_bud <= '$tgl2'
+					)
+					AND a.status_bud = '1'
+					GROUP BY
+						a.kd_skpd,
+						a.nm_skpd,
+						a.no_kas_bud,
+						a.tgl_kas_bud,
+						a.no_sp2d,
+						a.tgl_sp2d,
+						a.nilai
+				) a
+			UNION
+				SELECT
+					a.kd_skpd,
+					a.nm_skpd,
+					a.no_kas_bud,
+					a.tgl_kas_bud,
+					a.no_sp2d,
+					a.tgl_sp2d,
+					ISNULL(a.nilai, 0) AS nilai,
+					ISNULL(ppn, 0) ppn,
+					ISNULL(pph21, 0) pph21,
+					ISNULL(pph22, 0) pph22,
+					ISNULL(pph23, 0) pph23,
+					ISNULL(psl4_a2, 0) psl4_a2,
+					ISNULL(iwppnpn, 0) iwppnpn,
+					ISNULL(pot_lain, 0) pot_lain,
+					ppn + pph21 + pph22 + pph23 + psl4_a2 + iwppnpn + pot_lain AS jumlah_potongan
+				FROM
+					(
+						SELECT
+							a.kd_skpd,
+							a.nm_skpd,
+							a.no_kas_bud,
+							a.tgl_kas_bud,
+							a.no_sp2d,
+							a.tgl_sp2d,
+							a.nilai AS nilai
+						FROM
+							trhsp2d a
+						INNER JOIN trdspp d ON a.no_spp = d.no_spp
+						AND a.kd_skpd = d.kd_skpd
+						INNER JOIN trspmpot e ON e.no_spm = a.no_spm
+						AND e.kd_skpd = a.kd_skpd
+						WHERE
+							(
+								a.jns_spp = '4'
+								AND a.jenis_beban = '1'
+							)
+						AND d.kd_rek6 IN ('5110208', '5110205')
+						AND (
+							a.tgl_kas_bud >= '$tgl'
+							AND a.tgl_kas_bud <= '$tgl2'
+						)
+						AND a.status_bud = '1'						
+						GROUP BY
+							a.kd_skpd,
+							a.nm_skpd,
+							a.no_kas_bud,
+							a.tgl_kas_bud,
+							a.no_sp2d,
+							a.tgl_sp2d,
+							a.nilai
+					) a
+				LEFT JOIN (
+					SELECT
+						a.kd_skpd,
+						a.nm_skpd,
+						a.no_sp2d,
+						SUM (
+							CASE
+							WHEN c.kd_rek6 = '2130301' THEN
+								c.nilai
+							ELSE
+								0
+							END
+						) AS ppn,
+						SUM (
+							CASE
+							WHEN c.kd_rek6 = '2130101' THEN
+								c.nilai
+							ELSE
+								0
+							END
+						) AS pph21,
+						SUM (
+							CASE
+							WHEN c.kd_rek6 = '2130201' THEN
+								c.nilai
+							ELSE
+								0
+							END
+						) AS pph22,
+						SUM (
+							CASE
+							WHEN c.kd_rek6 = '2130401' THEN
+								c.nilai
+							ELSE
+								0
+							END
+						) AS pph23,
+						SUM (
+							CASE
+							WHEN c.kd_rek6 = '2130501' THEN
+								c.nilai
+							ELSE
+								0
+							END
+						) AS psl4_a2,
+						SUM (
+							CASE
+							WHEN c.kd_rek6 = '2110901' THEN
+								c.nilai
+							ELSE
+								0
+							END
+						) AS iwppnpn,
+						SUM (
+							CASE
+							WHEN c.kd_rek6 NOT IN (
+								'2130301',
+								'2130101',
+								'2130201',
+								'2130401',
+								'2130501',
+								'2110901'
+							) THEN
+								c.nilai
+							ELSE
+								0
+							END
+						) AS pot_lain
+					FROM
+						trhsp2d a
+					INNER JOIN trspmpot c ON a.no_spm = c.no_spm
+					AND a.kd_skpd = c.kd_skpd
+					INNER JOIN trdspp d ON a.no_spp = d.no_spp
+					AND a.kd_skpd = d.kd_skpd
+					WHERE
+						(
+							a.jns_spp = '4'
+							AND a.jenis_beban = '1'
+						)
+					AND d.kd_rek6 IN ('5110208', '5110205')
+					AND (
+						a.tgl_kas_bud >= '$tgl'
+						AND a.tgl_kas_bud <= '$tgl2'
+					)
+					AND a.status_bud = '1'
+					GROUP BY
+						a.kd_skpd,
+						a.nm_skpd,
+						a.no_sp2d
+				) b ON a.kd_skpd = b.kd_skpd
+				AND a.no_sp2d = b.no_sp2d
+	) a
+)z
+GROUP BY z.kd_skpd, z.nm_skpd
+ORDER BY z.kd_skpd";
+			
+				$hasil = $this->db->query($sql);
+				
+				$nomor                  ='0';
+				$jum_nilai              =0;
+				$jum_ppn                =0;
+				$jum_pph21              =0;
+				$jum_pph22              =0;
+				$jum_pph23              =0;
+				$jum_psl4_a2            =0;
+				$jum_iwppnpn            =0;
+				$jum_pot_lain           =0;
+				$jum_jumlah_potongan    =0;
+				$jum_nilai_bersih       =0;
+				$jumlah_sp2d            =0;
+				$jumlah_ppn             =0;
+				$jumlah_pph21           =0;
+				$jumlah_pph22           =0;
+				$jumlah_pph23           =0;
+				$jumlah_psl4_a2         =0;
+				$jumlah_iwppnpn         =0;
+				$jumlah_pot_lain        =0;
+				$jumlah_jumlah_potongan =0;
+				$jumlah_nilai_bersih    =0;
+				
+				
+				foreach ($hasil->result() as $row){
+					$kd_skpd         = $row->kd_skpd;
+					$nm_skpd         = $row->nm_skpd;
+					$nilai           = $row->nilai;
+					$ppn             = $row->ppn;
+					$pph21           = $row->pph21;
+					$pph22           = $row->pph22;
+					$pph23           = $row->pph23;
+					$psl4_a2         = $row->psl4_a2;
+					$iwppnpn         = $row->iwppnpn;
+					$pot_lain        = $row->pot_lain;
+					$jumlah_potongan = $row->jumlah_potongan;
+					$nilai_bersih    = $nilai-$jumlah_potongan;
+					
+					//Total
+					$jum_nilai=$jum_nilai+$nilai;
+					$jumlah_sp2d=number_format($jum_nilai,"2",",",".");
+					
+					$jum_ppn=$jum_ppn+$ppn;
+					$jumlah_ppn=number_format($jum_ppn,"2",",",".");
+					
+					$jum_pph21=$jum_pph21+$pph21;
+					$jumlah_pph21=number_format($jum_pph21,"2",",",".");
+					
+					$jum_pph22=$jum_pph22+$pph22;
+					$jumlah_pph22=number_format($jum_pph22,"2",",",".");
+					
+					$jum_pph23=$jum_pph23+$pph23;
+					$jumlah_pph23=number_format($jum_pph23,"2",",",".");
+					
+					$jum_psl4_a2=$jum_psl4_a2+$psl4_a2;
+					$jumlah_psl4_a2=number_format($jum_psl4_a2,"2",",",".");
+					
+					$jum_iwppnpn=$jum_iwppnpn+$iwppnpn;
+					$jumlah_iwppnpn=number_format($jum_iwppnpn,"2",",",".");
+					
+					$jum_pot_lain=$jum_pot_lain+$pot_lain;
+					$jumlah_pot_lain=number_format($jum_pot_lain,"2",",",".");
+					
+					$jum_jumlah_potongan=$jum_jumlah_potongan+$jumlah_potongan;
+					$jumlah_jumlah_potongan=number_format($jum_jumlah_potongan,"2",",",".");
+					
+					$jum_nilai_bersih=$jum_nilai_bersih+$nilai_bersih;
+					$jumlah_nilai_bersih=number_format($jum_nilai_bersih,"2",",",".");
+					
+					$nomor=$nomor+1;
+					
+					$nilai=number_format($nilai,"2",",",".");
+					$ppn=number_format($ppn,"2",",",".");
+					$pph21=number_format($pph21,"2",",",".");
+					$pph22=number_format($pph22,"2",",",".");
+					$pph23=number_format($pph23,"2",",",".");
+					$psl4_a2=number_format($psl4_a2,"2",",",".");
+					$iwppnpn=number_format($iwppnpn,"2",",",".");
+					$pot_lain=number_format($pot_lain,"2",",",".");
+					$jumlah_potongan=number_format($jumlah_potongan,"2",",",".");
+					$nilai_bersih=number_format($nilai_bersih,"2",",",".");
+					
+					
+					
+					
+					$cRet .="<tr>
+								<td align=\"center\">$nomor</td>
+								<td align=\"left\">$kd_skpd-$nm_skpd</td>
+								<td align=\"right\">$nilai</td>
+								<td align=\"right\">$ppn</td>
+								<td align=\"right\">$pph21</td>
+								<td align=\"right\">$pph22</td>
+								<td align=\"right\">$pph23</td>
+								<td align=\"right\">$psl4_a2</td>
+								<td align=\"right\">$iwppnpn</td>
+								<td align=\"right\">$pot_lain</td>
+								<td align=\"right\">$jumlah_potongan</td>
+								<td align=\"right\">$nilai_bersih</td>
+							</tr>";
+				}	
+			
+				$cRet .="<tr>
+							<td colspan=\"2\" align=\"right\"><b>Jumlah</b></td>
+							<td align=\"center\"><b>$jumlah_sp2d</b></td>
+							<td align=\"center\"><b>$jumlah_ppn</b></td>
+							<td align=\"right\"><b>$jumlah_pph21</b></td>
+							<td align=\"center\"><b>$jumlah_pph22</b></td>
+							<td align=\"center\"><b>$jumlah_pph23</b></td>
+							<td align=\"right\"><b>$jumlah_psl4_a2</b></td>
+							<td align=\"right\"><b>$jumlah_iwppnpn</b></td>
+							<td align=\"center\"><b>$jumlah_pot_lain</b></td>
+							<td align=\"center\"><b>$jumlah_jumlah_potongan</b></td>
+							<td align=\"right\"><b>$jumlah_nilai_bersih</b></td>
+						</tr>";
+			}else if($cetk=='1'){
+			  //Rekap Per SKPD
+			  $cRet .="<table style=\"border-collapse:collapse;\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\">
+				<tr>
+					<td align=\"center\" colspan=\"16\" style=\"font-size:14px;border: solid 1px white;\"><b>$prov<br>$judul</b></td>
+				</tr>
+				<tr>
+					<td align=\"center\" colspan=\"16\" style=\"font-size:14px;border: solid 1px white;\"><b>DARI TANGGAL : $tanggal S/D $tanggal2</b></td>
+				</tr>
+				<tr>
+					<td align=\"left\" colspan=\"12\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 1px black;\">&nbsp;</td>
+					<td align=\"left\" colspan=\"4\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 1px black;\"></td>
+				</tr>
+				</table>
+				<table style=\"border-collapse:collapse; border-color: black;font-size:11px\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\" >
+				<thead> 
+				<tr>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"3%\" style=\"font-weight:bold\">NO</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">NAMA INSTANSI</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"5%\" style=\"font-weight:bold\">NO/TGL. KAS</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"5%\" style=\"font-weight:bold\">NO/TGL. SP2D</td>
+                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"4%\" style=\"font-weight:bold\">Rekanan</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">NILAI SP2D</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"6%\" style=\"font-weight:bold\">PPN</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"6%\" style=\"font-weight:bold\">PPH 21</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"6%\" style=\"font-weight:bold\">PPH 22</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"6%\" style=\"font-weight:bold\">PPH 23</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"6%\" style=\"font-weight:bold\">Pasal 4 ayat 2</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"6%\" style=\"font-weight:bold\">Iuran Wajib PPNPN</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"6%\" style=\"font-weight:bold\">Pot Lain-lain</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">JUMLAH POTONGAN<br/>(Kol.6 s.d 12)</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">NILAI BERSIH<br/>(Kol.5 - 13)</td>
+				</tr>
+				<tr>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">1</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">2</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">3</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">4</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">5</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">6</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">7</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">8</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">9</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">10</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">11</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">12</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">13</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">14</td>                    
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">15</td>
+				</tr>
+				</thead>"; 
+				
+				//isi
+				$sql = "SELECT a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, a.nmrekan,
+				  ISNULL(a.nilai,0) as nilai,
+					ISNULL(ppn,0) ppn,
+					ISNULL(pph21,0) pph21,
+					ISNULL(pph22,0) pph22,
+					ISNULL(pph23,0) pph23,
+					ISNULL(psl4_a2,0) psl4_a2,
+					ISNULL(iwppnpn,0) iwppnpn,
+					ISNULL(pot_lain,0) pot_lain,
+					ppn+pph21+pph22+pph23+psl4_a2+iwppnpn+pot_lain as jumlah_potongan
+					FROM(					
+					SELECT a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, a.nmrekan,
+				  ISNULL(a.nilai,0) as nilai,
+					ISNULL(ppn,0) ppn,
+					ISNULL(pph21,0) pph21,
+					ISNULL(pph22,0) pph22,
+					ISNULL(pph23,0) pph23,
+					ISNULL(psl4_a2,0) psl4_a2,
+					ISNULL(iwppnpn,0) iwppnpn,
+					ISNULL(pot_lain,0) pot_lain,
+					ppn+pph21+pph22+pph23+psl4_a2+iwppnpn+pot_lain as jumlah_potongan
+					FROM
+					(SELECT a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, a.nmrekan, a.nilai as nilai FROM trhsp2d a
+					INNER JOIN trdspp d ON a.no_spp = d.no_spp AND a.kd_skpd = d.kd_skpd
+                    INNER JOIN trspmpot e ON e.no_spm = a.no_spm AND e.kd_skpd = a.kd_skpd          
+					WHERE ((a.jns_spp='4' and a.jenis_beban in ('2','9')) or a.jns_spp in ('6','5','3')) AND (a.tgl_kas_bud >= '$tgl' AND  a.tgl_kas_bud <= '$tgl2') AND a.status_bud='1' AND left(a.kd_skpd,7)=left('$skpd',7)
+					GROUP BY a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, a.nmrekan, a.nilai
+					)a LEFT JOIN
+					(SELECT a.kd_skpd, a.nm_skpd, a.no_sp2d
+					,SUM(CASE WHEN kd_rek6 ='2130301' THEN c.nilai ELSE 0 END) AS ppn 
+					,SUM(CASE WHEN kd_rek6 ='2130101' THEN c.nilai ELSE 0 END) AS pph21 
+					,SUM(CASE WHEN kd_rek6 ='2130201' THEN c.nilai ELSE 0 END) AS pph22 
+					,SUM(CASE WHEN kd_rek6 ='2130401' THEN c.nilai ELSE 0 END) AS pph23
+					,SUM(CASE WHEN kd_rek6 ='2130501' THEN c.nilai ELSE 0 END) AS psl4_a2
+					,SUM(CASE WHEN kd_rek6 ='2110901' THEN c.nilai ELSE 0 END) AS iwppnpn
+					,SUM(CASE WHEN kd_rek6 not in ('2130301','2130101','2130201','2130401','2130501','2110901') THEN c.nilai ELSE 0 END) AS pot_lain
+					FROM trhsp2d a
+					INNER JOIN trspmpot c ON a.no_spm = c.no_spm AND a.kd_skpd = c.kd_skpd
+					WHERE ((a.jns_spp='4' and a.jenis_beban in ('2','9')) or a.jns_spp in ('6','5','3')) AND (a.tgl_kas_bud >= '$tgl' AND  a.tgl_kas_bud <= '$tgl2') AND a.status_bud='1' AND left(a.kd_skpd,7)=left('$skpd',7)
+					GROUP BY a.kd_skpd, a.nm_skpd,a.no_sp2d
+					) b ON a.kd_skpd=b.kd_skpd AND a.no_sp2d=b.no_sp2d
+					UNION
+					SELECT a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, a.nmrekan, 
+				  ISNULL(a.nilai,0) as nilai,
+					ISNULL(0,0) ppn,
+					ISNULL(0,0) pph21,
+					ISNULL(0,0) pph22,
+					ISNULL(0,0) pph23,
+					ISNULL(0,0) psl4_a2,
+					ISNULL(0,0) iwppnpn,
+					ISNULL(0,0) pot_lain,
+					ISNULL(0,0) as jumlah_potongan
+					FROM
+					(SELECT a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, a.nmrekan, a.nilai as nilai FROM trhsp2d a
+					INNER JOIN trdspp d ON a.no_spp = d.no_spp AND a.kd_skpd = d.kd_skpd                   
+					WHERE d.kd_rek6 in ('5110122','5110123','5110109','5220401','5220404') AND (a.tgl_kas_bud >= '$tgl' AND  a.tgl_kas_bud <= '$tgl2') AND a.status_bud='1' AND left(a.kd_skpd,7)=left('$skpd',7)
+					GROUP BY a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, a.nmrekan, a.nilai
+					)a
+                    UNION  
+                  
+                    SELECT a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, a.nmrekan,
+				  ISNULL(a.nilai,0) as nilai,
+					ISNULL(ppn,0) ppn,
+					ISNULL(pph21,0) pph21,
+					ISNULL(pph22,0) pph22,
+					ISNULL(pph23,0) pph23,
+					ISNULL(psl4_a2,0) psl4_a2,
+					ISNULL(iwppnpn,0) iwppnpn,
+					ISNULL(pot_lain,0) pot_lain,
+					ppn+pph21+pph22+pph23+psl4_a2+iwppnpn+pot_lain as jumlah_potongan
+					FROM
+					(SELECT a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, a.nmrekan, a.nilai as nilai FROM trhsp2d a
+					INNER JOIN trdspp d ON a.no_spp = d.no_spp AND a.kd_skpd = d.kd_skpd 
+					INNER JOIN trspmpot e ON e.no_spm = a.no_spm AND e.kd_skpd = a.kd_skpd					
+					WHERE (a.jns_spp='4' and a.jenis_beban='1') and d.kd_rek6 in ('5110208','5110205') AND (a.tgl_kas_bud >= '$tgl' AND  a.tgl_kas_bud <= '$tgl2') AND a.status_bud='1' AND left(a.kd_skpd,7)=left('$skpd',7)
+					GROUP BY a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, a.nmrekan, a.nilai
+					)a LEFT JOIN
+					(SELECT a.kd_skpd, a.nm_skpd, a.no_sp2d
+					,SUM(CASE WHEN c.kd_rek6 ='2130301' THEN c.nilai ELSE 0 END) AS ppn 
+					,SUM(CASE WHEN c.kd_rek6 ='2130101' THEN c.nilai ELSE 0 END) AS pph21 
+					,SUM(CASE WHEN c.kd_rek6 ='2130201' THEN c.nilai ELSE 0 END) AS pph22 
+					,SUM(CASE WHEN c.kd_rek6 ='2130401' THEN c.nilai ELSE 0 END) AS pph23
+					,SUM(CASE WHEN c.kd_rek6 ='2130501' THEN c.nilai ELSE 0 END) AS psl4_a2
+					,SUM(CASE WHEN c.kd_rek6 ='2110901' THEN c.nilai ELSE 0 END) AS iwppnpn
+					,SUM(CASE WHEN c.kd_rek6 not in ('2130301','2130101','2130201','2130401','2130501','2110901') THEN c.nilai ELSE 0 END) AS pot_lain
+					FROM trhsp2d a
+					INNER JOIN trspmpot c ON a.no_spm = c.no_spm AND a.kd_skpd = c.kd_skpd
+					INNER JOIN trdspp d ON a.no_spp = d.no_spp AND a.kd_skpd = d.kd_skpd 
+					WHERE (a.jns_spp='4' and a.jenis_beban='1') and d.kd_rek6 in ('5110208','5110205') AND (a.tgl_kas_bud >= '$tgl' AND  a.tgl_kas_bud <= '$tgl2') AND a.status_bud='1' AND left(a.kd_skpd,7)=left('$skpd',7)
+					GROUP BY a.kd_skpd, a.nm_skpd,a.no_sp2d
+					) b ON a.kd_skpd=b.kd_skpd AND a.no_sp2d=b.no_sp2d
+                    )a order by a.tgl_sp2d,a.no_kas_bud,a.no_sp2d                    
+					";
+			
+				$hasil = $this->db->query($sql);
+				
+				$nomor              ='0';
+				$jum_nilai          =0;
+				$jum_ppn            =0;
+				$jum_pph21          =0;
+				$jum_pph22          =0;
+				$jum_pph23          =0;
+				$jum_psl4_a2        =0;
+				$jum_iwppnpn        =0;
+				$jum_pot_lain       =0;
+				$jum_jumlah_potongan=0;
+				$jum_nilai_bersih   =0;
+				$jumlah_sp2d            =0;
+				$jumlah_ppn             =0;
+				$jumlah_pph21           =0;
+				$jumlah_pph22           =0;
+				$jumlah_pph23           =0;
+				$jumlah_psl4_a2         =0;
+				$jumlah_iwppnpn         =0;
+				$jumlah_pot_lain        =0;
+				$jumlah_jumlah_potongan =0;
+				$jumlah_nilai_bersih    =0;
+				
+				foreach ($hasil->result() as $row){
+					$kd_skpd         = $row->kd_skpd;
+					$nm_skpd         = $row->nm_skpd;
+					$no_kas_bud      = $row->no_kas_bud;
+					$tgl_kas_bud     = $row->tgl_kas_bud;
+					$no_sp2d         = $row->no_sp2d;
+                    $nmrekan         = $row->nmrekan;
+					$tgl_sp2d        = $row->tgl_sp2d;
+					$nilai           = $row->nilai;
+					$ppn             = $row->ppn;
+					$pph21           = $row->pph21;
+					$pph22           = $row->pph22;
+					$pph23           = $row->pph23;
+					$psl4_a2         = $row->psl4_a2;
+					$iwppnpn         = $row->iwppnpn;
+					$pot_lain        = $row->pot_lain;
+					$jumlah_potongan = $row->jumlah_potongan;
+					$nilai_bersih    = $nilai-$jumlah_potongan;
+					
+					//Total
+					$jum_nilai=$jum_nilai+$nilai;
+					$jumlah_sp2d=number_format($jum_nilai,"2",",",".");
+					
+					$jum_ppn=$jum_ppn+$ppn;
+					$jumlah_ppn=number_format($jum_ppn,"2",",",".");
+					
+					$jum_pph21=$jum_pph21+$pph21;
+					$jumlah_pph21=number_format($jum_pph21,"2",",",".");
+					
+					$jum_pph22=$jum_pph22+$pph22;
+					$jumlah_pph22=number_format($jum_pph22,"2",",",".");
+					
+					$jum_pph23=$jum_pph23+$pph23;
+					$jumlah_pph23=number_format($jum_pph23,"2",",",".");
+					
+					$jum_psl4_a2=$jum_psl4_a2+$psl4_a2;
+					$jumlah_psl4_a2=number_format($jum_psl4_a2,"2",",",".");
+					
+					$jum_iwppnpn=$jum_iwppnpn+$iwppnpn;
+					$jumlah_iwppnpn=number_format($jum_iwppnpn,"2",",",".");
+					
+					$jum_pot_lain=$jum_pot_lain+$pot_lain;
+					$jumlah_pot_lain=number_format($jum_pot_lain,"2",",",".");
+					
+					$jum_jumlah_potongan=$jum_jumlah_potongan+$jumlah_potongan;
+					$jumlah_jumlah_potongan=number_format($jum_jumlah_potongan,"2",",",".");
+					
+					$jum_nilai_bersih=$jum_nilai_bersih+$nilai_bersih;
+					$jumlah_nilai_bersih=number_format($jum_nilai_bersih,"2",",",".");
+					
+					$nomor=$nomor+1;
+					
+					$nilai=number_format($nilai,"2",",",".");
+					$ppn=number_format($ppn,"2",",",".");
+					$pph21=number_format($pph21,"2",",",".");
+					$pph22=number_format($pph22,"2",",",".");
+					$pph23=number_format($pph23,"2",",",".");
+					$psl4_a2=number_format($psl4_a2,"2",",",".");
+					$iwppnpn=number_format($iwppnpn,"2",",",".");
+					$pot_lain=number_format($pot_lain,"2",",",".");
+					$jumlah_potongan=number_format($jumlah_potongan,"2",",",".");
+					$nilai_bersih=number_format($nilai_bersih,"2",",",".");
+					
+					
+					$cRet .="<tr>
+								<td align=\"center\">$nomor</td>
+								<td align=\"left\">$nm_skpd</td>
+								<td align=\"left\">$no_kas_bud<br/>$tgl_kas_bud</td>
+								<td align=\"left\">$no_sp2d<br/>$tgl_sp2d</td>
+       	                        <td align=\"left\">$nmrekan</td>
+								<td align=\"right\">$nilai</td>
+								<td align=\"right\">$ppn</td>
+								<td align=\"right\">$pph21</td>
+								<td align=\"right\">$pph22</td>
+								<td align=\"right\">$pph23</td>
+								<td align=\"right\">$psl4_a2</td>
+								<td align=\"right\">$iwppnpn</td>
+								<td align=\"right\">$pot_lain</td>
+								<td align=\"right\">$jumlah_potongan</td>
+								<td align=\"right\">$nilai_bersih</td>
+							</tr>";
+				}	
+			
+				$cRet .="<tr>
+							<td colspan=\"2\" align=\"right\"><b>Jumlah</b></td>
+							<td align=\"center\"><b></b></td>
+							<td align=\"center\"><b></b></td>
                             <td align=\"center\"><b></b></td>
+							<td align=\"center\"><b>$jumlah_sp2d</b></td>
+							<td align=\"center\"><b>$jumlah_ppn</b></td>
+							<td align=\"right\"><b>$jumlah_pph21</b></td>
+							<td align=\"center\"><b>$jumlah_pph22</b></td>
+							<td align=\"center\"><b>$jumlah_pph23</b></td>
+							<td align=\"right\"><b>$jumlah_psl4_a2</b></td>
+							<td align=\"right\"><b>$jumlah_iwppnpn</b></td>
+							<td align=\"center\"><b>$jumlah_pot_lain</b></td>
+							<td align=\"center\"><b>$jumlah_jumlah_potongan</b></td>
+							<td align=\"right\"><b>$jumlah_nilai_bersih</b></td>
+						</tr>";
+			}else if($cetk=='2'){
+			  //Rekap Per Unit
+			  $cRet .="<table style=\"border-collapse:collapse;\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\">
+				<tr>
+					<td align=\"center\" colspan=\"16\" style=\"font-size:14px;border: solid 1px white;\"><b>$prov<br>$judul</b></td>
+				</tr>
+				<tr>
+					<td align=\"center\" colspan=\"16\" style=\"font-size:14px;border: solid 1px white;\"><b>DARI TANGGAL : $tanggal S/D $tanggal2</b></td>
+				</tr>
+				<tr>
+					<td align=\"left\" colspan=\"12\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 1px black;\">&nbsp;</td>
+					<td align=\"left\" colspan=\"4\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 1px black;\"></td>
+				</tr>
+				</table>
+				<table style=\"border-collapse:collapse; border-color: black;font-size:11px\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\" >
+				<thead> 
+				<tr>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"3%\" style=\"font-weight:bold\">NO</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">NAMA INSTANSI</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"5%\" style=\"font-weight:bold\">NO/TGL. KAS</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"5%\" style=\"font-weight:bold\">NO/TGL. SP2D</td>
+                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"4%\" style=\"font-weight:bold\">Rekanan</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">NILAI SP2D</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"6%\" style=\"font-weight:bold\">PPN</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"6%\" style=\"font-weight:bold\">PPH 21</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"6%\" style=\"font-weight:bold\">PPH 22</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"6%\" style=\"font-weight:bold\">PPH 23</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"6%\" style=\"font-weight:bold\">Pasal 4 ayat 2</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"6%\" style=\"font-weight:bold\">Iuran Wajib PPNPN</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"6%\" style=\"font-weight:bold\">Pot Lain-lain</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">JUMLAH POTONGAN <br/>(Kol.6 s.d 12)</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">NILAI BERSIH<br/>(Kol.5 - 13)</td>
+				</tr>
+				<tr>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">1</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">2</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">3</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">4</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">5</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">6</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">7</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">8</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">9</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">10</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">11</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">12</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">13</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">14</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">15</td>
+                    
+				</tr>
+				</thead>"; 
+				
+				//isi
+				$sql = "SELECT a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, a.nmrekan, 
+				  ISNULL(a.nilai,0) as nilai,
+					ISNULL(ppn,0) ppn,
+					ISNULL(pph21,0) pph21,
+					ISNULL(pph22,0) pph22,
+					ISNULL(pph23,0) pph23,
+					ISNULL(psl4_a2,0) psl4_a2,
+					ISNULL(iwppnpn,0) iwppnpn,
+					ISNULL(pot_lain,0) pot_lain,
+					ppn+pph21+pph22+pph23+psl4_a2+iwppnpn+pot_lain as jumlah_potongan
+					FROM(					
+					SELECT a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, a.nmrekan,
+				  ISNULL(a.nilai,0) as nilai,
+					ISNULL(ppn,0) ppn,
+					ISNULL(pph21,0) pph21,
+					ISNULL(pph22,0) pph22,
+					ISNULL(pph23,0) pph23,
+					ISNULL(psl4_a2,0) psl4_a2,
+					ISNULL(iwppnpn,0) iwppnpn,
+					ISNULL(pot_lain,0) pot_lain,
+					ppn+pph21+pph22+pph23+psl4_a2+iwppnpn+pot_lain as jumlah_potongan
+					FROM
+					(SELECT a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, a.nmrekan, a.nilai as nilai FROM trhsp2d a
+					INNER JOIN trdspp d ON a.no_spp = d.no_spp AND a.kd_skpd = d.kd_skpd
+                    INNER JOIN trspmpot e ON e.no_spm = a.no_spm AND e.kd_skpd = a.kd_skpd          
+					WHERE ((a.jns_spp='4' and a.jenis_beban in ('2','9')) or a.jns_spp in ('6','5','3')) AND (a.tgl_kas_bud >= '$tgl' AND  a.tgl_kas_bud <= '$tgl2') AND a.status_bud='1' AND a.kd_skpd='$skpd'
+					GROUP BY a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, a.nmrekan, a.nilai
+					)a LEFT JOIN
+					(SELECT a.kd_skpd, a.nm_skpd, a.no_sp2d
+					,SUM(CASE WHEN kd_rek6 ='2130301' THEN c.nilai ELSE 0 END) AS ppn 
+					,SUM(CASE WHEN kd_rek6 ='2130101' THEN c.nilai ELSE 0 END) AS pph21 
+					,SUM(CASE WHEN kd_rek6 ='2130201' THEN c.nilai ELSE 0 END) AS pph22 
+					,SUM(CASE WHEN kd_rek6 ='2130401' THEN c.nilai ELSE 0 END) AS pph23
+					,SUM(CASE WHEN kd_rek6 ='2130501' THEN c.nilai ELSE 0 END) AS psl4_a2
+					,SUM(CASE WHEN kd_rek6 ='2110901' THEN c.nilai ELSE 0 END) AS iwppnpn
+					,SUM(CASE WHEN kd_rek6 not in ('2130301','2130101','2130201','2130401','2130501','2110901') THEN c.nilai ELSE 0 END) AS pot_lain
+					FROM trhsp2d a
+					INNER JOIN trspmpot c ON a.no_spm = c.no_spm AND a.kd_skpd = c.kd_skpd
+					WHERE ((a.jns_spp='4' and a.jenis_beban in ('2','9')) or a.jns_spp in ('6','5','3')) AND (a.tgl_kas_bud >= '$tgl' AND  a.tgl_kas_bud <= '$tgl2') AND a.status_bud='1' AND a.kd_skpd='$skpd'
+					GROUP BY a.kd_skpd, a.nm_skpd,a.no_sp2d
+					) b ON a.kd_skpd=b.kd_skpd AND a.no_sp2d=b.no_sp2d
+					UNION
+					SELECT a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, a.nmrekan,
+				  ISNULL(a.nilai,0) as nilai,
+					ISNULL(0,0) ppn,
+					ISNULL(0,0) pph21,
+					ISNULL(0,0) pph22,
+					ISNULL(0,0) pph23,
+					ISNULL(0,0) psl4_a2,
+					ISNULL(0,0) iwppnpn,
+					ISNULL(0,0) pot_lain,
+					ISNULL(0,0) as jumlah_potongan
+					FROM
+					(SELECT a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, a.nmrekan, a.nilai as nilai FROM trhsp2d a
+					INNER JOIN trdspp d ON a.no_spp = d.no_spp AND a.kd_skpd = d.kd_skpd                   
+					WHERE d.kd_rek6 in ('5110122','5110123','5110109','5220401','5220404') AND (a.tgl_kas_bud >= '$tgl' AND  a.tgl_kas_bud <= '$tgl2') AND a.status_bud='1' AND a.kd_skpd='$skpd'
+					GROUP BY a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, a.nmrekan, a.nilai
+					)a
+                   
+                    UNION                     
+                    SELECT a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, a.nmrekan,
+				  ISNULL(a.nilai,0) as nilai,
+					ISNULL(ppn,0) ppn,
+					ISNULL(pph21,0) pph21,
+					ISNULL(pph22,0) pph22,
+					ISNULL(pph23,0) pph23,
+					ISNULL(psl4_a2,0) psl4_a2,
+					ISNULL(iwppnpn,0) iwppnpn,
+					ISNULL(pot_lain,0) pot_lain,
+					ppn+pph21+pph22+pph23+psl4_a2+iwppnpn+pot_lain as jumlah_potongan
+					FROM
+					(SELECT a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, a.nmrekan, a.nilai as nilai FROM trhsp2d a
+					INNER JOIN trdspp d ON a.no_spp = d.no_spp AND a.kd_skpd = d.kd_skpd 
+					INNER JOIN trspmpot e ON e.no_spm = a.no_spm AND e.kd_skpd = a.kd_skpd					
+					WHERE (a.jns_spp='4' and a.jenis_beban='1') and d.kd_rek6 in ('5110208','5110205') AND (a.tgl_kas_bud >= '$tgl' AND  a.tgl_kas_bud <= '$tgl2') AND a.status_bud='1' AND a.kd_skpd='$skpd'
+					GROUP BY a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, a.nmrekan, a.nilai
+					)a LEFT JOIN
+					(SELECT a.kd_skpd, a.nm_skpd, a.no_sp2d
+					,SUM(CASE WHEN c.kd_rek6 ='2130301' THEN c.nilai ELSE 0 END) AS ppn 
+					,SUM(CASE WHEN c.kd_rek6 ='2130101' THEN c.nilai ELSE 0 END) AS pph21 
+					,SUM(CASE WHEN c.kd_rek6 ='2130201' THEN c.nilai ELSE 0 END) AS pph22 
+					,SUM(CASE WHEN c.kd_rek6 ='2130401' THEN c.nilai ELSE 0 END) AS pph23
+					,SUM(CASE WHEN c.kd_rek6 ='2130501' THEN c.nilai ELSE 0 END) AS psl4_a2
+					,SUM(CASE WHEN c.kd_rek6 ='2110901' THEN c.nilai ELSE 0 END) AS iwppnpn
+					,SUM(CASE WHEN c.kd_rek6 not in ('2130301','2130101','2130201','2130401','2130501','2110901') THEN c.nilai ELSE 0 END) AS pot_lain
+					FROM trhsp2d a
+					INNER JOIN trspmpot c ON a.no_spm = c.no_spm AND a.kd_skpd = c.kd_skpd
+					INNER JOIN trdspp d ON a.no_spp = d.no_spp AND a.kd_skpd = d.kd_skpd 
+					WHERE (a.jns_spp='4' and a.jenis_beban='1') and d.kd_rek6 in ('5110208','5110205') AND (a.tgl_kas_bud >= '$tgl' AND  a.tgl_kas_bud <= '$tgl2') AND a.status_bud='1' AND a.kd_skpd='$skpd'
+					GROUP BY a.kd_skpd, a.nm_skpd,a.no_sp2d
+					) b ON a.kd_skpd=b.kd_skpd AND a.no_sp2d=b.no_sp2d
+                    )a order by a.tgl_sp2d,a.no_kas_bud,a.no_sp2d
+					";
+			
+				$hasil = $this->db->query($sql);
+				
+				$nomor              ='0';
+				$jum_nilai          =0;
+				$jum_ppn            =0;
+				$jum_pph21          =0;
+				$jum_pph22          =0;
+				$jum_pph23          =0;
+				$jum_psl4_a2        =0;
+				$jum_iwppnpn        =0;
+				$jum_pot_lain       =0;
+				$jum_jumlah_potongan=0;
+				$jum_nilai_bersih   =0;
+				$jumlah_sp2d            =0;
+				$jumlah_ppn             =0;
+				$jumlah_pph21           =0;
+				$jumlah_pph22           =0;
+				$jumlah_pph23           =0;
+				$jumlah_psl4_a2         =0;
+				$jumlah_iwppnpn         =0;
+				$jumlah_pot_lain        =0;
+				$jumlah_jumlah_potongan =0;
+				$jumlah_nilai_bersih    =0;
+				
+				foreach ($hasil->result() as $row){
+					$kd_skpd         = $row->kd_skpd;
+					$nm_skpd         = $row->nm_skpd;
+					$no_kas_bud      = $row->no_kas_bud;
+					$tgl_kas_bud     = $row->tgl_kas_bud;
+					$no_sp2d         = $row->no_sp2d;
+                    $nmrekan         = $row->nmrekan;
+					$tgl_sp2d        = $row->tgl_sp2d;
+					$nilai           = $row->nilai;
+					$ppn             = $row->ppn;
+					$pph21           = $row->pph21;
+					$pph22           = $row->pph22;
+					$pph23           = $row->pph23;
+					$psl4_a2         = $row->psl4_a2;
+					$iwppnpn         = $row->iwppnpn;
+					$pot_lain        = $row->pot_lain;
+					$jumlah_potongan = $row->jumlah_potongan;
+					$nilai_bersih    = $nilai-$jumlah_potongan;
+					
+					//Total
+					$jum_nilai=$jum_nilai+$nilai;
+					$jumlah_sp2d=number_format($jum_nilai,"2",",",".");
+					
+					$jum_ppn=$jum_ppn+$ppn;
+					$jumlah_ppn=number_format($jum_ppn,"2",",",".");
+					
+					$jum_pph21=$jum_pph21+$pph21;
+					$jumlah_pph21=number_format($jum_pph21,"2",",",".");
+					
+					$jum_pph22=$jum_pph22+$pph22;
+					$jumlah_pph22=number_format($jum_pph22,"2",",",".");
+					
+					$jum_pph23=$jum_pph23+$pph23;
+					$jumlah_pph23=number_format($jum_pph23,"2",",",".");
+					
+					$jum_psl4_a2=$jum_psl4_a2+$psl4_a2;
+					$jumlah_psl4_a2=number_format($jum_psl4_a2,"2",",",".");
+					
+					$jum_iwppnpn=$jum_iwppnpn+$iwppnpn;
+					$jumlah_iwppnpn=number_format($jum_iwppnpn,"2",",",".");
+					
+					$jum_pot_lain=$jum_pot_lain+$pot_lain;
+					$jumlah_pot_lain=number_format($jum_pot_lain,"2",",",".");
+					
+					$jum_jumlah_potongan=$jum_jumlah_potongan+$jumlah_potongan;
+					$jumlah_jumlah_potongan=number_format($jum_jumlah_potongan,"2",",",".");
+					
+					$jum_nilai_bersih=$jum_nilai_bersih+$nilai_bersih;
+					$jumlah_nilai_bersih=number_format($jum_nilai_bersih,"2",",",".");
+					
+					$nomor=$nomor+1;
+					
+					$nilai=number_format($nilai,"2",",",".");
+					$ppn=number_format($ppn,"2",",",".");
+					$pph21=number_format($pph21,"2",",",".");
+					$pph22=number_format($pph22,"2",",",".");
+					$pph23=number_format($pph23,"2",",",".");
+					$psl4_a2=number_format($psl4_a2,"2",",",".");
+					$iwppnpn=number_format($iwppnpn,"2",",",".");
+					$pot_lain=number_format($pot_lain,"2",",",".");
+					$jumlah_potongan=number_format($jumlah_potongan,"2",",",".");
+					$nilai_bersih=number_format($nilai_bersih,"2",",",".");
+					
+					
+					
+					
+					$cRet .="<tr>
+								<td align=\"center\">$nomor</td>
+								<td align=\"left\">$nm_skpd</td>
+								<td align=\"left\">$no_kas_bud<br/>$tgl_kas_bud</td>
+								<td align=\"left\">$no_sp2d<br/>$tgl_sp2d</td>
+                                <td align=\"left\">$nmrekan</td>
+								<td align=\"right\">$nilai</td>
+								<td align=\"right\">$ppn</td>
+								<td align=\"right\">$pph21</td>
+								<td align=\"right\">$pph22</td>
+								<td align=\"right\">$pph23</td>
+								<td align=\"right\">$psl4_a2</td>
+								<td align=\"right\">$iwppnpn</td>
+								<td align=\"right\">$pot_lain</td>
+								<td align=\"right\">$jumlah_potongan</td>
+								<td align=\"right\">$nilai_bersih</td>
+							</tr>";
+				}	
+			
+				$cRet .="<tr>
+							<td colspan=\"2\" align=\"right\"><b>Jumlah</b></td>
+							<td align=\"center\"><b></b></td>
+							<td align=\"center\"><b></b></td>
                             <td align=\"center\"><b></b></td>
-                            <td align=\"center\"><b>$jumlah_sp2d</b></td>
-                            <td align=\"center\"><b>$jumlah_ppn</b></td>
-                            <td align=\"right\"><b>$jumlah_pph21</b></td>
-                            <td align=\"center\"><b>$jumlah_pph22</b></td>
-                            <td align=\"center\"><b>$jumlah_pph23</b></td>
-                            <td align=\"right\"><b>$jumlah_psl4_a2</b></td>
-                            <td align=\"right\"><b>$jumlah_iwppnpn</b></td>
-                            <td align=\"center\"><b>$jumlah_pot_lain</b></td>
-                            <td align=\"center\"><b>$jumlah_jumlah_potongan</b></td>
-                            <td align=\"right\"><b>$jumlah_nilai_bersih</b></td>
-                        </tr>";
-            }else{
-              //Rekap Keseluruhan
-              $cRet .="<table style=\"border-collapse:collapse;\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\">
-                <tr>
-                    <td align=\"center\" colspan=\"16\" style=\"font-size:14px;border: solid 1px white;\"><b>$prov<br>$judul</b></td>
-                </tr>
-                <tr>
-                    <td align=\"center\" colspan=\"16\" style=\"font-size:14px;border: solid 1px white;\"><b>DARI TANGGAL : $tanggal S/D $tanggal2</b></td>
-                </tr>
-                <tr>
-                    <td align=\"left\" colspan=\"12\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 1px black;\">&nbsp;</td>
-                    <td align=\"left\" colspan=\"4\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 1px black;\"></td>
-                </tr>
-                </table>
-                <table style=\"border-collapse:collapse; border-color: black;font-size:11px\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\" >
-                <thead> 
-                <tr>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"3%\" style=\"font-weight:bold\">NO</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">NAMA INSTANSI</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"5%\" style=\"font-weight:bold\">NO. KAS/TGL. KAS</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"5%\" style=\"font-weight:bold\">NO. SP2D/TGL. SP2D</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">NILAI SP2D</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"8%\" style=\"font-weight:bold\">PPN</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"5%\" style=\"font-weight:bold\">PPH 21</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"5%\" style=\"font-weight:bold\">PPH 22</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"5%\" style=\"font-weight:bold\">PPH 23</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"8%\" style=\"font-weight:bold\">Pasal 4 ayat 2</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"5%\" style=\"font-weight:bold\">Iuran Wajib PPNPN</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"7%\" style=\"font-weight:bold\">Pot Lian-lain</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">JUMLAH POTONGAN &nbsp; (Kol.6 s.d 12)</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">NILAI BERSIH &nbsp; (Kol.5 - 13)</td>
-                </tr>
-                <tr>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">1</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">2</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">3</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">4</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">5</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">6</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">7</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">8</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">9</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">10</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">11</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">12</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">13</td>
-                    <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">14</td>
-                </tr>
-                </thead>"; 
-                
-                //isi
-                $sql = "SELECT a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, 
-                    ISNULL(a.nilai,0) as nilai,
-                    ISNULL(ppn,0) ppn,
-                    ISNULL(pph21,0) pph21,
-                    ISNULL(pph22,0) pph22,
-                    ISNULL(pph23,0) pph23,
-                    ISNULL(psl4_a2,0) psl4_a2,
-                    ISNULL(iwppnpn,0) iwppnpn,
-                    ISNULL(pot_lain,0) pot_lain,
-                    ppn+pph21+pph22+pph23+psl4_a2+iwppnpn+pot_lain as jumlah_potongan
-                    FROM
-                    (SELECT a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, SUM(d.nilai) as nilai FROM trhsp2d a
-                    INNER JOIN trhspm b ON a.no_spm = b.no_spm AND a.kd_skpd = b.kd_skpd
-                    INNER JOIN trhspp c ON b.no_spp = c.no_spp AND b.kd_skpd = c.kd_skpd
-                    INNER JOIN trdspp d ON c.no_spp = d.no_spp AND c.kd_skpd = d.kd_skpd
-                    WHERE (a.jns_spp!='4' AND a.jenis_beban!='1') AND (a.tgl_kas_bud >= '$tgl' AND  a.tgl_kas_bud <= '$tgl2') AND a.status_bud='1'
-                    GROUP BY a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d
-                    )a LEFT JOIN
-                    (SELECT a.kd_skpd, a.nm_skpd, a.no_sp2d
-                    ,SUM(CASE WHEN kd_rek5 ='2130301' THEN c.nilai ELSE 0 END) AS ppn 
-                    ,SUM(CASE WHEN kd_rek5 ='2130101' THEN c.nilai ELSE 0 END) AS pph21 
-                    ,SUM(CASE WHEN kd_rek5 ='2130201' THEN c.nilai ELSE 0 END) AS pph22 
-                    ,SUM(CASE WHEN kd_rek5 ='2130401' THEN c.nilai ELSE 0 END) AS pph23
-                    ,SUM(CASE WHEN kd_rek5 ='2130501' THEN c.nilai ELSE 0 END) AS psl4_a2
-                    ,SUM(CASE WHEN kd_rek5 ='2110901' THEN c.nilai ELSE 0 END) AS iwppnpn
-                    ,SUM(CASE WHEN kd_rek5 not in ('2130301','2130101','2130201','2130401','2130501','2110901') THEN c.nilai ELSE 0 END) AS pot_lain
-                    FROM trhsp2d a
-                    INNER JOIN trhspm b ON a.no_spm = b.no_spm AND a.kd_skpd = b.kd_skpd
-                    INNER JOIN trspmpot c ON b.no_spm = c.no_spm AND b.kd_skpd = c.kd_skpd
-                    WHERE (a.jns_spp!='4' AND a.jenis_beban!='1') AND (a.tgl_kas_bud >= '$tgl' AND  a.tgl_kas_bud <= '$tgl2') AND a.status_bud='1'
-                    GROUP BY a.kd_skpd, a.nm_skpd,a.no_sp2d
-                    ) b ON a.kd_skpd=b.kd_skpd AND a.no_sp2d=b.no_sp2d
-                    ORDER BY cast(no_kas_bud as int)";
-            
-                $hasil = $this->db->query($sql);
-                
-                $nomor              ='0';
-                $jum_nilai          =0;
-                $jum_ppn            =0;
-                $jum_pph21          =0;
-                $jum_pph22          =0;
-                $jum_pph23          =0;
-                $jum_psl4_a2        =0;
-                $jum_iwppnpn        =0;
-                $jum_pot_lain       =0;
-                $jum_jumlah_potongan=0;
-                $jum_nilai_bersih   =0;
-                $jumlah_sp2d            =0;
-                $jumlah_ppn             =0;
-                $jumlah_pph21           =0;
-                $jumlah_pph22           =0;
-                $jumlah_pph23           =0;
-                $jumlah_psl4_a2         =0;
-                $jumlah_iwppnpn         =0;
-                $jumlah_pot_lain        =0;
-                $jumlah_jumlah_potongan =0;
-                $jumlah_nilai_bersih    =0;
-                
-                foreach ($hasil->result() as $row){
-                    $kd_skpd         = $row->kd_skpd;
-                    $nm_skpd         = $row->nm_skpd;
-                    $no_kas_bud      = $row->no_kas_bud;
-                    $tgl_kas_bud     = $row->tgl_kas_bud;
-                    $no_sp2d         = $row->no_sp2d;
-                    $tgl_sp2d        = $row->tgl_sp2d;
-                    $nilai           = $row->nilai;
-                    $ppn             = $row->ppn;
-                    $pph21           = $row->pph21;
-                    $pph22           = $row->pph22;
-                    $pph23           = $row->pph23;
-                    $psl4_a2         = $row->psl4_a2;
-                    $iwppnpn         = $row->iwppnpn;
-                    $pot_lain        = $row->pot_lain;
-                    $jumlah_potongan = $row->jumlah_potongan;
-                    $nilai_bersih    = $nilai-$jumlah_potongan;
+							<td align=\"center\"><b>$jumlah_sp2d</b></td>
+							<td align=\"center\"><b>$jumlah_ppn</b></td>
+							<td align=\"right\"><b>$jumlah_pph21</b></td>
+							<td align=\"center\"><b>$jumlah_pph22</b></td>
+							<td align=\"center\"><b>$jumlah_pph23</b></td>
+							<td align=\"right\"><b>$jumlah_psl4_a2</b></td>
+							<td align=\"right\"><b>$jumlah_iwppnpn</b></td>
+							<td align=\"center\"><b>$jumlah_pot_lain</b></td>
+							<td align=\"center\"><b>$jumlah_jumlah_potongan</b></td>
+							<td align=\"right\"><b>$jumlah_nilai_bersih</b></td>
+						</tr>";
+			}else{
+			  //Rekap Keseluruhan
+			  $cRet .="<table style=\"border-collapse:collapse;\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\">
+				<tr>
+					<td align=\"center\" colspan=\"16\" style=\"font-size:14px;border: solid 1px white;\"><b>$prov<br>$judul</b></td>
+				</tr>
+				<tr>
+					<td align=\"center\" colspan=\"16\" style=\"font-size:14px;border: solid 1px white;\"><b>DARI TANGGAL : $tanggal S/D $tanggal2</b></td>
+				</tr>
+				<tr>
+					<td align=\"left\" colspan=\"12\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 1px black;\">&nbsp;</td>
+					<td align=\"left\" colspan=\"4\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 1px black;\"></td>
+				</tr>
+				</table>
+				<table style=\"border-collapse:collapse; border-color: black;font-size:11px\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\" >
+				<thead> 
+				<tr>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"3%\" style=\"font-weight:bold\">NO</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">NAMA INSTANSI</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"5%\" style=\"font-weight:bold\">NO./TGL. KAS</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"5%\" style=\"font-weight:bold\">NO./TGL. SP2D</td>
+                    <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"6%\" style=\"font-weight:bold\">Rekanan</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">NILAI SP2D</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"6%\" style=\"font-weight:bold\">PPN</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"6%\" style=\"font-weight:bold\">PPH 21</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"6%\" style=\"font-weight:bold\">PPH 22</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"6%\" style=\"font-weight:bold\">PPH 23</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"6%\" style=\"font-weight:bold\">Pasal 4 ayat 2</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"6%\" style=\"font-weight:bold\">Iuran Wajib PPNPN</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"6%\" style=\"font-weight:bold\">Pot Lain-lain</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">JUMLAH POTONGAN &nbsp; (Kol.6 s.d 12)</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">NILAI BERSIH &nbsp; (Kol.5 - 13)</td>
+				</tr>
+				<tr>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">1</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">2</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">3</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">4</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">5</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">6</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">7</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">8</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">9</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">10</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">11</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">12</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">13</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">14</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">15</td>
+				</tr>
+				</thead>"; 
+				
+				//isi
+				$sql = "SELECT a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, a.nmrekan,
+				  ISNULL(a.nilai,0) as nilai,
+					ISNULL(ppn,0) ppn,
+					ISNULL(pph21,0) pph21,
+					ISNULL(pph22,0) pph22,
+					ISNULL(pph23,0) pph23,
+					ISNULL(psl4_a2,0) psl4_a2,
+					ISNULL(iwppnpn,0) iwppnpn,
+					ISNULL(pot_lain,0) pot_lain,
+					ppn+pph21+pph22+pph23+psl4_a2+iwppnpn+pot_lain as jumlah_potongan
+					FROM(					
+					SELECT a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, a.nmrekan, 
+				    ISNULL(a.nilai,0) as nilai,
+					ISNULL(ppn,0) ppn,
+					ISNULL(pph21,0) pph21,
+					ISNULL(pph22,0) pph22,
+					ISNULL(pph23,0) pph23,
+					ISNULL(psl4_a2,0) psl4_a2,
+					ISNULL(iwppnpn,0) iwppnpn,
+					ISNULL(pot_lain,0) pot_lain,
+					ppn+pph21+pph22+pph23+psl4_a2+iwppnpn+pot_lain as jumlah_potongan
+					FROM
+					(SELECT a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, a.nmrekan, a.nilai as nilai FROM trhsp2d a
+					INNER JOIN trdspp d ON a.no_spp = d.no_spp AND a.kd_skpd = d.kd_skpd
+                    INNER JOIN trspmpot e ON e.no_spm = a.no_spm AND e.kd_skpd = a.kd_skpd          
+					WHERE ((a.jns_spp='4' and a.jenis_beban in ('2','9')) or a.jns_spp in ('6','5','3')) AND (a.tgl_kas_bud >= '$tgl' AND  a.tgl_kas_bud <= '$tgl2') AND a.status_bud='1'
+					GROUP BY a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, a.nmrekan, a.nilai
+					)a LEFT JOIN
+					(SELECT a.kd_skpd, a.nm_skpd, a.no_sp2d
+					,SUM(CASE WHEN kd_rek6 ='2130301' THEN c.nilai ELSE 0 END) AS ppn 
+					,SUM(CASE WHEN kd_rek6 ='2130101' THEN c.nilai ELSE 0 END) AS pph21 
+					,SUM(CASE WHEN kd_rek6 ='2130201' THEN c.nilai ELSE 0 END) AS pph22 
+					,SUM(CASE WHEN kd_rek6 ='2130401' THEN c.nilai ELSE 0 END) AS pph23
+					,SUM(CASE WHEN kd_rek6 ='2130501' THEN c.nilai ELSE 0 END) AS psl4_a2
+					,SUM(CASE WHEN kd_rek6 ='2110901' THEN c.nilai ELSE 0 END) AS iwppnpn
+					,SUM(CASE WHEN kd_rek6 not in ('2130301','2130101','2130201','2130401','2130501','2110901') THEN c.nilai ELSE 0 END) AS pot_lain
+					FROM trhsp2d a
+					INNER JOIN trspmpot c ON a.no_spm = c.no_spm AND a.kd_skpd = c.kd_skpd
+					WHERE ((a.jns_spp='4' and a.jenis_beban in ('2','9')) or a.jns_spp in ('6','5','3')) AND (a.tgl_kas_bud >= '$tgl' AND  a.tgl_kas_bud <= '$tgl2') AND a.status_bud='1'
+					GROUP BY a.kd_skpd, a.nm_skpd,a.no_sp2d
+					) b ON a.kd_skpd=b.kd_skpd AND a.no_sp2d=b.no_sp2d
+					UNION
+					SELECT a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, a.nmrekan, 
+				  ISNULL(a.nilai,0) as nilai,
+					ISNULL(0,0) ppn,
+					ISNULL(0,0) pph21,
+					ISNULL(0,0) pph22,
+					ISNULL(0,0) pph23,
+					ISNULL(0,0) psl4_a2,
+					ISNULL(0,0) iwppnpn,
+					ISNULL(0,0) pot_lain,
+					ISNULL(0,0) as jumlah_potongan
+					FROM
+					(SELECT a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, a.nmrekan, a.nilai as nilai FROM trhsp2d a
+					INNER JOIN trdspp d ON a.no_spp = d.no_spp AND a.kd_skpd = d.kd_skpd                   
+					WHERE d.kd_rek6 in ('5110122','5110123','5110109','5220401','5220404') AND (a.tgl_kas_bud >= '$tgl' AND  a.tgl_kas_bud <= '$tgl2') AND a.status_bud='1'
+					GROUP BY a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, a.nmrekan, a.nilai
+					)a
+                  UNION  
+                  
+                    SELECT a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, a.nmrekan, 
+				  ISNULL(a.nilai,0) as nilai,
+					ISNULL(ppn,0) ppn,
+					ISNULL(pph21,0) pph21,
+					ISNULL(pph22,0) pph22,
+					ISNULL(pph23,0) pph23,
+					ISNULL(psl4_a2,0) psl4_a2,
+					ISNULL(iwppnpn,0) iwppnpn,
+					ISNULL(pot_lain,0) pot_lain,
+					ppn+pph21+pph22+pph23+psl4_a2+iwppnpn+pot_lain as jumlah_potongan
+					FROM
+					(SELECT a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, a.nmrekan, a.nilai as nilai FROM trhsp2d a
+					INNER JOIN trdspp d ON a.no_spp = d.no_spp AND a.kd_skpd = d.kd_skpd 
+					INNER JOIN trspmpot e ON e.no_spm = a.no_spm AND e.kd_skpd = a.kd_skpd					
+					WHERE (a.jns_spp='4' and a.jenis_beban='1') and d.kd_rek6 in ('5110208','5110205') AND (a.tgl_kas_bud >= '$tgl' AND  a.tgl_kas_bud <= '$tgl2') AND a.status_bud='1'
+					GROUP BY a.kd_skpd, a.nm_skpd, a.no_kas_bud, a.tgl_kas_bud, a.no_sp2d, a.tgl_sp2d, a.nmrekan, a.nilai
+					)a LEFT JOIN
+					(SELECT a.kd_skpd, a.nm_skpd, a.no_sp2d
+					,SUM(CASE WHEN c.kd_rek6 ='2130301' THEN c.nilai ELSE 0 END) AS ppn 
+					,SUM(CASE WHEN c.kd_rek6 ='2130101' THEN c.nilai ELSE 0 END) AS pph21 
+					,SUM(CASE WHEN c.kd_rek6 ='2130201' THEN c.nilai ELSE 0 END) AS pph22 
+					,SUM(CASE WHEN c.kd_rek6 ='2130401' THEN c.nilai ELSE 0 END) AS pph23
+					,SUM(CASE WHEN c.kd_rek6 ='2130501' THEN c.nilai ELSE 0 END) AS psl4_a2
+					,SUM(CASE WHEN c.kd_rek6 ='2110901' THEN c.nilai ELSE 0 END) AS iwppnpn
+					,SUM(CASE WHEN c.kd_rek6 not in ('2130301','2130101','2130201','2130401','2130501','2110901') THEN c.nilai ELSE 0 END) AS pot_lain
+					FROM trhsp2d a
+					INNER JOIN trspmpot c ON a.no_spm = c.no_spm AND a.kd_skpd = c.kd_skpd
+					INNER JOIN trdspp d ON a.no_spp = d.no_spp AND a.kd_skpd = d.kd_skpd 
+					WHERE (a.jns_spp='4' and a.jenis_beban='1') and d.kd_rek6 in ('5110208','5110205') AND (a.tgl_kas_bud >= '$tgl' AND  a.tgl_kas_bud <= '$tgl2') AND a.status_bud='1'
+					GROUP BY a.kd_skpd, a.nm_skpd,a.no_sp2d
+					) b ON a.kd_skpd=b.kd_skpd AND a.no_sp2d=b.no_sp2d
                     
-                    //Total
-                    $jum_nilai=$jum_nilai+$nilai;
-                    $jumlah_sp2d=number_format($jum_nilai,"2",",",".");
-                    
-                    $jum_ppn=$jum_ppn+$ppn;
-                    $jumlah_ppn=number_format($jum_ppn,"2",",",".");
-                    
-                    $jum_pph21=$jum_pph21+$pph21;
-                    $jumlah_pph21=number_format($jum_pph21,"2",",",".");
-                    
-                    $jum_pph22=$jum_pph22+$pph22;
-                    $jumlah_pph22=number_format($jum_pph22,"2",",",".");
-                    
-                    $jum_pph23=$jum_pph23+$pph23;
-                    $jumlah_pph23=number_format($jum_pph23,"2",",",".");
-                    
-                    $jum_psl4_a2=$jum_psl4_a2+$psl4_a2;
-                    $jumlah_psl4_a2=number_format($jum_psl4_a2,"2",",",".");
-                    
-                    $jum_iwppnpn=$jum_iwppnpn+$iwppnpn;
-                    $jumlah_iwppnpn=number_format($jum_iwppnpn,"2",",",".");
-                    
-                    $jum_pot_lain=$jum_pot_lain+$pot_lain;
-                    $jumlah_pot_lain=number_format($jum_pot_lain,"2",",",".");
-                    
-                    $jum_jumlah_potongan=$jum_jumlah_potongan+$jumlah_potongan;
-                    $jumlah_jumlah_potongan=number_format($jum_jumlah_potongan,"2",",",".");
-                    
-                    $jum_nilai_bersih=$jum_nilai_bersih+$nilai_bersih;
-                    $jumlah_nilai_bersih=number_format($jum_nilai_bersih,"2",",",".");
-                    
-                    $nomor=$nomor+1;
-                    
-                    $nilai=number_format($nilai,"2",",",".");
-                    $ppn=number_format($ppn,"2",",",".");
-                    $pph21=number_format($pph21,"2",",",".");
-                    $pph22=number_format($pph22,"2",",",".");
-                    $pph23=number_format($pph23,"2",",",".");
-                    $psl4_a2=number_format($psl4_a2,"2",",",".");
-                    $iwppnpn=number_format($iwppnpn,"2",",",".");
-                    $pot_lain=number_format($pot_lain,"2",",",".");
-                    $jumlah_potongan=number_format($jumlah_potongan,"2",",",".");
-                    $nilai_bersih=number_format($nilai_bersih,"2",",",".");
-                    
-                    
-                    
-                    
-                    $cRet .="<tr>
-                                <td align=\"center\">$nomor</td>
-                                <td align=\"left\">$nm_skpd</td>
-                                <td align=\"left\">$no_kas_bud $tgl_kas_bud</td>
-                                <td align=\"left\">$no_sp2d $tgl_sp2d</td>
-                                <td align=\"right\">$nilai</td>
-                                <td align=\"right\">$ppn</td>
-                                <td align=\"right\">$pph21</td>
-                                <td align=\"right\">$pph22</td>
-                                <td align=\"right\">$pph23</td>
-                                <td align=\"right\">$psl4_a2</td>
-                                <td align=\"right\">$iwppnpn</td>
-                                <td align=\"right\">$pot_lain</td>
-                                <td align=\"right\">$jumlah_potongan</td>
-                                <td align=\"right\">$nilai_bersih</td>
-                            </tr>";
-                }   
-            
-                $cRet .="<tr>
-                            <td colspan=\"2\" align=\"right\"><b>Jumlah</b></td>
+                    )a order by a.tgl_sp2d,a.no_kas_bud,a.no_sp2d
+					";
+			
+				$hasil = $this->db->query($sql);
+				
+				$nomor              ='0';
+				$jum_nilai          =0;
+				$jum_ppn            =0;
+				$jum_pph21          =0;
+				$jum_pph22          =0;
+				$jum_pph23          =0;
+				$jum_psl4_a2        =0;
+				$jum_iwppnpn        =0;
+				$jum_pot_lain       =0;
+				$jum_jumlah_potongan=0;
+				$jum_nilai_bersih   =0;
+				$jumlah_sp2d            =0;
+				$jumlah_ppn             =0;
+				$jumlah_pph21           =0;
+				$jumlah_pph22           =0;
+				$jumlah_pph23           =0;
+				$jumlah_psl4_a2         =0;
+				$jumlah_iwppnpn         =0;
+				$jumlah_pot_lain        =0;
+				$jumlah_jumlah_potongan =0;
+				$jumlah_nilai_bersih    =0;
+				
+				foreach ($hasil->result() as $row){
+					$kd_skpd         = $row->kd_skpd;
+					$nm_skpd         = $row->nm_skpd;
+					$no_kas_bud      = $row->no_kas_bud;
+					$tgl_kas_bud     = $row->tgl_kas_bud;
+					$no_sp2d         = $row->no_sp2d;
+                    $nmrekan         = $row->nmrekan;
+					$tgl_sp2d        = $row->tgl_sp2d;
+					$nilai           = $row->nilai;
+					$ppn             = $row->ppn;
+					$pph21           = $row->pph21;
+					$pph22           = $row->pph22;
+					$pph23           = $row->pph23;
+					$psl4_a2         = $row->psl4_a2;
+					$iwppnpn         = $row->iwppnpn;
+					$pot_lain        = $row->pot_lain;
+					$jumlah_potongan = $row->jumlah_potongan;
+					$nilai_bersih    = $nilai-$jumlah_potongan;
+					
+					//Total
+					$jum_nilai=$jum_nilai+$nilai;
+					$jumlah_sp2d=number_format($jum_nilai,"2",",",".");
+					
+					$jum_ppn=$jum_ppn+$ppn;
+					$jumlah_ppn=number_format($jum_ppn,"2",",",".");
+					
+					$jum_pph21=$jum_pph21+$pph21;
+					$jumlah_pph21=number_format($jum_pph21,"2",",",".");
+					
+					$jum_pph22=$jum_pph22+$pph22;
+					$jumlah_pph22=number_format($jum_pph22,"2",",",".");
+					
+					$jum_pph23=$jum_pph23+$pph23;
+					$jumlah_pph23=number_format($jum_pph23,"2",",",".");
+					
+					$jum_psl4_a2=$jum_psl4_a2+$psl4_a2;
+					$jumlah_psl4_a2=number_format($jum_psl4_a2,"2",",",".");
+					
+					$jum_iwppnpn=$jum_iwppnpn+$iwppnpn;
+					$jumlah_iwppnpn=number_format($jum_iwppnpn,"2",",",".");
+					
+					$jum_pot_lain=$jum_pot_lain+$pot_lain;
+					$jumlah_pot_lain=number_format($jum_pot_lain,"2",",",".");
+					
+					$jum_jumlah_potongan=$jum_jumlah_potongan+$jumlah_potongan;
+					$jumlah_jumlah_potongan=number_format($jum_jumlah_potongan,"2",",",".");
+					
+					$jum_nilai_bersih=$jum_nilai_bersih+$nilai_bersih;
+					$jumlah_nilai_bersih=number_format($jum_nilai_bersih,"2",",",".");
+					
+					$nomor=$nomor+1;
+					
+					$nilai=number_format($nilai,"2",",",".");
+					$ppn=number_format($ppn,"2",",",".");
+					$pph21=number_format($pph21,"2",",",".");
+					$pph22=number_format($pph22,"2",",",".");
+					$pph23=number_format($pph23,"2",",",".");
+					$psl4_a2=number_format($psl4_a2,"2",",",".");
+					$iwppnpn=number_format($iwppnpn,"2",",",".");
+					$pot_lain=number_format($pot_lain,"2",",",".");
+					$jumlah_potongan=number_format($jumlah_potongan,"2",",",".");
+					$nilai_bersih=number_format($nilai_bersih,"2",",",".");
+					
+					
+					
+					
+					$cRet .="<tr>
+								<td align=\"center\">$nomor</td>
+								<td align=\"left\">$nm_skpd</td>
+								<td align=\"left\">$no_kas_bud<br/>$tgl_kas_bud</td>
+								<td align=\"left\">$no_sp2d<br/>$tgl_sp2d</td>
+                                <td align=\"left\">$nmrekan</td>
+								<td align=\"right\">$nilai</td>
+								<td align=\"right\">$ppn</td>
+								<td align=\"right\">$pph21</td>
+								<td align=\"right\">$pph22</td>
+								<td align=\"right\">$pph23</td>
+								<td align=\"right\">$psl4_a2</td>
+								<td align=\"right\">$iwppnpn</td>
+								<td align=\"right\">$pot_lain</td>
+								<td align=\"right\">$jumlah_potongan</td>
+								<td align=\"right\">$nilai_bersih</td>
+							</tr>";
+				}	
+			
+				$cRet .="<tr>
+							<td colspan=\"2\" align=\"right\"><b>Jumlah</b></td>
+							<td align=\"center\"><b></b></td>
+							<td align=\"center\"><b></b></td>
                             <td align=\"center\"><b></b></td>
-                            <td align=\"center\"><b></b></td>
-                            <td align=\"center\"><b>$jumlah_sp2d</b></td>
-                            <td align=\"center\"><b>$jumlah_ppn</b></td>
-                            <td align=\"right\"><b>$jumlah_pph21</b></td>
-                            <td align=\"center\"><b>$jumlah_pph22</b></td>
-                            <td align=\"center\"><b>$jumlah_pph23</b></td>
-                            <td align=\"right\"><b>$jumlah_psl4_a2</b></td>
-                            <td align=\"right\"><b>$jumlah_iwppnpn</b></td>
-                            <td align=\"center\"><b>$jumlah_pot_lain</b></td>
-                            <td align=\"center\"><b>$jumlah_jumlah_potongan</b></td>
-                            <td align=\"right\"><b>$jumlah_nilai_bersih</b></td>
-                        </tr>";
-            }
-        }
-                
-        $cRet .= '</table>';
-        
-        $cRet .="<table style=\"font-size:12px;border-collapse:collapse;\" width=\"100%\" align=\"center\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\">
+							<td align=\"center\"><b>$jumlah_sp2d</b></td>
+							<td align=\"center\"><b>$jumlah_ppn</b></td>
+							<td align=\"right\"><b>$jumlah_pph21</b></td>
+							<td align=\"center\"><b>$jumlah_pph22</b></td>
+							<td align=\"center\"><b>$jumlah_pph23</b></td>
+							<td align=\"right\"><b>$jumlah_psl4_a2</b></td>
+							<td align=\"right\"><b>$jumlah_iwppnpn</b></td>
+							<td align=\"center\"><b>$jumlah_pot_lain</b></td>
+							<td align=\"center\"><b>$jumlah_jumlah_potongan</b></td>
+							<td align=\"right\"><b>$jumlah_nilai_bersih</b></td>
+						</tr>";
+			}
+		}
+				
+		$cRet .= '</table>';
+		
+		$cRet .="<table style=\"font-size:12px;border-collapse:collapse;\" width=\"100%\" align=\"center\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\">
                     <tr>
-                        <td align=\"center\" width=\"50%\">&nbsp;</td>
-                        <td align=\"center\" width=\"50%\">&nbsp;</td>
-                    </tr>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+						<td align=\"center\" width=\"50%\">&nbsp;Pontianak, $tanggal_cetak</td>
+					</tr>
+					<tr>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+					    <td align=\"center\" width=\"50%\">$jabatan<br/>$pangkat</td>
+					</tr>
                     <tr>
-                        <td align=\"center\" width=\"50%\">&nbsp;</td>
-                        <td align=\"center\" width=\"50%\">Kuasa Bendahara Umum Daerah</td>
-                    </tr>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+					</tr>
+					<tr>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+					</tr>                              
                     <tr>
-                        <td align=\"center\" width=\"50%\">&nbsp;</td>
-                        <td align=\"center\" width=\"50%\">&nbsp;</td>
-                    </tr>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+					</tr>                                       
                     <tr>
-                        <td align=\"center\" width=\"50%\">&nbsp;</td>
-                        <td align=\"center\" width=\"50%\">&nbsp;</td>
-                    </tr>                              
-                    <tr>
-                        <td align=\"center\" width=\"50%\">&nbsp;</td>
-                        <td align=\"center\" width=\"50%\">&nbsp;</td>
-                    </tr>                                       
-                    <tr>
-                        <td align=\"center\" width=\"50%\">&nbsp;</td>
-                        <td align=\"center\" width=\"50%\"><u>$nama</u></td>
-                    </tr>
-                    <tr>
-                        <td align=\"center\" width=\"50%\">&nbsp;</td>
-                        <td align=\"center\" width=\"50%\">$pangkat</td>
-                    </tr>
-                    <tr>
-                        <td align=\"center\" width=\"50%\">&nbsp;</td>
-                        <td align=\"center\" width=\"50%\">NIP. $nip</td>
-                    </tr>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+						<td align=\"center\" width=\"50%\"><u>$nama</u></td>
+					</tr>                    
+					<tr>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+						<td align=\"center\" width=\"50%\">NIP. $nip</td>
+					</tr>
                     
                   </table>";
-        
-        $print = $ctak;
-        
-        if($print==0){
-             $data['prev']= $cRet;    
-             echo ("<title></title>");
-             echo $cRet;
-        }else{
-            
-            $this->_mpdf2('',$cRet,10,10,10,'1',$no_halaman,'');
-            
-        }
+		
+		$print = $ctak;
+		
+		if($print==0){
+			 $data['prev']= $cRet;    
+			 echo ("<title></title>");
+			 echo $cRet;
+		}else{
+			
+			$this->_mpdf2('',$cRet,10,10,10,'1',$no_halaman,'');
+			
+		}
 
-    }
+	}  
 
     
     function cetak_spjterima2(){
@@ -47611,5 +48314,1550 @@ function _mpdf_margin($judul='',$isi='',$lMargin=10,$rMargin=10,$font='',$orient
         }
         
         echo json_encode($result) ;
+    }
+
+    function cetak_kas_harian_bln()
+    {   
+        
+        $thn_ang = $this->session->userdata('pcThang');
+        $jnscetak = $this->uri->segment(3);
+            $bulan =''; 
+            
+            $lcperiode = $this->tukd_model->getBulan($bulan);
+           
+         $tgl= $_REQUEST['tgl1'];
+         $tgl2= $_REQUEST['ttd7'];
+         $tgl_ttd= $_REQUEST['tgl_ttd'];
+         $ttd= $_REQUEST['ttd'];
+         $lcttd        = str_replace('a',' ',$ttd);
+         $csql="SELECT a.jabatan,a.pangkat,a.nama, a.nip FROM ms_ttd a WHERE kode = 'BUD' AND a.kd_skpd = '5.02.0.00.0.00.01.0000' and nip='$lcttd'";
+         $hasil = $this->db->query($csql);
+         $trh2 = $hasil->row();          
+         $lcNmBP = $trh2->nama;
+         $jab = $trh2->jabatan;
+         $pangkat = $trh2->pangkat;
+         $lcNipBP = $trh2->nip;                         
+            
+         $cRet = '';
+         $cRet .="<table style=\"border-collapse:collapse;\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\">
+            <tr>
+                <td align=\"center\" colspan=\"8\" style=\"font-size:14px;border: solid 1px white;\"><b>PEMERINTAH KOTA PONTIANAK <br>LAPORAN BUKU KAS UMUM</b></td>
+            </tr>
+              <tr>
+                <td align=\"left\" colspan=\"3\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
+                <td align=\"left\" colspan=\"5\" style=\"font-size:12px;border: solid 1px white;\"></td>
+            </tr>
+            
+            <tr>
+                <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;\">TANGGAL</td>
+                <td align=\"left\" colspan=\"6\" style=\"font-size:12px;border: solid 1px white;\">: ".$this->tanggal_format_indonesia($tgl)." s/d ".$this->tanggal_format_indonesia($tgl2)."</td>
+            </tr>
+            <tr>
+                <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 2px black;\">&nbsp;</td>
+                <td align=\"left\" colspan=\"6\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 2px black;\">&nbsp;</td>
+            </tr>
+            
+            <tr>
+                <td align=\"center\" rowspan=\"2\" width=\"4%\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black;\" >No.</td>
+				<td align=\"center\" rowspan=\"2\" width=\"7%\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black;\" >KASDA</td>
+                <td align=\"center\" colspan=\"3\" width=\"30%\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black;\">Transaksi</td>
+                <td align=\"center\" rowspan=\"2\" width=\"29%\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black;\">Uraian</td>
+                <td align=\"center\" rowspan=\"2\" width=\"15%\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black;\">Penerimaan<br>(Rp)</td> 
+                <td align=\"center\" rowspan=\"2\" width=\"15%\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black;\">Pengeluaran<br>(Rp)</td>             
+            </tr> 
+            <tr>
+                <td align=\"center\"  width=\"12%\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black\" >SP2D</td>
+                <td align=\"center\"  width=\"12%\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black\">STS</td>
+                <td align=\"center\"  width=\"12%\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black\">Lain - Lain</td>
+                       
+            </tr>           
+            <tr>
+                <td align=\"center\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black\">1</td>
+				<td align=\"center\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black\">2</td>
+                <td align=\"center\" colspan=\"3\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black\">3</td>
+                <td align=\"center\"  style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black\">4</td>
+                <td align=\"center\"  style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black\">5</td>
+                <td align=\"center\"  style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black\">6</td>               
+            </tr>";
+                      
+                $csql= "
+                select sum(x.nilai) AS nilai from (
+                SELECT sum(b.nilai) AS nilai FROM trhsp2d a
+left join trdspp b on b.no_spp = a.no_spp and a.kd_skpd = b.kd_skpd
+WHERE a.status_bud='1' and a.tgl_kas_bud < '$tgl'
+union all
+select sum(b.nilai) AS nilai from trhinlain_ppkd a inner join trdinlain_ppkd b
+on a.kd_skpd=b.kd_skpd and a.no_bukti=b.no_bukti
+where a.tgl_bukti < '$tgl' 
+) x";
+                $hasil2 = $this->db->query($csql);
+                $trhsp2d2 = $hasil2->row();          
+                $lcsp2d_lalu = $trhsp2d2->nilai;
+                
+                $csqlkasin1= "SELECT sld_awal as nilai from ms_skpd where kd_skpd='5.02.0.00.0.00.01.0000'";
+                $hasil3 = $this->db->query($csqlkasin1);
+                $trhkasinpkd = $hasil3->row();          
+                $lckasinpkd = $trhkasinpkd->nilai;
+                
+                $csqlkasin2= "select sum(b.rupiah) AS nilai FROM trhkasin_ppkd a
+left join trdkasin_ppkd b on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd 
+ WHERE  a.tgl_kas < '$tgl'";
+                $hasil4 = $this->db->query($csqlkasin2);
+                $trhkasinppkd = $hasil4->row();          
+                $lckasinppkd = $trhkasinppkd->nilai;
+                
+                $kasin_1= $lckasinpkd+$lckasinppkd;
+				//$kasin_1= $lckasinppkd;
+                $posisi_1= $kasin_1-$lcsp2d_lalu;                                            
+                
+                     /*$sql = "SELECT * FROM
+						   (SELECT no_kas_bud as kasda,no_sp2d AS nomor,tgl_sp2d AS tgl,keperluan AS uraian,nilai AS nilai,'5' AS jns FROM trhsp2d WHERE STATUS='1'
+                            UNION
+                            SELECT '' as kasda,no_sts AS nomor,tgl_sts AS tgl,keterangan AS uraian,total AS nilai,'4' AS jns FROM trhkasin_pkd 
+                            UNION
+                            SELECT no_kas as kasda,no_sts AS nomor,tgl_sts AS tgl,keterangan AS uraian,total AS nilai,'4' AS jns FROM trhkasin_ppkd) z WHERE z.tgl='$tgl' ORDER BY z.tgl";
+					 */
+				 $sql = "SELECT * FROM
+						   (SELECT no_kas_bud as kasda,no_sp2d AS nomor,tgl_kas_bud AS tgl,keperluan AS uraian,nilai AS nilai,'5' AS jns FROM trhsp2d WHERE status_bud='1'
+                            UNION
+                            SELECT no_kas as kasda,no_sts AS nomor,tgl_kas AS tgl,keterangan AS uraian,total AS nilai,'4' AS jns FROM trhkasin_ppkd
+                            union 
+                            select no_bukti as kasda,no_bukti AS nomor,tgl_bukti AS tgl,KET as uraian,nilai AS nilai,'5' AS jns from trhinlain_ppkd) z WHERE z.tgl >= '$tgl' and z.tgl <='$tgl2' ORDER BY z.tgl";
+					
+                    $hasil = $this->db->query($sql);       
+                    $lcterima_ini=0;
+                    $lckeluar_ini=0;
+                    $no=0;
+                    foreach ($hasil->result() as $row)
+                    {
+                       $no      =$no+1;
+                       $nomor   =$row->nomor;
+					   $kasda   =$row->kasda;
+                       $tgl     =$row->tgl;
+                       $uraian  =$row->uraian; 
+                       $nilai   =$row->nilai;
+                       $jns     =$row->jns;                   
+                       if ($jns==5){ 
+                        $cRet .="<tr>
+                                  <td valign=\"top\" align=\"center\" style=\"font-size:12px;border-bottom:none;border-top:none\">$no</td>
+								  <td valign=\"top\" align=\"center\" style=\"font-size:12px;border-bottom:none;border-top:none\">$kasda</td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">$nomor</td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">$uraian</td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format($nilai,2)."</td>
+                                  </tr>";                     
+                                                                    
+                                $lckeluar_ini=$lckeluar_ini+$nilai;
+                       }else{
+                            $cRet .="<tr>
+                                  <td valign=\"top\" align=\"center\" style=\"font-size:12px;border-bottom:none;border-top:none\">$no</td>
+								  <td valign=\"top\" align=\"center\" style=\"font-size:12px;border-bottom:none;border-top:none\">$kasda</td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">$nomor</td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">$uraian</td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format($nilai,2)."</td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  </tr>"; 
+                                   $lcterima_ini=$lcterima_ini+$nilai;
+                       }           
+                    }
+                    $posisi_ini=$lcterima_ini-$lckeluar_ini;
+                    $posisi=$posisi_1+$posisi_ini;
+                 
+
+        $cRet .="<tr>
+                    <td align=\"left\" colspan=\"5\" style=\"font-size:12px;border: solid 1px white;border-right:solid 1px black;border-top:solid 1px black;\">&nbsp;</td>
+                    <td align=\"right\" style=\"font-size:12px;border: solid 1px black;\">Jumlah </td>
+                    <td align=\"right\" style=\"font-size:12px;border: solid 1px black;\">".number_format($lcterima_ini,2)."</td>
+                    <td align=\"right\" style=\"font-size:12px;border: solid 1px black;\">".number_format($lckeluar_ini,2)."</td>
+                </tr>";
+       if ($posisi_ini<0){
+                
+                $cRet .="<tr>
+                            <td align=\"left\" colspan=\"5\" style=\"font-size:12px;border: solid 1px white;border-right:solid 1px black;\">&nbsp;</td>
+                            <td align=\"right\" style=\"font-size:12px;border: solid 1px black;\">Perubahan Posisi Kas</td>
+                            <td align=\"right\" style=\"font-size:12px;border: solid 1px black;\">".number_format($posisi_ini,2)."</td>
+                            <td align=\"right\" style=\"font-size:12px;border: solid 1px black;\"></td>
+                        </tr>";
+        }else {
+                 $cRet .="<tr>
+                            <td align=\"left\" colspan=\"5\" style=\"font-size:12px;border: solid 1px white;border-right:solid 1px black;\">&nbsp;</td>
+                            <td align=\"right\" style=\"font-size:12px;border: solid 1px black;\">Perubahan Posisi Kas</td>
+                            <td align=\"right\" style=\"font-size:12px;border: solid 1px black;\"></td>
+                            <td align=\"right\" style=\"font-size:12px;border: solid 1px black;\">".number_format($posisi_ini,2)."</td>
+                        </tr>";
+        }       
+        $cRet .="<tr>
+                    <td align=\"left\" colspan=\"5\" style=\"font-size:12px;border: solid 1px white;border-right:solid 1px black;\"> &nbsp;</td>
+                    <td align=\"right\" style=\"font-size:12px;border: solid 1px black;\">Posisi Kas Lalu (H-1)</td>
+                    <td align=\"right\" style=\"font-size:12px;border: solid 1px black;\">".number_format($kasin_1,2)."</td>
+                    <td align=\"right\" style=\"font-size:12px;border: solid 1px black;\">".number_format($lcsp2d_lalu,2)."</td>
+                </tr>
+                        
+                <tr>
+                    <td align=\"left\" colspan=\"5\" style=\"font-size:12px;border: solid 1px white;border-right:solid 1px black;\">&nbsp;</td>
+                    <td align=\"right\" style=\"font-size:12px;border: solid 1px black; border-bottom:solid 1px black;\">Posisi Kas (H)</td>
+                    <td align=\"right\" style=\"font-size:12px;border: solid 1px black; border-bottom:solid 1px black;\">".number_format($posisi,2)."</td>
+                    <td align=\"right\" style=\"font-size:12px;border: solid 1px black; border-bottom:solid 1px black;\"></td>
+                </tr>";
+        
+         $cRet .="
+                 <tr>&nbsp;
+                    <td align=\"center\" colspan=\"3\" style=\"font-size:15px;border: solid 1px white;\">&nbsp;</td>
+                    <td align=\"left\" colspan=\"2\" style=\"font-size:15px;border: solid 1px white;\">&nbsp;</td>
+                    <td align=\"center\" colspan=\"3\" style=\"font-size:15px;border: solid 1px white; border-top:solid 1px black;\">&nbsp;</td>                                                                                                                                                                                
+                </tr>
+                 <tr>
+                    <td align=\"left\" colspan=\"4\" style=\"font-size:15px;border: solid 1px white;\">Rekapitulasi Posisi kas di BUD (Rp)</td>
+                    <td align=\"left\" colspan=\"2\" style=\"font-size:15px;border: solid 1px white;\"></td>
+                    <td align=\"left\" colspan=\"2\" style=\"font-size:15px;border: solid 1px white;\"></td>                                                                                                                                                                                
+                </tr>";
+                    
+        /* $sqlsaldo = "SELECT sld_awal as nilai from ms_skpd where kd_skpd='5.02.0.00.0.00.01.0000'";
+                $saldo = $this->db->query($sqlsaldo);
+                $totsaldo=0;
+                foreach ($saldo->result() as $roww)
+                {
+                    
+                    $rp = $roww->nilai;
+                
+                    $cRet .="<tr>
+                                <td align=\"left\" colspan=\"3\" style=\"font-size:15px;border: solid 1px white;\">Saldo di Bank</td>
+                                <td align=\"right\" colspan=\"2\" style=\"font-size:15px;border: solid 1px white;\"> ".number_format($rp)."</td>
+                                <td align=\"left\" colspan=\"3\" style=\"font-size:15px;border: solid 1px white;\"></td>                                                                                                                                                                                
+                            </tr>";                    
+                }*/
+         $cRet .="<tr>
+                    <td align=\"left\" colspan=\"3\" style=\"font-size:15px;border: solid 1px white;\"><b>Total Saldo Kas</b></td>
+                    <td align=\"right\" colspan=\"2\" style=\"font-size:15px;border: solid 1px white;\"><b>".number_format($posisi,2)."</b></td>
+                    <td align=\"left\" colspan=\"3\" style=\"font-size:15px;border: solid 1px white;\"></td>                                                                                                                                                                                
+                </tr>
+                <tr>
+                    <td align=\"left\" colspan=\"4\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
+                    <td align=\"left\" colspan=\"4\" style=\"font-size:12px;border: solid 1px white;\"></td>
+                </tr>
+                <tr>
+                    <td align=\"center\" colspan=\"4\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
+                    <td align=\"left\" style=\"font-size:12px;border: solid 1px white;\"></td>
+                    <td align=\"center\" colspan=\"3\" style=\"font-size:15px;border: solid 1px white;\">Pontianak, tanggal ".$this->tanggal_format_indonesia($tgl_ttd)."</td>                                                                                                                                                                                
+                </tr>
+                <tr>                
+                    <td align=\"center\" colspan=\"4\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
+                    <td align=\"left\" style=\"font-size:12px;border: solid 1px white;\"></td>
+                    <td align=\"center\" colspan=\"3\" style=\"font-size:15px;border: solid 1px white;\">$jab</td>                    
+                </tr>
+                 <tr>
+                    <td align=\"center\" colspan=\"4\" style=\"font-size:12px;border: solid 1px white;\"> &nbsp;</td>
+                    <td align=\"center\"  style=\"font-size:12px;border: solid 1px white;\"></td>
+                    <td align=\"center\" colspan=\"3\" style=\"font-size:15px;border: solid 1px white;\">$pangkat</td>
+      
+                </tr>
+                <tr>
+                    <td align=\"left\" colspan=\"4\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
+                    <td align=\"left\" colspan=\"4\" style=\"font-size:12px;border: solid 1px white;\"></td>
+                </tr>
+                <tr>
+                    <td align=\"left\" colspan=\"4\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
+                    <td align=\"left\" colspan=\"4\" style=\"font-size:12px;border: solid 1px white;\"></td>
+                </tr>
+				<tr>
+                    <td align=\"left\" colspan=\"4\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
+                    <td align=\"left\" colspan=\"4\" style=\"font-size:12px;border: solid 1px white;\"></td>
+                </tr>                
+                <tr>
+                    <td align=\"center\" colspan=\"5\" style=\"font-size:12px; border: solid 1px white;\"></td>                    
+                    <td align=\"center\" colspan=\"3\" style=\"font-size:15px; border: solid 1px white;\"><b><u>$lcNmBP</u></b></td>
+                </tr>
+               
+                <tr>
+                    <td align=\"center\" colspan=\"4\" style=\"font-size:12px;border: solid 1px white;\"> &nbsp;</td>
+                    <td align=\"center\"  style=\"font-size:12px;border: solid 1px white;\"></td>
+                    <td align=\"center\" colspan=\"3\" style=\"font-size:15px;border: solid 1px white;\">NIP. $lcNipBP</td>
+      
+                </tr>";        
+                                  
+                
+        $cRet .='</table>';
+                 
+                 $juduls = "Kas Harian";
+                 
+         $data['prev']= $cRet;    
+         if($jnscetak=="0"){
+                echo $cRet;
+         }else if($jnscetak=="1"){
+                $this->tukd_model->_mpdf('', $cRet, 10, 5, 10, '0');
+         }else if($jnscetak=="2"){
+         header("Cache-Control: no-cache, no-store, must-revalidate");
+            header("Content-Type: application/vnd.ms-excel");
+            header("Content-Disposition: attachment; filename= $juduls.xls");
+            
+            $this->load->view('anggaran/rka/perkadaII', $data);
+         }
+         //$this->tukd_model->_mpdf('',$cRet,'10','10',5,'0');
+         //$this->tukd_model->_mpdf('', $cRet, 10, 10, 10, 'L');
+     
+    }       
+
+    function cetak_kas_harian_rincibln()
+    {
+        $thn_ang = $this->session->userdata('pcThang');
+        $jnscetak = $this->uri->segment(3);
+            $bulan =''; 
+            
+            $lcperiode = $this->tukd_model->getBulan($bulan);
+            $ttd= $_REQUEST['ttd'];
+         $lcttd        = str_replace('a',' ',$ttd);
+         $tgl6= $_REQUEST['tgl1'];
+         $tgl7= $_REQUEST['ttd7'];            
+         $tgl_ttd= $_REQUEST['tgl_ttd'];
+         
+         //$lcperiode = $this->tukd_model->getBulan($tgl6);
+         //$lcperiode7 = $this->tukd_model->getBulan($tgl7);
+         
+         $csql="SELECT a.pangkat,a.jabatan,a.nama, a.nip FROM ms_ttd a WHERE kode = 'BUD' AND nip='$lcttd'";
+         $hasil = $this->db->query($csql);
+         $trh2 = $hasil->row();          
+         $lcNmBP = $trh2->nama;
+         $lcNipBP = $trh2->nip;
+         $jabatan = $trh2->jabatan;
+         $pangkat = $trh2->pangkat;                         
+            
+         $cRet = '';
+         $cRet .="<table style=\"border-collapse:collapse;\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\">
+            <tr>
+                <td align=\"center\" colspan=\"9\" style=\"font-size:14px;border: solid 1px white;\"><b>PEMERINTAH KOTA PONTIANAK <br>LAPORAN BUKU KAS UMUM</b></td>
+            </tr>
+              <tr>
+                <td align=\"left\" colspan=\"3\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
+                <td align=\"left\" colspan=\"1\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>                
+                <td align=\"left\" colspan=\"5\" style=\"font-size:12px;border: solid 1px white;\"></td>
+            </tr>
+            
+            <tr>
+                <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;\">PERIODE</td>
+                <td align=\"left\" colspan=\"7\" style=\"font-size:12px;border: solid 1px white;\">: ".$this->tanggal_format_indonesia($tgl6)."  s/d  ".$this->tanggal_format_indonesia($tgl7)."</td>
+            </tr>
+            <tr>
+                <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 2px black;\">&nbsp;</td>
+                <td align=\"left\" colspan=\"7\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 2px black;\">&nbsp;</td>
+            </tr>
+            
+            <tr>
+                <td align=\"center\" rowspan=\"2\" width=\"4%\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black;\" >No.</td>
+				<td align=\"center\" rowspan=\"2\" width=\"7%\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black;\" >KASDA</td>                
+				<td align=\"center\" rowspan=\"2\" width=\"7%\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black;\" >TGL KAS</td>
+                <td align=\"center\" colspan=\"3\" width=\"30%\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black;\">Transaksi</td>
+                <td align=\"center\" rowspan=\"2\" width=\"29%\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black;\">Uraian</td>
+                <td align=\"center\" rowspan=\"2\" width=\"15%\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black;\">Penerimaan<br>(Rp)</td> 
+                <td align=\"center\" rowspan=\"2\" width=\"15%\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black;\">Pengeluaran<br>(Rp)</td>             
+            </tr> 
+            <tr>
+                <td align=\"center\"  width=\"12%\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black\" >SP2D</td>
+                <td align=\"center\"  width=\"12%\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black\">STS</td>
+                <td align=\"center\"  width=\"12%\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black\">Lain - Lain</td>
+                       
+            </tr>           
+            <tr>
+                <td align=\"center\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black\">1</td>
+				<td align=\"center\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black\">2</td>                
+				<td align=\"center\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black\">3</td>
+                <td align=\"center\" colspan=\"3\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black\">4</td>
+                <td align=\"center\"  style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black\">5</td>
+                <td align=\"center\"  style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black\">6</td>
+                <td align=\"center\"  style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black\">7</td>               
+            </tr>";
+               
+                $csql= "select sum(x.nilai) AS nilai from (
+                SELECT sum(b.nilai) AS nilai FROM trhsp2d a
+left join trdspp b on b.no_spp = a.no_spp and a.kd_skpd = b.kd_skpd
+WHERE a.status_bud='1' and a.tgl_kas_bud < '$tgl6'
+union all
+select sum(b.nilai) AS nilai from trhinlain_ppkd a inner join trdinlain_ppkd b
+on a.kd_skpd=b.kd_skpd and a.no_bukti=b.no_bukti
+where a.tgl_bukti < '$tgl6' 
+) x";      
+                //$csql= "select SUM(nilai) AS nilai FROM trhsp2d  WHERE  tgl_kas_bud < '$tgl' ";
+                $hasil2 = $this->db->query($csql);
+                $trhsp2d2 = $hasil2->row();          
+                $lcsp2d_lalu2 = $trhsp2d2->nilai;
+                
+                $csqlkasin1= "SELECT sld_awal as nilai from ms_skpd where kd_skpd='5.02.0.00.0.00.01.0000'";
+                $hasil3 = $this->db->query($csqlkasin1);
+                $trhkasinpkd = $hasil3->row();          
+                $lckasinpkd = $trhkasinpkd->nilai;
+                
+                $csqlkasin2= "select sum(b.rupiah) AS nilai FROM trhkasin_ppkd a
+left join trdkasin_ppkd b on b.no_kas = a.no_kas and b.no_sts = a.no_sts and 
+b.kd_skpd = a.kd_skpd  WHERE  a.tgl_kas < '$tgl6' ";
+                $hasil4 = $this->db->query($csqlkasin2);
+                $trhkasinppkd = $hasil4->row();          
+                $lckasinppkd = $trhkasinppkd->nilai;
+                
+                $kasin_1= $lckasinpkd+$lckasinppkd;
+				//$kasin_1= $lckasinppkd;
+                $posisi_1= $kasin_1-$lcsp2d_lalu2;                                            
+                //echo $lckasinppkd."</br>";
+                //echo $lcsp2d_lalu2."</br>";
+                //echo $posisi_1."</br>";                  
+				 /*$sql = "SELECT * FROM
+						   (SELECT no_kas_bud as kasda,no_sp2d AS nomor,tgl_kas_bud AS tgl,keperluan AS uraian,nilai AS nilai,'5' AS jns FROM trhsp2d WHERE STATUS='1'
+                            UNION
+                            SELECT no_kas as kasda,no_sts AS nomor,tgl_sts AS tgl,keterangan AS uraian,total AS nilai,'4' AS jns FROM trhkasin_ppkd) z WHERE z.tgl='$tgl' ORDER BY z.tgl,z.kasda";
+	               */
+                   
+                   $sql = "SELECT * FROM
+(
+SELECT '1' as urut,no_kas_bud as kasda,no_sp2d AS nomor,tgl_kas_bud AS tgl,keperluan AS uraian,nilai AS nilai,'5' AS jns FROM trhsp2d WHERE status_bud='1'
+UNION ALL
+SELECT '2' as urut,a.no_kas_bud as kasda,a.no_sp2d AS nomor,a.tgl_kas_bud AS tgl,b.kd_rek6 AS uraian,b.nilai AS nilai,'5' AS jns FROM trhsp2d a
+left join trdspp b on b.no_spp = a.no_spp and a.kd_skpd = b.kd_skpd
+WHERE a.status_bud='1'
+UNION ALL
+SELECT '1' as urut,no_kas as kasda,no_sts AS nomor,tgl_kas AS tgl,keterangan AS uraian,total AS nilai,'4' AS jns FROM trhkasin_ppkd
+UNION ALL
+SELECT '2' as urut,a.no_kas as kasda,a.no_sts AS nomor,a.tgl_kas AS tgl,b.kd_rek5 AS uraian,b.rupiah AS nilai,'4' AS jns FROM trhkasin_ppkd a
+left join trdkasin_ppkd b on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+union ALL
+select '1' as urut,NO_BUKTI as kasda,NO_BUKTI as nomor,TGL_BUKTI as tgl, KET AS uraian,nilai AS nilai,'5' jns from trhinlain_ppkd
+union ALL
+select '2' as urut,a.NO_BUKTI as kasda,a.NO_BUKTI as nomor,a.TGL_BUKTI as tgl, b.kd_rek5 AS uraian,sum(b.nilai) AS nilai,'5' jns 
+from trhinlain_ppkd a inner join trdinlain_ppkd b
+on a.kd_skpd=b.kd_skpd and a.no_bukti=b.no_bukti
+group by a.NO_BUKTI,a.TGL_BUKTI,b.kd_rek5
+) 
+z WHERE z.tgl >='$tgl6' and z.tgl<='$tgl7'
+ORDER BY z.tgl,z.kasda,z.urut";			
+                        
+                	
+                    $hasil = $this->db->query($sql);       
+                    $lcterima_ini=0;
+                    $lckeluar_ini=0;
+                    $no=0;
+                    foreach ($hasil->result() as $row)
+                    {
+                       
+                       if($row->urut=='1'){
+                            $no =$no+1;                        
+                       }
+                       $no =$no+0;
+                       $urut   =$row->urut;
+                       $nomor   =$row->nomor;
+					   $kasda   =$row->kasda;
+                       $tgl     =$row->tgl;
+                       $uraian  =$row->uraian; 
+                       $nilai   =$row->nilai;
+                       $jns     =$row->jns;      
+                       
+                       $tglv = explode('-',$tgl);
+                       $tglv1 = $tglv[0];
+                       $tglv2 = $tglv[1];
+                       $tglv3 = $tglv[2];
+                       
+                       $tgll = $tglv3.'-'.$tglv2.'-'.$tglv1; 
+                                                            
+                       if ($jns==5){
+                            
+                            if($urut==1){
+                                $cRet .="<tr>
+                                  <td valign=\"top\" align=\"center\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>$no</b></td>
+								  <td valign=\"top\" align=\"center\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>$kasda</b></td>                                  
+								  <td valign=\"top\" align=\"center\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>$tgll</b></td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>$nomor</b></td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>$uraian</b></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format($nilai,2)."</b></td>
+                                  </tr>";                     
+                                                                    
+                                $lckeluar_ini=$lckeluar_ini+$nilai;
+                            }else{
+                                 $cRet .="<tr>
+                                  <td valign=\"top\" align=\"center\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+								  <td valign=\"top\" align=\"center\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>                                  
+                                  <td valign=\"top\" align=\"center\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">$uraian</td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format($nilai,2)."</td>
+                                  </tr>";                     
+                                         
+                            }
+                                                
+                       }else{
+                            if($urut==1){
+                            $cRet .="<tr>
+                                  <td valign=\"top\" align=\"center\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>$no</b></td>
+								  <td valign=\"top\" align=\"center\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>$kasda</b></td>
+                                  <td valign=\"top\" align=\"center\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>$tgll</b></td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>$nomor</b></td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>$uraian</b></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format($nilai,2)."</b></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  </tr>"; 
+                                   
+                            }else{
+                              $cRet .="<tr>
+                                  <td valign=\"top\" align=\"center\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+								  <td valign=\"top\" align=\"center\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>                                  
+								  <td valign=\"top\" align=\"center\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">$uraian</td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format($nilai,2)."</td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  </tr>";   
+                                  //$lcterima_ini=$lcterima_ini+$nilai;
+                            }                                   
+                       }           
+                    }
+                    
+                    $csqlkasin25= "select sum(nilai) nilai,sum(koreksi) koreksi
+					from(select sum(b.rupiah) AS nilai,0 as koreksi FROM trhkasin_ppkd a
+                    left join trdkasin_ppkd b on b.no_kas = a.no_kas and b.no_sts = a.no_sts and 
+                    b.kd_skpd = a.kd_skpd  WHERE  a.tgl_kas >= '$tgl6' and a.tgl_kas <= '$tgl7'
+						UNION
+			SELECT
+				0 AS nilai,
+				SUM (b.nilai) AS koreksi
+			FROM
+				trhinlain_ppkd a
+			LEFT JOIN trdinlain_ppkd b ON b.no_bukti = a.no_bukti
+			AND b.kd_skpd = a.kd_skpd
+			WHERE
+				a.tgl_bukti >= '$tgl6'
+			AND a.tgl_bukti <= '$tgl7'
+	) x";
+                $hasil45 = $this->db->query($csqlkasin25);
+                $trhkasinppkd5 = $hasil45->row();          
+                $lcterima_ini = $trhkasinppkd5->nilai;
+				$lckoreksi_ini = $trhkasinppkd5->koreksi;
+                    
+                    
+                    $posisi_ini=$lcterima_ini-$lckeluar_ini;
+                    $posisi=$posisi_1+$posisi_ini;
+					$posisi_baru =$posisi-$lckoreksi_ini;
+                 
+
+        $cRet .="<tr>
+                    <td align=\"left\" colspan=\"6\" style=\"font-size:12px;border: solid 1px white;border-right:solid 1px black;border-top:solid 1px black;\">&nbsp;</td>
+                    <td align=\"right\" style=\"font-size:12px;border: solid 1px black;\">Jumlah </td>
+                    <td align=\"right\" style=\"font-size:12px;border: solid 1px black;\">".number_format($lcterima_ini,2)."</td>
+                    <td align=\"right\" style=\"font-size:12px;border: solid 1px black;\">".number_format($lckeluar_ini,2)."</td>
+                </tr>";
+       if ($posisi_ini<0){
+                
+                $cRet .="<tr>
+                            <td align=\"left\" colspan=\"6\" style=\"font-size:12px;border: solid 1px white;border-right:solid 1px black;\">&nbsp;</td>
+                            <td align=\"right\" style=\"font-size:12px;border: solid 1px black;\">Perubahan Posisi Kas</td>
+                            <td align=\"right\" style=\"font-size:12px;border: solid 1px black;\">".number_format($posisi_ini,2)."</td>
+                            <td align=\"right\" style=\"font-size:12px;border: solid 1px black;\"></td>
+                        </tr>";
+        }else {
+                 $cRet .="<tr>
+                            <td align=\"left\" colspan=\"6\" style=\"font-size:12px;border: solid 1px white;border-right:solid 1px black;\">&nbsp;</td>
+                            <td align=\"right\" style=\"font-size:12px;border: solid 1px black;\">Perubahan Posisi Kas</td>
+                            <td align=\"right\" style=\"font-size:12px;border: solid 1px black;\"></td>
+                            <td align=\"right\" style=\"font-size:12px;border: solid 1px black;\">".number_format($posisi_ini,2)."</td>
+                        </tr>";
+        }       
+        $cRet .="<tr>
+                    <td align=\"left\" colspan=\"6\" style=\"font-size:12px;border: solid 1px white;border-right:solid 1px black;\"> &nbsp;</td>
+                    <td align=\"right\" style=\"font-size:12px;border: solid 1px black;\">Posisi Kas Lalu (H-1)</td>
+                    <td align=\"right\" style=\"font-size:12px;border: solid 1px black;\">".number_format($kasin_1,2)."</td>
+                    <td align=\"right\" style=\"font-size:12px;border: solid 1px black;\">".number_format($lcsp2d_lalu2,2)."</td>
+                </tr>
+                        
+                <tr>
+                    <td align=\"left\" colspan=\"6\" style=\"font-size:12px;border: solid 1px white;border-right:solid 1px black;\">&nbsp;</td>
+                    <td align=\"right\" style=\"font-size:12px;border: solid 1px black; border-bottom:solid 1px black;\">Posisi Kas (H)</td>
+                    <td align=\"right\" style=\"font-size:12px;border: solid 1px black; border-bottom:solid 1px black;\">".number_format($posisi,2)."</td>
+                    <td align=\"right\" style=\"font-size:12px;border: solid 1px black; border-bottom:solid 1px black;\"></td>
+                </tr>";
+        
+         $cRet .="
+                 <tr>&nbsp;
+                    <td align=\"center\" colspan=\"4\" style=\"font-size:15px;border: solid 1px white;\">&nbsp;</td>
+                    <td align=\"left\" colspan=\"2\" style=\"font-size:15px;border: solid 1px white;\">&nbsp;</td>
+                    <td align=\"center\" colspan=\"3\" style=\"font-size:15px;border: solid 1px white; border-top:solid 1px black;\">&nbsp;</td>                                                                                                                                                                                
+                </tr>
+                 <tr>
+                    <td align=\"left\" colspan=\"5\" style=\"font-size:15px;border: solid 1px white;\">Rekapitulasi Posisi kas di BUD (Rp)</td>
+                    <td align=\"left\" colspan=\"2\" style=\"font-size:15px;border: solid 1px white;\"></td>
+                    <td align=\"left\" colspan=\"2\" style=\"font-size:15px;border: solid 1px white;\"></td>                                                                                                                                                                                
+                </tr>";
+        // nggk ada tabel saldo_bank
+        //  $sqlsaldo = "SELECT nm_bank as nama,saldo as nilai from saldo_bank order by kd_bank";
+        //         $saldo = $this->db->query($sqlsaldo);
+                $totsaldo=0;
+            //     foreach ($saldo->result() as $roww)
+            //     {
+            //         $nmbank = $roww->nama;
+            //         $rp = $roww->nilai;
+                
+            //         $cRet .="<tr>
+            //                     <td align=\"left\" colspan=\"4\" style=\"font-size:15px;border: solid 1px white;\">Saldo di Bank $nmbank </td>
+            //                     <td align=\"right\" colspan=\"2\" style=\"font-size:15px;border: solid 1px white;\"> ".number_format($rp)."</td>
+            //                     <td align=\"left\" colspan=\"3\" style=\"font-size:15px;border: solid 1px white;\"></td>                                                                                                                                                                                
+            //                 </tr>";
+            //         $totsaldo=$totsaldo+$rp;
+            //    }
+         $cRet .="<tr>
+                    <td align=\"left\" colspan=\"4\" style=\"font-size:15px;border: solid 1px white;\"><b>Total Saldo Kas</b></td>
+                    <td align=\"right\" colspan=\"2\" style=\"font-size:15px;border: solid 1px white;\"><b>".number_format($posisi,2)."</b></td>
+                    <td align=\"left\" colspan=\"3\" style=\"font-size:15px;border: solid 1px white;\"></td>                                                                                                                                                                                
+                </tr>
+                <tr>
+                    <td align=\"left\" colspan=\"4\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
+                    <td align=\"left\" colspan=\"5\" style=\"font-size:12px;border: solid 1px white;\"></td>
+                </tr>
+                <tr>
+                    <td align=\"center\" colspan=\"4\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
+                    <td align=\"left\" style=\"font-size:12px;border: solid 1px white;\"></td>
+                    <td align=\"center\" colspan=\"4\" style=\"font-size:15px;border: solid 1px white;\">Pontianak, tanggal ".$this->tanggal_format_indonesia($tgl_ttd)."</td>                                                                                                                                                                                
+                </tr>
+                <tr>                
+                    <td align=\"center\" colspan=\"4\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
+                    <td align=\"left\" style=\"font-size:12px;border: solid 1px white;\"></td>
+                    <td align=\"center\" colspan=\"4\" style=\"font-size:15px;border: solid 1px white;\">$jabatan</td>                    
+                </tr>
+                <tr>                
+                    <td align=\"center\" colspan=\"4\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
+                    <td align=\"left\" style=\"font-size:12px;border: solid 1px white;\"></td>
+                    <td align=\"center\" colspan=\"4\" style=\"font-size:15px;border: solid 1px white;\">$pangkat</td>                    
+                </tr>
+                <tr>
+                    <td align=\"left\" colspan=\"5\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
+                    <td align=\"left\" colspan=\"4\" style=\"font-size:12px;border: solid 1px white;\"></td>
+                </tr>
+                <tr>
+                    <td align=\"left\" colspan=\"5\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
+                    <td align=\"left\" colspan=\"4\" style=\"font-size:12px;border: solid 1px white;\"></td>
+                </tr>
+				<tr>
+                    <td align=\"left\" colspan=\"5\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
+                    <td align=\"left\" colspan=\"4\" style=\"font-size:12px;border: solid 1px white;\"></td>
+                </tr>                
+                <tr>
+                    <td align=\"center\" colspan=\"5\" style=\"font-size:12px; border: solid 1px white;\"></td>                    
+                    <td align=\"center\" colspan=\"4\" style=\"font-size:15px; border: solid 1px white;\"><b><u>$lcNmBP</u></b></td>
+                </tr>
+                <tr>
+                    <td align=\"center\" colspan=\"4\" style=\"font-size:12px;border: solid 1px white;\"> &nbsp;</td>
+                    <td align=\"center\"  style=\"font-size:12px;border: solid 1px white;\"></td>
+                    <td align=\"center\" colspan=\"4\" style=\"font-size:15px;border: solid 1px white;\">NIP. $lcNipBP</td>
+      
+                </tr>";        
+                                  
+                
+        $cRet .='</table>';
+                 
+                 $juduls = "Kas Bulanan";
+                 
+         $data['prev']= $cRet;    
+         if($jnscetak=="0"){
+                echo $cRet;
+         }else if($jnscetak=="1"){
+                $this->tukd_model->_mpdf('', $cRet, 10, 5, 10, '0');
+         }else if($jnscetak=="2"){
+         header("Cache-Control: no-cache, no-store, must-revalidate");
+            header("Content-Type: application/vnd.ms-excel");
+            header("Content-Disposition: attachment; filename= $juduls.xls");
+            
+            $this->load->view('anggaran/rka/perkadaII', $data);
+         }
+         //$this->tukd_model->_mpdf('',$cRet,'10','10',5,'0');
+         //$this->tukd_model->_mpdf('', $cRet, 10, 10, 10, 'L');
+     
+    }
+
+
+    function cetak_kas_harian_arusrinci_bln()
+    {
+        $thn_ang = $this->session->userdata('pcThang');
+        $jnscetak = $this->uri->segment(3);
+            $bulan =''; 
+            
+           
+           
+         $tgl= $_REQUEST['tgl1'];
+         $tgl7= $_REQUEST['ttd7'];
+          //$lcperiode = $this->tukd_model->getBulan($tgl);
+         $tgl_ttd= $_REQUEST['tgl_ttd'];
+         //$lcperiode = $this->tukd_model->getBulan($tgl);
+         //$lcperiode7 = $this->tukd_model->getBulan($tgl7);
+            //$ttd= $_REQUEST['ttd'];
+           // $lcperiode = $this->tukd_model->getBulan($bulan);
+            //$ttd= $_REQUEST['ttd'];
+            $ttd= $_REQUEST['ttd'];
+         $lcttd        = str_replace('a',' ',$ttd);
+         $csql="SELECT a.jabatan,a.pangkat,a.nama, a.nip FROM ms_ttd a WHERE kode = 'BUD' and nip='$lcttd'";
+         $hasil = $this->db->query($csql);
+         $trh2 = $hasil->row();          
+         $lcNmBP = $trh2->nama;
+         $lcNipBP = $trh2->nip;
+         $pangkat = $trh2->pangkat;
+         $jabatan = $trh2->jabatan;                         
+            
+         $cRet = '';
+         $cRet .="<table style=\"border-collapse:collapse;\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\">
+            <tr>
+                <td align=\"center\" colspan=\"5\" style=\"font-size:14px;border: solid 1px white;\"><b>PEMERINTAH KOTA PONTIANAK <br>LAPORAN RINCIAN ARUS KAS</b></td>
+            </tr>
+              <tr>
+                <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
+                <td align=\"left\" colspan=\"3\" style=\"font-size:12px;border: solid 1px white;\"></td>
+            </tr>
+            
+            <tr>
+                <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;\">PERIODE : ".$this->tanggal_format_indonesia($tgl)."  s/d  ".$this->tanggal_format_indonesia($tgl7)."</td>
+                <td align=\"left\" colspan=\"3\" style=\"font-size:12px;border: solid 1px white;\"></td>
+            </tr>
+            <tr>
+                <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 2px black;\">&nbsp;</td>
+                <td align=\"left\" colspan=\"3\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 2px black;\">&nbsp;</td>
+            </tr>
+            
+            <tr>
+                <td align=\"center\" width=\"10%\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black;\" >REK.</td>
+				<td align=\"center\" width=\"45%\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black;\" >URAIAN</td>
+                <td align=\"center\" colspan=\"3\" width=\"45%\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black;\">NILAI</td>
+            </tr>                        
+            <tr>
+                <td align=\"center\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black\">1</td>
+				<td align=\"center\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black\">2</td>
+                <td align=\"center\" colspan=\"3\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black\">3</td>                             
+            </tr>";
+                      
+                $csql= "select sum(x.nilai) AS nilai from (
+                SELECT sum(b.nilai) AS nilai FROM trhsp2d a
+left join trdspp b on b.no_spp = a.no_spp and a.kd_skpd = b.kd_skpd
+WHERE a.status_bud='1' and a.tgl_kas_bud < '$tgl'
+union all
+select sum(b.nilai) AS nilai from trhinlain_ppkd a inner join trdinlain_ppkd b
+on a.kd_skpd=b.kd_skpd and a.no_bukti=b.no_bukti
+where a.tgl_bukti < '$tgl' 
+) x";
+                $hasil2 = $this->db->query($csql);
+                $trhsp2d2 = $hasil2->row();          
+                $lcsp2d_lalu = $trhsp2d2->nilai;
+                
+                $csqlkasin1= "SELECT sld_awal as nilai from ms_skpd where kd_skpd='5.02.0.00.0.00.01.0000'";
+                $hasil3 = $this->db->query($csqlkasin1);
+                $trhkasinpkd = $hasil3->row();          
+                $lckasinpkd = $trhkasinpkd->nilai;
+                
+                $csqlkasin2= "select sum(b.rupiah) AS nilai FROM trhkasin_ppkd a
+left join trdkasin_ppkd b on b.no_kas = a.no_kas and b.no_sts = a.no_sts and 
+b.kd_skpd = a.kd_skpd  WHERE  a.tgl_kas < '$tgl'                
+                ";
+                $hasil4 = $this->db->query($csqlkasin2);
+                $trhkasinppkd = $hasil4->row();          
+                $lckasinppkd = $trhkasinppkd->nilai;
+                
+                $kasin_1= $lckasinpkd+$lckasinppkd;
+				//$kasin_1= $lckasinppkd;
+                $posisi_1= $kasin_1-$lcsp2d_lalu;                                                            
+
+                 $sql4="SELECT a.seq,a.nor,a.kode,a.uraian,isnull(a.kode_1,'-') as kode_1,isnull(a.kode_2,'-') as kode_2,isnull(a.kode_3,'-') as kode_3,a.cetak,a.bold FROM map_arus_kas a 
+				   GROUP BY a.seq,a.nor,a.kode,a.uraian,isnull(a.kode_1,'-'),isnull(a.kode_2,'-'),isnull(a.kode_3,'-'),a.cetak,a.bold ORDER BY a.seq";
+                       
+                  $query4 = $this->db->query($sql4);
+                  $no     = 0;                                  
+               
+                foreach ($query4->result() as $row4)
+                {
+                    $nseq      = $row4->seq; 
+                    $nkode     = $row4->kode;                      
+                    $nama      = $row4->uraian;   
+                    $n         = $row4->kode_1;
+					$n		   = ($n=="-"?"'-'":$n);
+					$n2        = $row4->kode_2;
+					$n2		   = ($n2=="-"?"'-'":$n2);
+					$n3        = $row4->kode_3;
+					$n3		   = ($n3=="-"?"'-'":$n3);
+                    $ncetak    = $row4->cetak;
+                    $nbold     = $row4->bold;
+                    
+                    $digit = strlen($n)-2;
+                    
+                    if($n3==5){
+                        $sql = "SELECT sum(b.nilai) AS nilai FROM trhsp2d a
+left join trdspp b on b.no_spp = a.no_spp and a.kd_skpd = b.kd_skpd
+WHERE a.status_bud='1' and a.tgl_kas_bud >= '$tgl' and a.tgl_kas_bud <= '$tgl7' and left(b.kd_rek6,$digit) in ($n) ";				       
+                    }else if($n3==51){
+                        $sql = "SELECT sum(b.nilai) AS nilai FROM trhsp2d a
+left join trdspp b on b.no_spp = a.no_spp and a.kd_skpd = b.kd_skpd
+WHERE a.status_bud='1' and a.tgl_kas_bud >= '$tgl' and a.tgl_kas_bud <= '$tgl7' and left(b.kd_rek6,1) in ($n) ";				       
+                    }else if($n3==61){
+                        $sql = "SELECT sum(b.rupiah) AS nilai FROM trhkasin_ppkd a
+left join trdkasin_ppkd b on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+where a.tgl_kas >= '$tgl' and a.tgl_kas <= '$tgl7' and left(b.kd_rek6,$digit) in ($n) ";
+                    }else if($n3==62){
+                        $sql = "SELECT sum(b.nilai) AS nilai FROM trhsp2d a
+left join trdspp b on b.no_spp = a.no_spp and a.kd_skpd = b.kd_skpd
+WHERE a.status_bud='1' and a.tgl_kas_bud >= '$tgl' and a.tgl_kas_bud <= '$tgl7' and left(b.kd_rek6,$digit) in ($n) ";				       
+                    }else if($n3==41){
+                        $sql = "select sum(x.nilai) AS nilai from (SELECT sum(b.rupiah) AS nilai FROM trhkasin_ppkd a
+left join trdkasin_ppkd b on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+where a.tgl_kas >= '$tgl' and a.tgl_kas <= '$tgl7' and left(b.kd_rek5,2) in ($n)
+union all
+select sum(b.nilai)*-1 AS nilai from trhinlain_ppkd a inner join trdinlain_ppkd b
+on a.kd_skpd=b.kd_skpd and a.no_bukti=b.no_bukti
+where a.tgl_bukti >='$tgl' and a.tgl_bukti <='$tgl7' and left(b.kd_rek5,2) in ($n)) x  ";				                               
+                    }else{
+                        $sql = "select sum(x.nilai) AS nilai from (SELECT sum(b.rupiah) AS nilai FROM trhkasin_ppkd a
+left join trdkasin_ppkd b on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+where a.tgl_kas >= '$tgl' and a.tgl_kas <= '$tgl7' and left(b.kd_rek5,$digit) in ($n)
+union all
+select sum(b.nilai)*-1 AS nilai from trhinlain_ppkd a inner join trdinlain_ppkd b
+on a.kd_skpd=b.kd_skpd and a.no_bukti=b.no_bukti
+where a.tgl_bukti >='$tgl' and a.tgl_bukti <='$tgl7' and left(b.kd_rek5,$digit) in ($n)) x ";				                               
+                    }
+                                            				 	
+                    $hasil = $this->db->query($sql);       
+                    $lcterima_ini=0;
+                    $lcterima_ini1=0;
+                    $lcterima_ini2=0;
+                    $lckeluar_ini=0;
+                    $lcnilai_up=0;
+                    $lcnilai_gu=0;
+                    $lcnilai_tu=0;
+                    $no=0;
+                    foreach ($hasil->result() as $row)
+                    {
+                       $no      =$no+1;
+                       $nilai   =$row->nilai;
+                        
+                       if($nkode=='4'){
+                        $lcterima_ini=$lcterima_ini+$nilai;
+                       } 
+  
+                       if($n3==4 or $n3==41){ 
+                       if ($nbold==2){                                                                                            
+                              $cRet .="<tr>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>$nkode</b></td>
+								  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>$nama</b></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format($nilai,2)."</b></td>
+                                  </tr>";                                                                         
+                       }else if ($nbold==3){                                                                                            
+                              $cRet .="<tr>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>$nkode</b></td>
+								  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>$nama</b></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format($nilai,2)."</b></td>
+                                  </tr>";                                                                         
+                       }else{
+                        
+                            if($ncetak=='p1'){
+                            $cRet .="<tr>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">$nkode</td>
+								  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">&nbsp;&nbsp;&nbsp;&nbsp;$nama</td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format($nilai,2)."</td>
+                                  </tr>";    
+                        }else if($ncetak=='p2'){
+                            $cRet .="<tr>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">$nkode</td>
+								  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$nama</td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format($nilai,2)."</td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  </tr>";    
+                        }else if($ncetak=='p3'){
+                            $cRet .="<tr>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">$nkode</td>
+								  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$nama</td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format($nilai,2)."</td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  </tr>";    
+                        }                               
+                       }                                  
+                    }//batas 4
+                    
+                    $cRet .="<tr>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+								  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  </tr>";  
+                    
+                    if($n3==51){ 
+                       if ($nbold==2){                                                                                            
+                              $cRet .="<tr>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>$nkode</b></td>
+								  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>$nama</b></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format($nilai,2)."</b></td>
+                                  </tr>";                                                                         
+                       }else if ($nbold==3){                                                                                            
+                              $cRet .="<tr>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>$nkode</b></td>
+								  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>$nama</b></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format($nilai,2)."</b></td>
+                                  </tr>";                                                                         
+                       }else{
+                            //up
+                            if($nseq==675){
+                                $sqlup = $this->db->query("SELECT sum(b.nilai) AS nilai FROM trhsp2d a
+                                left join trdspp b on b.no_spp = a.no_spp and a.kd_skpd = b.kd_skpd
+                                left join trhspp c on b.no_spp = c.no_spp and c.kd_skpd = b.kd_skpd                                
+                                WHERE a.status_bud='1' and a.tgl_kas_bud >= '$tgl' and a.tgl_kas_bud <= '$tgl7' and left(b.kd_rek6,1)='1' and c.jns_spp = '1' ")->row();
+                                $lcnilai_up = $sqlup->nilai;
+                          
+                            if($ncetak=='p1'){
+                            $cRet .="<tr>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">$nkode</td>
+								  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">&nbsp;&nbsp;&nbsp;&nbsp;$nama</td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format($lcnilai_up,2)."</td>
+                                  </tr>";    
+                            }
+                            }
+                            //GU                            
+                            if($nseq==680){
+                                $sqlgu = $this->db->query("SELECT sum(b.nilai) AS nilai FROM trhsp2d a
+                                left join trdspp b on b.no_spp = a.no_spp and a.kd_skpd = b.kd_skpd
+                                left join trhspp c on b.no_spp = c.no_spp and c.kd_skpd = b.kd_skpd                                
+                                WHERE a.status_bud='1' and a.tgl_kas_bud >= '$tgl' and a.tgl_kas_bud <= '$tgl7' and c.jns_spp = '2' ")->row();
+                                $lcnilai_gu = $sqlgu->nilai;
+                          
+                            if($ncetak=='p1'){
+                            $cRet .="<tr>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">$nkode</td>
+								  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">&nbsp;&nbsp;&nbsp;&nbsp;$nama</td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format($lcnilai_gu,2)."</td>
+                                  </tr>";    
+                            }
+                            }   
+                            //TU                            
+                            if($nseq==685){
+                                $sqltu = $this->db->query("SELECT sum(b.nilai) AS nilai FROM trhsp2d a
+                                left join trdspp b on b.no_spp = a.no_spp and a.kd_skpd = b.kd_skpd
+                                left join trhspp c on b.no_spp = c.no_spp and c.kd_skpd = b.kd_skpd                                
+                                WHERE a.status_bud='1' and a.tgl_kas_bud >= '$tgl' and a.tgl_kas_bud <= '$tgl7' and c.jns_spp = '3' ")->row();
+                                $lcnilai_tu = $sqltu->nilai;
+                          
+                            if($ncetak=='p1'){
+                            $cRet .="<tr>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">$nkode</td>
+								  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">&nbsp;&nbsp;&nbsp;&nbsp;$nama</td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format($lcnilai_tu,2)."</td>
+                                  </tr>";    
+                            }
+                            } 
+                            //batas                           
+                       }                                  
+                    }//batas51
+                    if($n3==5){ 
+                       if ($nbold==2){                                                                                            
+                              $cRet .="<tr>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>$nkode</b></td>
+								  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>$nama</b></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format($nilai,2)."</b></td>
+                                  </tr>";                                                                         
+                       }else if ($nbold==3){                                                                                            
+                              $cRet .="<tr>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>$nkode</b></td>
+								  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>$nama</b></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format($nilai,2)."</b></td>
+                                  </tr>";                                                                         
+                       }else{
+                            if($ncetak=='p1'){
+                            $cRet .="<tr>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">$nkode</td>
+								  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">&nbsp;&nbsp;&nbsp;&nbsp;$nama</td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format($nilai,2)."</td>
+                                  </tr>";    
+                        }else if($ncetak=='p2'){
+                            $cRet .="<tr>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">$nkode</td>
+								  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$nama</td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format($nilai,2)."</td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  </tr>";    
+                        }else if($ncetak=='p3'){
+                            $cRet .="<tr>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">$nkode</td>
+								  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$nama</td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format($nilai,2)."</td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  </tr>";    
+                        }                               
+                       }                                  
+                    }//batas 5
+                    
+                     $cRet .="<tr>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+								  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  </tr>";  
+                     
+                     
+                     if($n3==6){ 
+                       if ($nbold==2){                                                                                            
+                              $cRet .="<tr>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>$nkode</b></td>
+								  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>$nama</b></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format($nilai,2)."</b></td>
+                                  </tr>";                                                                         
+                       }else if ($nbold==3){                                                                                            
+                              $cRet .="<tr>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>$nkode</b></td>
+								  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>$nama</b></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format($nilai,2)."</b></td>
+                                  </tr>";                                                                         
+                       }else{
+                            if($ncetak=='p1'){
+                            $cRet .="<tr>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">$nkode</td>
+								  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">&nbsp;&nbsp;&nbsp;&nbsp;$nama</td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format($nilai,2)."</td>
+                                  </tr>";    
+                        }else if($ncetak=='p2'){
+                            $cRet .="<tr>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">$nkode</td>
+								  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$nama</td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format($nilai,2)."</td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  </tr>";    
+                        }else if($ncetak=='p3'){
+                            $cRet .="<tr>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">$nkode</td>
+								  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$nama</td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format($nilai,2)."</td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  </tr>";    
+                        }                               
+                       }                                  
+                    }
+                    
+                    if($n3==61 || $n3==62){ 
+                       if ($nbold==2){                                                                                            
+                              $cRet .="<tr>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>$nkode</b></td>
+								  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>$nama</b></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format($nilai,2)."</b></td>
+                                  </tr>";                                                                         
+                       }else if ($nbold==3){                                                                                            
+                              $cRet .="<tr>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>$nkode</b></td>
+								  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>$nama</b></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format($nilai,2)."</b></td>
+                                  </tr>";                                                                         
+                       }else{
+                            if($ncetak=='p1'){
+                            $cRet .="<tr>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">$nkode</td>
+								  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">&nbsp;&nbsp;&nbsp;&nbsp;$nama</td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format($nilai,2)."</td>
+                                  </tr>";    
+                        }else if($ncetak=='p2'){
+                            $cRet .="<tr>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">$nkode</td>
+								  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$nama</td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format($nilai,2)."</td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  </tr>";    
+                        }else if($ncetak=='p3'){
+                            $cRet .="<tr>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">$nkode</td>
+								  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$nama</td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format($nilai,2)."</td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  </tr>";    
+                        }                               
+                       }                                  
+                    }
+                    //batas 6
+                    
+                    }
+                    
+                    }
+                    
+                    $sql_4cp = $this->db->query("SELECT sum(b.rupiah) AS nilai FROM trhkasin_ppkd a
+left join trdkasin_ppkd b on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+where a.tgl_kas >= '$tgl' and a.tgl_kas <= '$tgl7' and left(b.kd_rek5,1) in ('5','1')")->row();
+                    $lcterima_cp = $sql_4cp->nilai;
+                    
+                    $cRet .="<tr>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:solid 1px black\"></td>
+								  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:solid 1px black\"><b>Contra Pos</b></td>
+                                  <td valign=\"top\" colspan=\"2\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:solid 1px black\"></td>                                 
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:solid 1px black\">".number_format($lcterima_cp,2)."</td>
+                                  </tr>";
+                    
+                    $sql_4 = $this->db->query("SELECT sum(b.rupiah) AS nilai FROM trhkasin_ppkd a
+left join trdkasin_ppkd b on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+where a.tgl_kas >= '$tgl' and a.tgl_kas <= '$tgl7' and left(b.kd_rek5,1) in ('4','5','1')")->row();
+                    $lcterima_ini1 = $sql_4->nilai;
+                    
+                    $sql_61 = $this->db->query("SELECT sum(b.rupiah) AS nilai FROM trhkasin_ppkd a
+left join trdkasin_ppkd b on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+where a.tgl_kas >= '$tgl' and a.tgl_kas <= '$tgl7' and left(b.kd_rek5,2) in ('61')")->row();                    
+                    $lcterima_ini2 = $sql_61->nilai;
+                    $lcterima_ini = $lcterima_ini1 + $lcterima_ini2;
+                    
+                    $sql_5 = $this->db->query("SELECT sum(b.nilai) AS nilai FROM trhsp2d a
+left join trdspp b on b.no_spp = a.no_spp and a.kd_skpd = b.kd_skpd
+WHERE a.status_bud='1' and a.tgl_kas_bud >= '$tgl' and a.tgl_kas_bud <= '$tgl7' and left(b.kd_rek6,2) in ('51','52','62','11')")->row(); 
+                    
+                    $lckeluarxy_ini = $sql_5->nilai;
+                    
+                    $sql_7 = $this->db->query("select sum(b.nilai) AS nilai from trhinlain_ppkd a inner join trdinlain_ppkd b
+on a.kd_skpd=b.kd_skpd and a.no_bukti=b.no_bukti
+where a.tgl_bukti>= '$tgl' and a.tgl_bukti<= '$tgl7' and left(b.kd_rek5,1) in ('4','5','1') ")->row(); 
+                    $lckeluarx_ini = $sql_7->nilai;
+                    
+                    $lckeluar_ini=$lckeluarxy_ini+$lckeluarx_ini;
+                    
+                    
+                    $posisi_ini=$lcterima_ini-$lckeluar_ini;
+                    $posisi=$posisi_1+$posisi_ini;                 
+
+        $cRet .="<tr>
+                    <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;border-right:solid 1px black;border-top:solid 1px black;\">&nbsp;</td>
+                    <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px black;\">1. Jumlah Penerimaan (H)</td>
+                    <td align=\"right\" style=\"font-size:12px;border: solid 1px black;\">".number_format($lcterima_ini,2)."</td>                    
+                </tr>";                
+        $cRet .="<tr>
+                    <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;border-right:solid 1px black;\">&nbsp;</td>
+                    <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px black;\">2. Jumlah Pengeluaran (H)</td>
+                    <td align=\"right\" style=\"font-size:12px;border: solid 1px black;\">".number_format($lckeluar_ini,2)."</td>
+                </tr>";        
+       if ($posisi_ini<0){
+                
+                $cRet .="<tr>
+                            <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;border-right:solid 1px black;\">&nbsp;</td>
+                            <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px black;\">3. Perubahan Posisi Kas (1 - 2)</td>
+                            <td align=\"right\" style=\"font-size:12px;border: solid 1px black;\">".number_format($posisi_ini,2)."</td>                            
+                        </tr>";
+        }else {
+                 $cRet .="<tr>
+                        <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;border-right:solid 1px black;\">&nbsp;</td>
+                            <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px black;\">3. Perubahan Posisi Kas (1 - 2)</td>
+                            <td align=\"right\" style=\"font-size:12px;border: solid 1px black;\">".number_format($posisi_ini,2)."</td>                            
+                        </tr>";
+        }       
+        $cRet .="<tr>
+                    <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;border-right:solid 1px black;\"> &nbsp;</td>
+                    <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px black;\">4. Penerimaan Kas Lalu (H - 1) </td>
+                    <td align=\"right\" style=\"font-size:12px;border: solid 1px black;\">".number_format($kasin_1,2)."</td>
+                </tr>
+                <tr>
+                    <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;border-right:solid 1px black;\"> &nbsp;</td>
+                    <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px black;\">5. Pengeluaran Kas Lalu (H - 1) </td>
+                    <td align=\"right\" style=\"font-size:12px;border: solid 1px black;\">".number_format($lcsp2d_lalu,2)."</td>
+                </tr>                         
+                <tr>
+                    <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;border-right:solid 1px black;\">&nbsp;</td>
+                    <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px black; border-bottom:solid 1px black;\">6. Posisi Kas (H)</td>
+                    <td align=\"right\" style=\"font-size:12px;border: solid 1px black; border-bottom:solid 1px black;\">".number_format($posisi,2)."</td>
+                </tr>";
+        
+         $cRet .="
+                 <tr>&nbsp;
+                    <td align=\"center\" colspan=\"3\" style=\"font-size:15px;border: solid 1px white;\">&nbsp;</td>
+                    <td align=\"left\" colspan=\"1\" style=\"font-size:15px;border: solid 1px white;\">&nbsp;</td>
+                    <td align=\"center\" colspan=\"1\" style=\"font-size:15px;border: solid 1px white; border-top:solid 1px black;\">&nbsp;</td>                                                                                                                                                                                
+                </tr>
+                 <tr>
+                    <td align=\"left\" colspan=\"3\" style=\"font-size:15px;border: solid 1px white;\">Rekapitulasi Posisi kas di BUD (Rp)</td>
+                    <td align=\"left\" colspan=\"1\" style=\"font-size:15px;border: solid 1px white;\"></td>
+                    <td align=\"left\" colspan=\"1\" style=\"font-size:15px;border: solid 1px white;\"></td>                                                                                                                                                                                
+                </tr>";
+                //  tabel saldo bank tidak ada   
+        //  $sqlsaldo = "SELECT nm_bank as nama,saldo as nilai from saldo_bank order by kd_bank";
+        //         $saldo = $this->db->query($sqlsaldo);
+                $totsaldo=0;
+            //     foreach ($saldo->result() as $roww)
+            //     {
+            //         $nmbank = $roww->nama;
+            //         $rp = $roww->nilai;
+                
+            //         $cRet .="<tr>
+            //                     <td align=\"left\" colspan=\"2\" style=\"font-size:15px;border: solid 1px white;\">Saldo di Bank $nmbank </td>
+            //                     <td align=\"right\" colspan=\"2\" style=\"font-size:15px;border: solid 1px white;\"> ".number_format($rp)."</td>
+            //                     <td align=\"left\" colspan=\"1\" style=\"font-size:15px;border: solid 1px white;\"></td>                                                                                                                                                                                
+            //                 </tr>";
+            //         $totsaldo=$totsaldo+$rp;
+            //    }
+               
+              // $tgl_ttd2 = date('YYYY-m-d');
+               // ".$this->tanggal_format_indonesia($tgl_ttd2)."
+         $cRet .="<tr>
+                    <td align=\"left\" colspan=\"2\" style=\"font-size:15px;border: solid 1px white;\"><b>Total Saldo Kas </b></td>
+                    <td align=\"left\" colspan=\"2\" style=\"font-size:15px;border: solid 1px white;\"><b>".number_format($posisi,2)."</b></td>
+                    <td align=\"left\" colspan=\"1\" style=\"font-size:15px;border: solid 1px white;\"></td>                                                                                                                                                                                
+                </tr>
+                <tr>
+                    <td align=\"left\" colspan=\"3\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
+                    <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;\"></td>
+                </tr>
+                <tr>
+                    <td align=\"center\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
+                    <td align=\"center\" colspan=\"3\" style=\"font-size:15px;border: solid 1px white;\">Pontianak, ".$this->tanggal_format_indonesia($tgl_ttd)."</td>                                                                                                                                                                                
+                </tr>
+                <tr>                
+                    <td align=\"center\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
+                    <td align=\"center\" colspan=\"3\" style=\"font-size:15px;border: solid 1px white;\">$jabatan</td>                    
+                </tr>
+                <tr>
+                    <td align=\"center\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;\"> &nbsp;</td>
+                    <td align=\"center\" colspan=\"3\" style=\"font-size:15px;border: solid 1px white;\">$pangkat</td>
+                </tr>
+                <tr>
+                    <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
+                    <td align=\"left\" colspan=\"3\" style=\"font-size:12px;border: solid 1px white;\"></td>
+                </tr>
+                <tr>
+                    <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
+                    <td align=\"left\" colspan=\"3\" style=\"font-size:12px;border: solid 1px white;\"></td>
+                </tr>
+				<tr>
+                    <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
+                    <td align=\"left\" colspan=\"3\" style=\"font-size:12px;border: solid 1px white;\"></td>
+                </tr>                
+                <tr>
+                    <td align=\"center\" colspan=\"2\" style=\"font-size:12px; border: solid 1px white;\"></td>                    
+                    <td align=\"center\" colspan=\"3\" style=\"font-size:15px; border: solid 1px white;\"><b><u>$lcNmBP</u></b></td>
+                </tr>
+                <tr>
+                    <td align=\"center\" colspan=\"1\" style=\"font-size:12px;border: solid 1px white;\"> &nbsp;</td>
+                    <td align=\"center\"  style=\"font-size:12px;border: solid 1px white;\"></td>
+                    <td align=\"center\" colspan=\"3\" style=\"font-size:15px;border: solid 1px white;\">NIP. $lcNipBP</td>     
+                </tr>";        
+                                  
+                
+        $cRet .='</table>';
+                 
+                 $juduls = "Kas Harian";
+                 
+         $data['prev']= $cRet;    
+         if($jnscetak=="0"){
+                echo $cRet;
+         }else if($jnscetak=="1"){
+                $this->tukd_model->_mpdf('', $cRet, 10, 5, 10, '0');
+         }else if($jnscetak=="2"){
+         header("Cache-Control: no-cache, no-store, must-revalidate");
+            header("Content-Type: application/vnd.ms-excel");
+            header("Content-Disposition: attachment; filename= $juduls.xls");
+            
+            $this->load->view('anggaran/rka/perkadaII', $data);
+         }
+         //$this->tukd_model->_mpdf('',$cRet,'10','10',5,'0');
+         //$this->tukd_model->_mpdf('', $cRet, 10, 10, 10, 'L');
+     
+    }
+
+
+    function cetak_kas_harian_rincibln_cp()
+    {
+        $thn_ang = $this->session->userdata('pcThang');
+        $jnscetak = $this->uri->segment(3);
+            $bulan =''; 
+            
+            $lcperiode = $this->tukd_model->getBulan($bulan);
+            $ttd= $_REQUEST['ttd'];
+         $lcttd        = str_replace('a',' ',$ttd);
+         $tgl6= $_REQUEST['tgl1'];
+         $tgl7= $_REQUEST['ttd7'];            
+         $tgl_ttd= $_REQUEST['tgl_ttd'];
+         
+         ///$lcperiode = $this->tukd_model->getBulan($tgl6);
+         //$lcperiode7 = $this->tukd_model->getBulan($tgl7);
+         
+         $csql="SELECT a.pangkat,a.jabatan,a.nama, a.nip FROM ms_ttd a WHERE kode = 'BUD' AND nip='$lcttd'";
+         $hasil = $this->db->query($csql);
+         $trh2 = $hasil->row();          
+         $lcNmBP = $trh2->nama;
+         $lcNipBP = $trh2->nip;
+         $jabatan = $trh2->jabatan;
+         $pangkat = $trh2->pangkat;                         
+            
+         $cRet = '';
+         $cRet .="<table style=\"border-collapse:collapse;\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\">
+            <tr>
+                <td align=\"center\" colspan=\"8\" style=\"font-size:14px;border: solid 1px white;\"><b>PEMERINTAH KOTA PONTIANAK <br>LAPORAN DAFTAR CONTRA POS</b></td>
+            </tr>
+              <tr>
+                <td align=\"left\" colspan=\"3\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
+                <td align=\"left\" colspan=\"1\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>                
+                <td align=\"left\" colspan=\"4\" style=\"font-size:12px;border: solid 1px white;\"></td>
+            </tr>
+            
+            <tr>
+                <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;\">PERIODE</td>
+                <td align=\"left\" colspan=\"6\" style=\"font-size:12px;border: solid 1px white;\">: ".$this->tanggal_format_indonesia($tgl6)."  s/d  ".$this->tanggal_format_indonesia($tgl7)."</td>
+            </tr>
+            <tr>
+                <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 2px black;\">&nbsp;</td>
+                <td align=\"left\" colspan=\"6\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 2px black;\">&nbsp;</td>
+            </tr>            
+            <tr>
+                <td align=\"center\" rowspan=\"2\" width=\"4%\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black;\" >No.</td>
+				<td align=\"center\" rowspan=\"2\" width=\"7%\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black;\" >KASDA</td>                
+				<td align=\"center\" rowspan=\"2\" width=\"7%\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black;\" >TGL KAS</td>
+                <td align=\"center\" colspan=\"3\" width=\"30%\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black;\">Transaksi</td>
+                <td align=\"center\" rowspan=\"2\" width=\"29%\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black;\">Uraian</td>
+                <td align=\"center\" rowspan=\"2\" width=\"15%\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black;\">Nilai<br>(Rp)</td>                            
+            </tr> 
+            <tr>
+                <td align=\"center\"  width=\"12%\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black\" >UP/GU/TU</td>
+                <td align=\"center\"  width=\"12%\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black\">LS/LS-GAJI</td>
+                <td align=\"center\"  width=\"12%\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black\">Lain - Lain</td>                       
+            </tr>           
+            <tr>
+                <td align=\"center\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black\">1</td>
+				<td align=\"center\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black\">2</td>                
+				<td align=\"center\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black\">3</td>
+                <td align=\"center\" colspan=\"3\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black\">4</td>
+                <td align=\"center\"  style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black\">5</td>
+                <td align=\"center\"  style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black\">6</td                               
+            </tr>";
+                   
+                $lcsp2d_lalu2 = 0;
+                
+                $csqlkasin1= "SELECT sld_awal as nilai from ms_skpd where kd_skpd='5.02.0.00.0.00.01.0000'";
+                $hasil3 = $this->db->query($csqlkasin1);
+                $trhkasinpkd = $hasil3->row();          
+                $lckasinpkd = $trhkasinpkd->nilai;
+                
+                $csqlkasin2= "select sum(b.rupiah) AS nilai FROM trhkasin_ppkd a
+left join trdkasin_ppkd b on b.no_kas = a.no_kas and b.no_sts = a.no_sts and 
+b.kd_skpd = a.kd_skpd  WHERE  a.tgl_kas < '$tgl6' and a.jns_trans in ('1','5')";
+                $hasil4 = $this->db->query($csqlkasin2);
+                $trhkasinppkd = $hasil4->row();          
+                $lckasinppkd = $trhkasinppkd->nilai;
+                
+                $kasin_1= $lckasinpkd+$lckasinppkd;
+				//$kasin_1= $lckasinppkd;
+                $posisi_1= $kasin_1-$lcsp2d_lalu2;                                            
+                //echo $lckasinppkd."</br>";
+                //echo $lcsp2d_lalu2."</br>";
+                //echo $posisi_1."</br>";                  
+				 /*$sql = "SELECT * FROM
+						   (SELECT no_kas_bud as kasda,no_sp2d AS nomor,tgl_kas_bud AS tgl,keperluan AS uraian,nilai AS nilai,'5' AS jns FROM trhsp2d WHERE STATUS='1'
+                            UNION
+                            SELECT no_kas as kasda,no_sts AS nomor,tgl_sts AS tgl,keterangan AS uraian,total AS nilai,'4' AS jns FROM trhkasin_ppkd) z WHERE z.tgl='$tgl' ORDER BY z.tgl,z.kasda";
+	               */
+                   
+                   $sql = "SELECT * FROM
+(
+SELECT '1' as urut,no_kas as kasda,no_sts AS nomor,tgl_kas AS tgl,keterangan AS uraian,total AS nilai,jns_trans FROM trhkasin_ppkd where jns_trans in ('1','5')
+UNION ALL
+SELECT '2' as urut,a.no_kas as kasda,a.no_sts AS nomor,a.tgl_kas AS tgl,b.kd_rek5 AS uraian,b.rupiah AS nilai,jns_trans FROM trhkasin_ppkd a
+left join trdkasin_ppkd b on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd where a.jns_trans in ('1','5')
+) 
+z WHERE z.tgl >='$tgl6' and z.tgl <= '$tgl7'
+ORDER BY z.tgl,z.kasda,z.urut";			                        
+                	
+                    $hasil = $this->db->query($sql);       
+                    $lcterima_ini=0;
+                    $lckeluar_ini=0;
+                    $no=0;
+                    foreach ($hasil->result() as $row)
+                    {
+                       
+                       if($row->urut=='1'){
+                            $no =$no+1;                        
+                       }
+                       $no =$no+0;
+                       $urut   =$row->urut;
+                       $nomor   =$row->nomor;
+					             $kasda   =$row->kasda;
+                       $tgl     =$row->tgl;
+                       $uraian  =$row->uraian; 
+                       $nilai   =$row->nilai;
+                       $jns     =$row->jns_trans;      
+                       
+                       $tglv = explode('-',$tgl);
+                       $tglv1 = $tglv[0];
+                       $tglv2 = $tglv[1];
+                       $tglv3 = $tglv[2];
+                       
+                       $tgll = $tglv3.'-'.$tglv2.'-'.$tglv1; 
+                            
+                            if($jns==1){
+                            if($urut==1){
+                            $cRet .="<tr>
+                                  <td valign=\"top\" align=\"center\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>$no</b></td>
+								  <td valign=\"top\" align=\"center\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>$kasda</b></td>
+                                  <td valign=\"top\" align=\"center\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>$tgll</b></td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>$nomor</b></td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>$uraian</b></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format($nilai)."</b></td>                                 
+                                  </tr>"; 
+                                   
+                            }else{
+                              $cRet .="<tr>
+                                  <td valign=\"top\" align=\"center\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+								  <td valign=\"top\" align=\"center\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>                                  
+								  <td valign=\"top\" align=\"center\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">$uraian</td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format($nilai)."</td>                                  
+                                  </tr>";   
+                                  //$lcterima_ini=$lcterima_ini+$nilai;
+                            }     
+                            }else{
+                             if($urut==1){
+                            $cRet .="<tr>
+                                  <td valign=\"top\" align=\"center\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>$no</b></td>
+								  <td valign=\"top\" align=\"center\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>$kasda</b></td>
+                                  <td valign=\"top\" align=\"center\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>$tgll</b></td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>$nomor</b></td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>$uraian</b></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format($nilai)."</b></td>                                 
+                                  </tr>"; 
+                                   
+                            }else{
+                              $cRet .="<tr>
+                                  <td valign=\"top\" align=\"center\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+								  <td valign=\"top\" align=\"center\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>                                  
+								  <td valign=\"top\" align=\"center\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">$uraian</td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format($nilai)."</td>                                  
+                                  </tr>";   
+                                  //$lcterima_ini=$lcterima_ini+$nilai;
+                            }    
+                            }                                                                
+                    }
+                    
+                    $csqlkasin25= "select sum(b.rupiah) AS nilai FROM trhkasin_ppkd a
+                    left join trdkasin_ppkd b on b.no_kas = a.no_kas and b.no_sts = a.no_sts and 
+                    b.kd_skpd = a.kd_skpd  WHERE a.tgl_kas >= '$tgl6' and a.tgl_kas <= '$tgl7' and a.jns_trans in ('1','5')";
+                $hasil45 = $this->db->query($csqlkasin25);
+                $trhkasinppkd5 = $hasil45->row();          
+                $lcterima_ini = $trhkasinppkd5->nilai;
+                    
+                    $posisi_ini=$lcterima_ini-$lckeluar_ini;
+                    $posisi=$posisi_1+$posisi_ini;
+                 
+        $cRet .="<tr>
+                    <td align=\"left\" colspan=\"6\" style=\"font-size:12px;border: solid 1px white;border-right:solid 1px black;border-top:solid 1px black;\">&nbsp;</td>
+                    <td align=\"right\" style=\"font-size:12px;border: solid 1px black;\">Jumlah </td>
+                    <td align=\"right\" style=\"font-size:12px;border: solid 1px black;\">".number_format($lcterima_ini,2)."</td>                    
+                </tr>";                      
+        
+         $cRet .="
+                <tr>
+                    <td align=\"left\" colspan=\"4\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
+                    <td align=\"left\" colspan=\"4\" style=\"font-size:12px;border: solid 1px white;\"></td>
+                </tr>
+                <tr>
+                    <td align=\"center\" colspan=\"4\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
+                    <td align=\"left\" style=\"font-size:12px;border: solid 1px white;\"></td>
+                    <td align=\"center\" colspan=\"3\" style=\"font-size:15px;border: solid 1px white;\">Pontianak, tanggal ".$this->tanggal_format_indonesia($tgl_ttd)."</td>                                                                                                                                                                                
+                </tr>
+                <tr>                
+                    <td align=\"center\" colspan=\"4\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
+                    <td align=\"left\" style=\"font-size:12px;border: solid 1px white;\"></td>
+                    <td align=\"center\" colspan=\"3\" style=\"font-size:15px;border: solid 1px white;\">$jabatan</td>                    
+                </tr>
+                <tr>                
+                    <td align=\"center\" colspan=\"4\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
+                    <td align=\"left\" style=\"font-size:12px;border: solid 1px white;\"></td>
+                    <td align=\"center\" colspan=\"3\" style=\"font-size:15px;border: solid 1px white;\">$pangkat</td>                    
+                </tr>
+                <tr>
+                    <td align=\"left\" colspan=\"5\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
+                    <td align=\"left\" colspan=\"3\" style=\"font-size:12px;border: solid 1px white;\"></td>
+                </tr>
+                <tr>
+                    <td align=\"left\" colspan=\"5\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
+                    <td align=\"left\" colspan=\"3\" style=\"font-size:12px;border: solid 1px white;\"></td>
+                </tr>
+				<tr>
+                    <td align=\"left\" colspan=\"5\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
+                    <td align=\"left\" colspan=\"3\" style=\"font-size:12px;border: solid 1px white;\"></td>
+                </tr>                
+                <tr>
+                    <td align=\"center\" colspan=\"5\" style=\"font-size:12px; border: solid 1px white;\"></td>                    
+                    <td align=\"center\" colspan=\"3\" style=\"font-size:15px; border: solid 1px white;\"><b><u>$lcNmBP</u></b></td>
+                </tr>
+                <tr>
+                    <td align=\"center\" colspan=\"4\" style=\"font-size:12px;border: solid 1px white;\"> &nbsp;</td>
+                    <td align=\"center\"  style=\"font-size:12px;border: solid 1px white;\"></td>
+                    <td align=\"center\" colspan=\"3\" style=\"font-size:15px;border: solid 1px white;\">NIP. $lcNipBP</td>
+                </tr>";        
+                                  
+                
+        $cRet .='</table>';
+                 
+                 $juduls = "Kas Bulanan";
+                 
+         $data['prev']= $cRet;    
+         if($jnscetak=="0"){
+                echo $cRet;
+         }else if($jnscetak=="1"){
+                $this->tukd_model->_mpdf('', $cRet, 10, 5, 10, '0');
+         }else if($jnscetak=="2"){
+         header("Cache-Control: no-cache, no-store, must-revalidate");
+            header("Content-Type: application/vnd.ms-excel");
+            header("Content-Disposition: attachment; filename= $juduls.xls");
+            
+            $this->load->view('anggaran/rka/perkadaII', $data);
+         }
+         //$this->tukd_model->_mpdf('',$cRet,'10','10',5,'0');
+         //$this->tukd_model->_mpdf('', $cRet, 10, 10, 10, 'L');
+     
     }
 }   
