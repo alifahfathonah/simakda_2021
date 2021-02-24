@@ -607,17 +607,20 @@ public $ppkd1_lama = "4.02.02.02";
                 if($status_anggaran2=='nilai'){
                     $dokumen="DOKUMEN PELAKSANAAN ANGGARAN";
                     $status_anggaran2="";
+                    $doc="DPA";
                     $status_volume2="";
                     $status_satuan2="";         
                     $status_harga2="";
                 }else if($status_anggaran2=='nilai_sempurna'){
                     $dokumen="DOKUMEN PELAKSANAAN ANGGARAN";
+                    $doc="DPA";
                     $status_anggaran2="_sempurna";
                     $status_harga2="_sempurna1";
                     $status_satuan2="_sempurna1";
                     $status_volume2="_sempurna1";
                 }else{
                     $dokumen="DOKUMEN PELAKSANAAN PERUBAHAN ANGGARAN";
+                    $doc="DPPA";
                     $status_anggaran2="_ubah";
                     $status_harga2="_ubah";
                     $status_satuan2="_ubah";
@@ -631,7 +634,7 @@ public $ppkd1_lama = "4.02.02.02";
         }else{
             $nodpa=$this->db->query("SELECT * from trhrka where kd_skpd='$id'")->row()->no_dpa;
             $tabeldpa="<tr>
-                        <td width='20%' style='border-right:none'>No DPA </td>
+                        <td width='20%' style='border-right:none'>No $doc </td>
                         <td width='80%' style='border-left:none'>: $nodpa</td>
                     </tr>";
         }
