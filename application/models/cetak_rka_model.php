@@ -587,13 +587,48 @@ public $ppkd1_lama = "4.02.02.02";
                     $daerah  = $rowsc->daerah;
                     $thn     = $rowsc->thn_ang;
                 }
+                if($status_anggaran1=='nilai'){
+                    $status_anggaran1="";
+                    $status_volume1="";
+                    $status_satuan1="";         
+                    $status_harga1="";
+                }else if($status_anggaran1=='nilai_sempurna'){
+                    $status_anggaran1="_sempurna";
+                    $status_harga1="_sempurna1";
+                    $status_satuan1="_sempurna1";
+                    $status_volume1="_sempurna1";
+                }else{
+                    $status_anggaran1="_ubah";
+                    $status_harga1="_ubah";
+                    $status_satuan1="_ubah";
+                    $status_volume1="_ubah";
+                }
+
+                if($status_anggaran2=='nilai'){
+                    $dokumen="DOKUMEN PELAKSANAAN ANGGARAN";
+                    $status_anggaran2="";
+                    $status_volume2="";
+                    $status_satuan2="";         
+                    $status_harga2="";
+                }else if($status_anggaran2=='nilai_sempurna'){
+                    $dokumen="DOKUMEN PELAKSANAAN ANGGARAN";
+                    $status_anggaran2="_sempurna";
+                    $status_harga2="_sempurna1";
+                    $status_satuan2="_sempurna1";
+                    $status_volume2="_sempurna1";
+                }else{
+                    $dokumen="DOKUMEN PELAKSANAAN PERUBAHAN ANGGARAN";
+                    $status_anggaran2="_ubah";
+                    $status_harga2="_ubah";
+                    $status_satuan2="_ubah";
+                    $status_volume2="_ubah";
+                }    
 
         
         if($doc=='RKA'){
             $dokumen="RENCANA KERJA DAN ANGGARAN";
             $tabeldpa="";
         }else{
-            $dokumen="DOKUMEN PELAKSANAAN ANGGARAN";
             $nodpa=$this->db->query("SELECT * from trhrka where kd_skpd='$id'")->row()->no_dpa;
             $tabeldpa="<tr>
                         <td width='20%' style='border-right:none'>No DPA </td>
@@ -653,39 +688,7 @@ public $ppkd1_lama = "4.02.02.02";
                      </thead>
                         ";
 
-                if($status_anggaran1=='nilai'){
-                    $status_anggaran1="";
-                    $status_volume1="";
-                    $status_satuan1="";         
-                    $status_harga1="";
-                }else if($status_anggaran1=='nilai_sempurna'){
-                    $status_anggaran1="_sempurna";
-                    $status_harga1="_sempurna1";
-                    $status_satuan1="_sempurna1";
-                    $status_volume1="_sempurna1";
-                }else{
-                    $status_anggaran1="_ubah";
-                    $status_harga1="_ubah";
-                    $status_satuan1="_ubah";
-                    $status_volume1="_ubah";
-                }
 
-                if($status_anggaran2=='nilai'){
-                    $status_anggaran2="";
-                    $status_volume2="";
-                    $status_satuan2="";         
-                    $status_harga2="";
-                }else if($status_anggaran2=='nilai_sempurna'){
-                    $status_anggaran2="_sempurna";
-                    $status_harga2="_sempurna1";
-                    $status_satuan2="_sempurna1";
-                    $status_volume2="_sempurna1";
-                }else{
-                    $status_anggaran2="_ubah";
-                    $status_harga2="_ubah";
-                    $status_satuan2="_ubah";
-                    $status_volume2="_ubah";
-                }    
 
                 
 
