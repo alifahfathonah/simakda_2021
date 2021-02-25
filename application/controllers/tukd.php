@@ -51677,4 +51677,646 @@ SELECT '2' as kk,a.no_kas as kode,a.no_kas as no_kas,a.no_sts, a.kd_skpd, a.tgl_
                 $this->load->view('anggaran/rka/perkadaII', $datax);
         }    
     }
+
+    function realisasi_peng()
+    {
+        $data['page_title']= 'REALISASI PENGELUARAN';
+        $this->template->set('title', 'RELISASI PENGELUARAN');   
+        $this->template->load('template','tukd/pendapatan/realisasi_pengeluaran',$data) ; 
+    }
+
+    function cetak_real_pengeluaran_jns()
+    {
+        $thn_ang = $this->session->userdata('pcThang');
+        $jnscetak = $this->uri->segment(3);
+            $bulan =''; 
+            $lcperiode = $this->tukd_model->getBulan($bulan);            
+         $bulan= $_REQUEST['tgl1'];
+         
+         $tgl_ttd= $_REQUEST['tgl_ttd'];
+         $ttd= $_REQUEST['ttd'];
+         $lcttd        = str_replace('a',' ',$ttd);
+         $csql="SELECT a.pangkat,a.jabatan,a.nama, a.nip FROM ms_ttd a WHERE kode = 'BUD' and nip='$lcttd'";
+         $hasil = $this->db->query($csql);
+         $trh2 = $hasil->row();          
+         $lcNmBP = $trh2->nama;
+         $lcNipBP = $trh2->nip;
+         $pangkat = $trh2->pangkat;
+         $jabatan = $trh2->jabatan;                         
+            
+         $cRet = '';
+         $cRet .="<table style=\"border-collapse:collapse;\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\">
+            <tr>
+                <td align=\"center\" colspan=\"7\" style=\"font-size:14px;border: solid 1px white;\"><b>PEMERINTAH KOTA PONTIANAK <br>LAPORAN REALISASI PENGELUARAN KAS DAERAH<br/> 
+                BULAN ".strtoupper($this->tukd_model->getBulan($bulan))." <br/>
+                TAHUN ANGGARAN ".$thn_ang."
+                </b></td>
+            </tr>
+              <tr>
+                <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
+                <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;\"></td>
+            </tr>
+            <tr>
+                <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 2px black;\">&nbsp;</td>
+                <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 2px black;\">&nbsp;</td>
+            </tr>            
+            <tr>                
+        <td align=\"center\" width=\"15%\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black;\" >Nama SKPD</td>
+                <td align=\"center\" width=\"15%\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black;\">Kode</td>
+                <td align=\"center\" width=\"40%\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black;\">Rekening</td>
+                <td align=\"center\" width=\"15%\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black;\">Realisasi<br>(Rp)</td>             
+            </tr>
+            <tr>
+                <td align=\"center\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black\">1</td>
+                <td align=\"center\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black\">2</td>  
+                <td align=\"center\" style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black\">3</td>        
+                <td align=\"center\"  style=\"font-size:12px;border-bottom:solid 1px black;border-top:solid 1px black\">4</td>
+            </tr>";
+                 
+$sql_skpd = "SELECT '1' as urut,a.kd_skpd,'' as kd_rek,'' as nm_rek,'0' as nilai FROM trhsp2d a
+inner join trdspp c on c.no_spp = a.no_spp and a.kd_skpd = c.kd_skpd 
+WHERE a.status_bud='1' and month(a.tgl_kas_bud)='$bulan' and LEFT(c.kd_rek6,2) in ('51','52','53','54','72')
+GROUP BY a.kd_skpd";
+
+$hasil = $this->db->query($sql_skpd);       
+                    $no=0;
+                    foreach ($hasil->result() as $row)
+                    {
+                       $no      =$no+1;
+                       $kun     =$row->urut;
+                       $nilai   =$row->nilai;
+                       $kdrek   =$row->kd_rek;      
+                       $nmrek   =$row->nm_rek;                             
+                       $kdskpd   =$row->kd_skpd;   
+                       
+                       $nm_skpd =  $this->tukd_model->get_nama($kdskpd,'nm_skpd','ms_skpd','kd_skpd');
+
+                        $cRet .="<tr>                                  
+                  <td valign=\"top\" colspan=\"4\" align=\"left\" style=\"font-size:12px;border-bottom:solid 1px black;\"><b>$kdskpd - $nm_skpd</b></td>
+                                  </tr>";  
+                                  
+                 //up  
+$sql_skpd = "SELECT '1' as urut,a.kd_skpd,'' as kd_rek,'UP' as nm_rek,'0' as nilai FROM trhsp2d a
+inner join trdspp c on c.no_spp = a.no_spp and a.kd_skpd = c.kd_skpd 
+WHERE a.status_bud='1' and a.jns_spp='1' and a.kd_skpd='$kdskpd' and month(a.tgl_kas_bud)='$bulan'
+GROUP BY a.kd_skpd";
+
+$hasil = $this->db->query($sql_skpd);       
+                    $no=0;
+                    foreach ($hasil->result() as $row)
+                    {
+                       $no      =$no+1;
+                       $kun     =$row->urut;
+                       $nilai   =$row->nilai;
+                       $kdrek   =$row->kd_rek;      
+                       $nmrek   =$row->nm_rek;                             
+                       $kdskpd   =$row->kd_skpd;   
+                       
+                        $cRet .="<tr>                                  
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-top:none;border-bottom:none;\"></td>  
+                  <td valign=\"top\" colspan=\"3\" align=\"left\" style=\"font-size:12px;border-bottom:solid 1px black;\"><b>$nmrek</b></td>
+                                  </tr>";  
+                                                                                                                                                                
+                    $sql = "SELECT z.* FROM
+(
+SELECT '2' as urut,a.kd_skpd,'5' as kd_rek,'BELANJA' as nm_rek,sum(c.nilai) AS nilai FROM trhsp2d a
+inner join trdspp c on c.no_spp = a.no_spp and a.kd_skpd = c.kd_skpd 
+inner join ms_rek1 d on d.kd_rek1 = LEFT(c.kd_rek6,1)
+WHERE a.status_bud='1' and a.jns_spp='1' and a.kd_skpd='$kdskpd' and month(a.tgl_kas_bud)='$bulan'
+GROUP BY a.kd_skpd,d.kd_rek1,d.nm_rek1
+) z 
+ORDER BY kd_skpd,kd_rek,urut,nm_rek
+";
+                    
+                    $hasil = $this->db->query($sql);       
+                    $no=0;
+                    foreach ($hasil->result() as $row)
+                    {
+                       $no      =$no+1;
+                       $kun     =$row->urut;
+                       $nilai   =$row->nilai;
+                       $kdrek   =$row->kd_rek;      
+                       $nmrek   =$row->nm_rek;                             
+                       $kdskpd   =$row->kd_skpd;   
+                                                              
+                             $cRet .="<tr>                                  
+                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">$kdrek</td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">$nmrek</td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format($nilai,2)."</td>
+                                  </tr>";                                                                
+                    }
+                    }
+                    //batas up
+ //GU  
+$sql_skpd = "SELECT '1' as urut,a.kd_skpd,'' as kd_rek,'GU' as nm_rek,'0' as nilai FROM trhsp2d a
+inner join trdspp c on c.no_spp = a.no_spp and a.kd_skpd = c.kd_skpd 
+WHERE a.status_bud='1' and a.jns_spp='2' and a.kd_skpd='$kdskpd' and month(a.tgl_kas_bud)='$bulan' and LEFT(c.kd_rek6,2) in ('51','52','62')
+GROUP BY a.kd_skpd";
+
+$hasil = $this->db->query($sql_skpd);       
+                    $no=0;
+                    foreach ($hasil->result() as $row)
+                    {
+                       $no      =$no+1;
+                       $kun     =$row->urut;
+                       $nilai   =$row->nilai;
+                       $kdrek   =$row->kd_rek;      
+                       $nmrek   =$row->nm_rek;                             
+                       $kdskpd   =$row->kd_skpd;   
+                       
+                        $cRet .="<tr>                                  
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none;\"></td>  
+                  <td valign=\"top\" colspan=\"3\" align=\"left\" style=\"font-size:12px;border-bottom:solid 1px black;\"><b>$nmrek</b></td>
+                                  </tr>";  
+                                                                                                                                                                
+                    $sql = "SELECT z.* FROM
+(
+SELECT '5' as urut,a.kd_skpd,d.kd_rek4 as kd_rek,d.nm_rek4 as nm_rek,sum(c.nilai) AS nilai FROM trhsp2d a
+inner join trdspp c on c.no_spp = a.no_spp and a.kd_skpd = c.kd_skpd 
+inner join ms_rek4 d on d.kd_rek4 = LEFT(c.kd_rek6,5)
+WHERE a.status_bud='1' and a.jns_spp='2' and a.kd_skpd='$kdskpd' and month(a.tgl_kas_bud)='$bulan' and LEFT(c.kd_rek6,2) in ('51','52','62')
+GROUP BY a.kd_skpd,d.kd_rek4,d.nm_rek4
+union all
+SELECT '4' as urut,a.kd_skpd,d.kd_rek3 as kd_rek,d.nm_rek3 as nm_rek,sum(c.nilai) AS nilai FROM trhsp2d a
+inner join trdspp c on c.no_spp = a.no_spp and a.kd_skpd = c.kd_skpd 
+inner join ms_rek3 d on d.kd_rek3 = LEFT(c.kd_rek6,3)
+WHERE a.status_bud='1' and a.jns_spp='2' and a.kd_skpd='$kdskpd' and month(a.tgl_kas_bud)='$bulan' and LEFT(c.kd_rek6,2) in ('51','52','62')
+GROUP BY a.kd_skpd,d.kd_rek3,d.nm_rek3
+union all
+SELECT '3' as urut,a.kd_skpd,d.kd_rek2 as kd_rek,d.nm_rek2 as nm_rek,sum(c.nilai) AS nilai FROM trhsp2d a
+inner join trdspp c on c.no_spp = a.no_spp and a.kd_skpd = c.kd_skpd 
+inner join ms_rek2 d on d.kd_rek2 = LEFT(c.kd_rek6,2)
+WHERE a.status_bud='1' and a.jns_spp='2' and a.kd_skpd='$kdskpd' and month(a.tgl_kas_bud)='$bulan' and LEFT(c.kd_rek6,2) in ('51','52','62')
+GROUP BY a.kd_skpd,d.kd_rek2,d.nm_rek2
+union all
+SELECT '2' as urut,a.kd_skpd,d.kd_rek1 as kd_rek,d.nm_rek1 as nm_rek,sum(c.nilai) AS nilai FROM trhsp2d a
+inner join trdspp c on c.no_spp = a.no_spp and a.kd_skpd = c.kd_skpd 
+inner join ms_rek1 d on d.kd_rek1 = LEFT(c.kd_rek6,1)
+WHERE a.status_bud='1' and a.jns_spp='2' and a.kd_skpd='$kdskpd' and month(a.tgl_kas_bud)='$bulan' and LEFT(c.kd_rek6,2) in ('51','52','62')
+GROUP BY a.kd_skpd,d.kd_rek1,d.nm_rek1
+union all
+SELECT '6' as urut,a.kd_skpd,c.kd_rek6 as kd_rek,c.nm_rek6 as nm_rek,sum(c.nilai) AS nilai FROM trhsp2d a
+inner join trdspp c on c.no_spp = a.no_spp and a.kd_skpd = c.kd_skpd 
+WHERE a.status_bud='1' and a.jns_spp='2' and a.kd_skpd='$kdskpd' and month(a.tgl_kas_bud)='$bulan' and LEFT(c.kd_rek6,2) in ('51','52','62')
+GROUP BY a.kd_skpd,c.kd_rek6,c.nm_rek6
+) z 
+ORDER BY kd_skpd,kd_rek,urut,nm_rek
+";
+                    
+                    $hasil = $this->db->query($sql);       
+                    $no=0;
+                    foreach ($hasil->result() as $row)
+                    {
+                       $no      =$no+1;
+                       $kun     =$row->urut;
+                       $nilai   =$row->nilai;
+                       $kdrek   =$row->kd_rek;      
+                       $nmrek   =$row->nm_rek;                             
+                       $kdskpd   =$row->kd_skpd;   
+                                                              
+                             $cRet .="<tr>                                  
+                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">$kdrek</td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">$nmrek</td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format($nilai,2)."</td>
+                                  </tr>";                                                                
+                    }
+                    }
+                    //batas GU    
+//TU  
+$sql_skpd = "SELECT '1' as urut,a.kd_skpd,'' as kd_rek,'TU' as nm_rek,'0' as nilai FROM trhsp2d a
+inner join trdspp c on c.no_spp = a.no_spp and a.kd_skpd = c.kd_skpd 
+WHERE a.status_bud='1' and a.jns_spp='3' and a.kd_skpd='$kdskpd' and month(a.tgl_kas_bud)='$bulan' and LEFT(c.kd_rek6,2) in ('51','52','62')
+GROUP BY a.kd_skpd";
+
+$hasil = $this->db->query($sql_skpd);       
+                    $no=0;
+                    foreach ($hasil->result() as $row)
+                    {
+                       $no      =$no+1;
+                       $kun     =$row->urut;
+                       $nilai   =$row->nilai;
+                       $kdrek   =$row->kd_rek;      
+                       $nmrek   =$row->nm_rek;                             
+                       $kdskpd   =$row->kd_skpd;   
+                       
+                        $cRet .="<tr>                                  
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none;\"></td>  
+                  <td valign=\"top\" colspan=\"3\" align=\"left\" style=\"font-size:12px;border-bottom:solid 1px black;\"><b>$nmrek</b></td>
+                                  </tr>";  
+                                                                                                                                                                
+                    $sql = "SELECT z.* FROM
+(
+SELECT '5' as urut,a.kd_skpd,d.kd_rek4 as kd_rek,d.nm_rek4 as nm_rek,sum(c.nilai) AS nilai FROM trhsp2d a
+inner join trdspp c on c.no_spp = a.no_spp and a.kd_skpd = c.kd_skpd 
+inner join ms_rek4 d on d.kd_rek4 = LEFT(c.kd_rek6,5)
+WHERE a.status_bud='1' and a.jns_spp='3' and a.kd_skpd='$kdskpd' and month(a.tgl_kas_bud)='$bulan' and LEFT(c.kd_rek6,2) in ('51','52','62')
+GROUP BY a.kd_skpd,d.kd_rek4,d.nm_rek4
+union all
+SELECT '4' as urut,a.kd_skpd,d.kd_rek3 as kd_rek,d.nm_rek3 as nm_rek,sum(c.nilai) AS nilai FROM trhsp2d a
+inner join trdspp c on c.no_spp = a.no_spp and a.kd_skpd = c.kd_skpd 
+inner join ms_rek3 d on d.kd_rek3 = LEFT(c.kd_rek6,3)
+WHERE a.status_bud='1' and a.jns_spp='3' and a.kd_skpd='$kdskpd' and month(a.tgl_kas_bud)='$bulan' and LEFT(c.kd_rek6,2) in ('51','52','62')
+GROUP BY a.kd_skpd,d.kd_rek3,d.nm_rek3
+union all
+SELECT '3' as urut,a.kd_skpd,d.kd_rek2 as kd_rek,d.nm_rek2 as nm_rek,sum(c.nilai) AS nilai FROM trhsp2d a
+inner join trdspp c on c.no_spp = a.no_spp and a.kd_skpd = c.kd_skpd 
+inner join ms_rek2 d on d.kd_rek2 = LEFT(c.kd_rek6,2)
+WHERE a.status_bud='1' and a.jns_spp='3' and a.kd_skpd='$kdskpd' and month(a.tgl_kas_bud)='$bulan' and LEFT(c.kd_rek6,2) in ('51','52','62')
+GROUP BY a.kd_skpd,d.kd_rek2,d.nm_rek2
+union all
+SELECT '2' as urut,a.kd_skpd,d.kd_rek1 as kd_rek,d.nm_rek1 as nm_rek,sum(c.nilai) AS nilai FROM trhsp2d a
+inner join trdspp c on c.no_spp = a.no_spp and a.kd_skpd = c.kd_skpd 
+inner join ms_rek1 d on d.kd_rek1 = LEFT(c.kd_rek6,1)
+WHERE a.status_bud='1' and a.jns_spp='3' and a.kd_skpd='$kdskpd' and month(a.tgl_kas_bud)='$bulan' and LEFT(c.kd_rek6,2) in ('51','52','62')
+GROUP BY a.kd_skpd,d.kd_rek1,d.nm_rek1
+union all
+SELECT '6' as urut,a.kd_skpd,c.kd_rek6 as kd_rek,c.nm_rek6 as nm_rek,sum(c.nilai) AS nilai FROM trhsp2d a
+inner join trdspp c on c.no_spp = a.no_spp and a.kd_skpd = c.kd_skpd 
+WHERE a.status_bud='1' and a.jns_spp='3' and a.kd_skpd='$kdskpd' and month(a.tgl_kas_bud)='$bulan' and LEFT(c.kd_rek6,2) in ('51','52','62')
+GROUP BY a.kd_skpd,c.kd_rek6,c.nm_rek6
+) z 
+ORDER BY kd_skpd,kd_rek,urut,nm_rek
+";
+                    
+                    $hasil = $this->db->query($sql);       
+                    $no=0;
+                    foreach ($hasil->result() as $row)
+                    {
+                       $no      =$no+1;
+                       $kun     =$row->urut;
+                       $nilai   =$row->nilai;
+                       $kdrek   =$row->kd_rek;      
+                       $nmrek   =$row->nm_rek;                             
+                       $kdskpd   =$row->kd_skpd;   
+                                                              
+                             $cRet .="<tr>                                  
+                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">$kdrek</td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">$nmrek</td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format($nilai,2)."</td>
+                                  </tr>";                                                                
+                    }
+                    }
+                    //batas TU   
+//GJ  
+$sql_skpd = "SELECT '1' as urut,a.kd_skpd,'' as kd_rek,'BTL' as nm_rek,'0' as nilai FROM trhsp2d a
+inner join trdspp c on c.no_spp = a.no_spp and a.kd_skpd = c.kd_skpd 
+WHERE a.status_bud='1' and a.jns_spp IN ('4','5') and a.kd_skpd='$kdskpd' and month(a.tgl_kas_bud)='$bulan' and LEFT(c.kd_rek6,2) in ('51')
+GROUP BY a.kd_skpd";
+
+$hasil = $this->db->query($sql_skpd);       
+                    $no=0;
+                    foreach ($hasil->result() as $row)
+                    {
+                       $no      =$no+1;
+                       $kun     =$row->urut;
+                       $nilai   =$row->nilai;
+                       $kdrek   =$row->kd_rek;      
+                       $nmrek   =$row->nm_rek;                             
+                       $kdskpd   =$row->kd_skpd;   
+                       
+                        $cRet .="<tr>                                  
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none;\"></td>  
+                  <td valign=\"top\" colspan=\"3\" align=\"left\" style=\"font-size:12px;border-bottom:solid 1px black;\"><b>$nmrek</b></td>
+                                  </tr>";  
+                                                                                                                                                                
+                    $sql = "SELECT z.* FROM
+(
+SELECT '5' as urut,a.kd_skpd,d.kd_rek4 as kd_rek,d.nm_rek4 as nm_rek,sum(c.nilai) AS nilai FROM trhsp2d a
+inner join trdspp c on c.no_spp = a.no_spp and a.kd_skpd = c.kd_skpd 
+inner join ms_rek4 d on d.kd_rek4 = LEFT(c.kd_rek6,5)
+WHERE a.status_bud='1' and a.jns_spp='4' and a.kd_skpd='$kdskpd' and month(a.tgl_kas_bud)='$bulan' and LEFT(c.kd_rek6,2) in ('51')
+GROUP BY a.kd_skpd,d.kd_rek4,d.nm_rek4
+union all
+SELECT '4' as urut,a.kd_skpd,d.kd_rek3 as kd_rek,d.nm_rek3 as nm_rek,sum(c.nilai) AS nilai FROM trhsp2d a
+inner join trdspp c on c.no_spp = a.no_spp and a.kd_skpd = c.kd_skpd 
+inner join ms_rek3 d on d.kd_rek3 = LEFT(c.kd_rek6,3)
+WHERE a.status_bud='1' and a.jns_spp='4' and a.kd_skpd='$kdskpd' and month(a.tgl_kas_bud)='$bulan' and LEFT(c.kd_rek6,2) in ('51')
+GROUP BY a.kd_skpd,d.kd_rek3,d.nm_rek3
+union all
+SELECT '3' as urut,a.kd_skpd,d.kd_rek2 as kd_rek,d.nm_rek2 as nm_rek,sum(c.nilai) AS nilai FROM trhsp2d a
+inner join trdspp c on c.no_spp = a.no_spp and a.kd_skpd = c.kd_skpd 
+inner join ms_rek2 d on d.kd_rek2 = LEFT(c.kd_rek6,2)
+WHERE a.status_bud='1' and a.jns_spp='4' and a.kd_skpd='$kdskpd' and month(a.tgl_kas_bud)='$bulan' and LEFT(c.kd_rek6,2) in ('51')
+GROUP BY a.kd_skpd,d.kd_rek2,d.nm_rek2
+union all
+SELECT '2' as urut,a.kd_skpd,d.kd_rek1 as kd_rek,d.nm_rek1 as nm_rek,sum(c.nilai) AS nilai FROM trhsp2d a
+inner join trdspp c on c.no_spp = a.no_spp and a.kd_skpd = c.kd_skpd 
+inner join ms_rek1 d on d.kd_rek1 = LEFT(c.kd_rek6,1)
+WHERE a.status_bud='1' and a.jns_spp='4' and a.kd_skpd='$kdskpd' and month(a.tgl_kas_bud)='$bulan' and LEFT(c.kd_rek6,2) in ('51')
+GROUP BY a.kd_skpd,d.kd_rek1,d.nm_rek1
+union all
+SELECT '6' as urut,a.kd_skpd,c.kd_rek6 as kd_rek,c.nm_rek6 as nm_rek,sum(c.nilai) AS nilai FROM trhsp2d a
+inner join trdspp c on c.no_spp = a.no_spp and a.kd_skpd = c.kd_skpd 
+WHERE a.status_bud='1' and a.jns_spp='4' and a.kd_skpd='$kdskpd' and month(a.tgl_kas_bud)='$bulan' and LEFT(c.kd_rek6,2) in ('51')
+GROUP BY a.kd_skpd,c.kd_rek6,c.nm_rek6
+) z 
+ORDER BY kd_skpd,kd_rek,urut,nm_rek
+";
+                    
+                    $hasil = $this->db->query($sql);       
+                    $no=0;
+                    foreach ($hasil->result() as $row)
+                    {
+                       $no      =$no+1;
+                       $kun     =$row->urut;
+                       $nilai   =$row->nilai;
+                       $kdrek   =$row->kd_rek;      
+                       $nmrek   =$row->nm_rek;                             
+                       $kdskpd   =$row->kd_skpd;   
+                                                              
+                             $cRet .="<tr>                                  
+                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">$kdrek</td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">$nmrek</td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format($nilai,2)."</td>
+                                  </tr>";                                                                
+                    }
+                    }
+                    //batas GAJI        
+//GJ PPKD  
+$sql_skpd = "SELECT '1' as urut,a.kd_skpd,'' as kd_rek,'BTL' as nm_rek,'0' as nilai FROM trhsp2d a
+inner join trdspp c on c.no_spp = a.no_spp and a.kd_skpd = c.kd_skpd 
+WHERE a.status_bud='1' and a.jns_spp='5' and a.kd_skpd='$kdskpd' and month(a.tgl_kas_bud)='$bulan' and LEFT(c.kd_rek6,2) in ('51','72')
+GROUP BY a.kd_skpd";
+
+$hasil = $this->db->query($sql_skpd);       
+                    $no=0;
+                    foreach ($hasil->result() as $row)
+                    {
+                       $no      =$no+1;
+                       $kun     =$row->urut;
+                       $nilai   =$row->nilai;
+                       $kdrek   =$row->kd_rek;      
+                       $nmrek   =$row->nm_rek;                             
+                       $kdskpd   =$row->kd_skpd;   
+                       
+                        $cRet .="<tr>                                  
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none;\"></td>  
+                  <td valign=\"top\" colspan=\"3\" align=\"left\" style=\"font-size:12px;border-bottom:solid 1px black;\"><b>$nmrek</b></td>
+                                  </tr>";  
+                                                                                                                                                                
+                    $sql = "SELECT z.* FROM
+(
+SELECT '5' as urut,a.kd_skpd,d.kd_rek4 as kd_rek,d.nm_rek4 as nm_rek,sum(c.nilai) AS nilai FROM trhsp2d a
+inner join trdspp c on c.no_spp = a.no_spp and a.kd_skpd = c.kd_skpd 
+inner join ms_rek4 d on d.kd_rek4 = LEFT(c.kd_rek6,5)
+WHERE a.status_bud='1' and a.jns_spp='5' and a.kd_skpd='$kdskpd' and month(a.tgl_kas_bud)='$bulan' and LEFT(c.kd_rek6,2) in ('51','72')
+GROUP BY a.kd_skpd,d.kd_rek4,d.nm_rek4
+union all
+SELECT '4' as urut,a.kd_skpd,d.kd_rek3 as kd_rek,d.nm_rek3 as nm_rek,sum(c.nilai) AS nilai FROM trhsp2d a
+inner join trdspp c on c.no_spp = a.no_spp and a.kd_skpd = c.kd_skpd 
+inner join ms_rek3 d on d.kd_rek3 = LEFT(c.kd_rek6,3)
+WHERE a.status_bud='1' and a.jns_spp='5' and a.kd_skpd='$kdskpd' and month(a.tgl_kas_bud)='$bulan' and LEFT(c.kd_rek6,2) in ('51','72')
+GROUP BY a.kd_skpd,d.kd_rek3,d.nm_rek3
+union all
+SELECT '3' as urut,a.kd_skpd,d.kd_rek2 as kd_rek,d.nm_rek2 as nm_rek,sum(c.nilai) AS nilai FROM trhsp2d a
+inner join trdspp c on c.no_spp = a.no_spp and a.kd_skpd = c.kd_skpd 
+inner join ms_rek2 d on d.kd_rek2 = LEFT(c.kd_rek6,2)
+WHERE a.status_bud='1' and a.jns_spp='5' and a.kd_skpd='$kdskpd' and month(a.tgl_kas_bud)='$bulan' and LEFT(c.kd_rek6,2) in ('51','72')
+GROUP BY a.kd_skpd,d.kd_rek2,d.nm_rek2
+union all
+SELECT '2' as urut,a.kd_skpd,d.kd_rek1 as kd_rek,d.nm_rek1 as nm_rek,sum(c.nilai) AS nilai FROM trhsp2d a
+inner join trdspp c on c.no_spp = a.no_spp and a.kd_skpd = c.kd_skpd 
+inner join ms_rek1 d on d.kd_rek1 = LEFT(c.kd_rek6,1)
+WHERE a.status_bud='1' and a.jns_spp='5' and a.kd_skpd='$kdskpd' and month(a.tgl_kas_bud)='$bulan' and LEFT(c.kd_rek6,2) in ('51','72')
+GROUP BY a.kd_skpd,d.kd_rek1,d.nm_rek1
+union all
+SELECT '6' as urut,a.kd_skpd,c.kd_rek6 as kd_rek,c.nm_rek6 as nm_rek,sum(c.nilai) AS nilai FROM trhsp2d a
+inner join trdspp c on c.no_spp = a.no_spp and a.kd_skpd = c.kd_skpd 
+WHERE a.status_bud='1' and a.jns_spp='5' and a.kd_skpd='$kdskpd' and month(a.tgl_kas_bud)='$bulan' and LEFT(c.kd_rek6,2) in ('51','72')
+GROUP BY a.kd_skpd,c.kd_rek6,c.nm_rek6
+) z 
+ORDER BY kd_skpd,kd_rek,urut,nm_rek
+";
+                    
+                    $hasil = $this->db->query($sql);       
+                    $no=0;
+                    foreach ($hasil->result() as $row)
+                    {
+                       $no      =$no+1;
+                       $kun     =$row->urut;
+                       $nilai   =$row->nilai;
+                       $kdrek   =$row->kd_rek;      
+                       $nmrek   =$row->nm_rek;                             
+                       $kdskpd   =$row->kd_skpd;   
+                                                              
+                             $cRet .="<tr>                                  
+                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">$kdrek</td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">$nmrek</td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format($nilai,2)."</td>
+                                  </tr>";                                                                
+                    }
+                    }
+                    //batas GALI PPKD  
+                                                                                        
+ //LS 
+$sql_skpd = "SELECT '1' as urut,a.kd_skpd,'' as kd_rek,'LS' as nm_rek,'0' as nilai FROM trhsp2d a
+inner join trdspp c on c.no_spp = a.no_spp and a.kd_skpd = c.kd_skpd 
+WHERE a.status_bud='1' and a.jns_spp='6' and a.kd_skpd='$kdskpd' and month(a.tgl_kas_bud)='$bulan' and LEFT(c.kd_rek6,2) in ('51','52','53','54')
+GROUP BY a.kd_skpd";
+
+$hasil = $this->db->query($sql_skpd);       
+                    $no=0;
+                    foreach ($hasil->result() as $row)
+                    {
+                       $no      =$no+1;
+                       $kun     =$row->urut;
+                       $nilai   =$row->nilai;
+                       $kdrek   =$row->kd_rek;      
+                       $nmrek   =$row->nm_rek;                             
+                       $kdskpd   =$row->kd_skpd;   
+                       
+                        $cRet .="<tr>                                  
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none;\"></td>  
+                  <td valign=\"top\" colspan=\"3\" align=\"left\" style=\"font-size:12px;border-bottom:solid 1px black;\"><b>$nmrek</b></td>
+                                  </tr>";  
+                                                                                                                                                                
+                    $sql = "SELECT z.* FROM
+(
+SELECT '5' as urut,a.kd_skpd,d.kd_rek4 as kd_rek,d.nm_rek4 as nm_rek,sum(c.nilai) AS nilai FROM trhsp2d a
+inner join trdspp c on c.no_spp = a.no_spp and a.kd_skpd = c.kd_skpd 
+inner join ms_rek4 d on d.kd_rek4 = LEFT(c.kd_rek6,5)
+WHERE a.status_bud='1' and a.jns_spp='6' and a.kd_skpd='$kdskpd' and month(a.tgl_kas_bud)='$bulan' and LEFT(c.kd_rek6,2) in ('51','52','53','54')
+GROUP BY a.kd_skpd,d.kd_rek4,d.nm_rek4
+union all
+SELECT '4' as urut,a.kd_skpd,d.kd_rek3 as kd_rek,d.nm_rek3 as nm_rek,sum(c.nilai) AS nilai FROM trhsp2d a
+inner join trdspp c on c.no_spp = a.no_spp and a.kd_skpd = c.kd_skpd 
+inner join ms_rek3 d on d.kd_rek3 = LEFT(c.kd_rek6,3)
+WHERE a.status_bud='1' and a.jns_spp='6' and a.kd_skpd='$kdskpd' and month(a.tgl_kas_bud)='$bulan' and LEFT(c.kd_rek6,2) in ('51','52','53','54')
+GROUP BY a.kd_skpd,d.kd_rek3,d.nm_rek3
+union all
+SELECT '3' as urut,a.kd_skpd,d.kd_rek2 as kd_rek,d.nm_rek2 as nm_rek,sum(c.nilai) AS nilai FROM trhsp2d a
+inner join trdspp c on c.no_spp = a.no_spp and a.kd_skpd = c.kd_skpd 
+inner join ms_rek2 d on d.kd_rek2 = LEFT(c.kd_rek6,2)
+WHERE a.status_bud='1' and a.jns_spp='6' and a.kd_skpd='$kdskpd' and month(a.tgl_kas_bud)='$bulan' and LEFT(c.kd_rek6,2) in ('51','52','53','54')
+GROUP BY a.kd_skpd,d.kd_rek2,d.nm_rek2
+union all
+SELECT '2' as urut,a.kd_skpd,d.kd_rek1 as kd_rek,d.nm_rek1 as nm_rek,sum(c.nilai) AS nilai FROM trhsp2d a
+inner join trdspp c on c.no_spp = a.no_spp and a.kd_skpd = c.kd_skpd 
+inner join ms_rek1 d on d.kd_rek1 = LEFT(c.kd_rek6,1)
+WHERE a.status_bud='1' and a.jns_spp='6' and a.kd_skpd='$kdskpd' and month(a.tgl_kas_bud)='$bulan' and LEFT(c.kd_rek6,2) in ('51','52','53','54')
+GROUP BY a.kd_skpd,d.kd_rek1,d.nm_rek1
+union all
+SELECT '6' as urut,a.kd_skpd,c.kd_rek6 as kd_rek,c.nm_rek6 as nm_rek,sum(c.nilai) AS nilai FROM trhsp2d a
+inner join trdspp c on c.no_spp = a.no_spp and a.kd_skpd = c.kd_skpd 
+WHERE a.status_bud='1' and a.jns_spp='6' and a.kd_skpd='$kdskpd' and month(a.tgl_kas_bud)='$bulan' and LEFT(c.kd_rek6,2) in ('51','52','53','54')
+GROUP BY a.kd_skpd,c.kd_rek6,c.nm_rek6
+) z 
+ORDER BY kd_skpd,kd_rek,urut,nm_rek
+";
+                    
+                    $hasil = $this->db->query($sql);       
+                    $no=0;
+                    foreach ($hasil->result() as $row)
+                    {
+                       $no      =$no+1;
+                       $kun     =$row->urut;
+                       $nilai   =$row->nilai;
+                       $kdrek   =$row->kd_rek;      
+                       $nmrek   =$row->nm_rek;                             
+                       $kdskpd   =$row->kd_skpd;   
+                                                              
+                             $cRet .="<tr>                                  
+                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"></td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">$kdrek</td>
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">$nmrek</td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format($nilai,2)."</td>
+                                  </tr>";                                                                
+                    }
+                    }
+                    //batas LS                   
+//total                    
+$sql_skpd = "
+SELECT z.urut,z.kd_skpd,'' as kd_rek,z.nm_rek,sum(z.nilai) as nilai FROM (
+SELECT '1' as urut,a.kd_skpd,'' as kd_rek,'JUMLAH' as nm_rek,sum(c.nilai) as nilai FROM trhsp2d a
+inner join trdspp c on c.no_spp = a.no_spp and a.kd_skpd = c.kd_skpd 
+WHERE a.status_bud='1' and a.jns_spp in ('1') and a.kd_skpd='$kdskpd' and month(a.tgl_kas_bud)='$bulan'
+GROUP BY a.kd_skpd
+UNION
+SELECT '1' as urut,a.kd_skpd,'' as kd_rek,'JUMLAH' as nm_rek,sum(c.nilai) as nilai FROM trhsp2d a
+inner join trdspp c on c.no_spp = a.no_spp and a.kd_skpd = c.kd_skpd 
+WHERE a.status_bud='1' and a.jns_spp in ('1','2','3','5','4','6') and a.kd_skpd='$kdskpd' and month(a.tgl_kas_bud)='$bulan' and LEFT(c.kd_rek6,2) in ('51','52','53','54','72')
+GROUP BY a.kd_skpd
+)z 
+GROUP BY z.urut,z.kd_skpd,z.nm_rek
+";
+
+$hasil = $this->db->query($sql_skpd);       
+                    $no=0;
+                    foreach ($hasil->result() as $row)
+                    {
+                       $no      =$no+1;
+                       $kun     =$row->urut;
+                       $nilai   =$row->nilai;
+                       $kdrek   =$row->kd_rek;      
+                       $nmrek   =$row->nm_rek;                             
+                       $kdskpd   =$row->kd_skpd;   
+                       
+                        $cRet .="<tr>                                  
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none;\"></td>  
+                  <td valign=\"top\" colspan=\"2\" align=\"left\" style=\"font-size:12px;border-bottom:solid 1px black;\"><b>$nmrek</b></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:solid 1px black;\"><b>".number_format($nilai,2)."</b></td>
+                                  </tr>";  
+                    }                                  
+    //batas for                
+    }   
+
+//total                    
+$sql_skpd = "
+SELECT z.urut,'' as kd_skpd,'' as kd_rek,z.nm_rek,sum(z.nilai) as nilai FROM (
+SELECT '1' as urut,'' as kd_skpd,'' as kd_rek,'JUMLAH KESELURUHAN' as nm_rek,sum(c.nilai) as nilai FROM trhsp2d a
+inner join trdspp c on c.no_spp = a.no_spp and a.kd_skpd = c.kd_skpd 
+WHERE a.status_bud='1' and a.jns_spp in ('1') and month(a.tgl_kas_bud)='$bulan'
+UNION
+SELECT '1' as urut,'' as kd_skpd,'' as kd_rek,'JUMLAH KESELURUHAN' as nm_rek,sum(c.nilai) as nilai FROM trhsp2d a
+inner join trdspp c on c.no_spp = a.no_spp and a.kd_skpd = c.kd_skpd 
+WHERE a.status_bud='1' and a.jns_spp in ('2','3','4','5','6') and month(a.tgl_kas_bud)='$bulan' and LEFT(c.kd_rek6,2) in ('51','52','53','54','72')
+)z 
+GROUP BY z.urut,z.nm_rek
+";
+
+$hasil = $this->db->query($sql_skpd);       
+                    $no=0;
+                    foreach ($hasil->result() as $row)
+                    {
+                       $no      =$no+1;
+                       $kun     =$row->urut;
+                       $nilai   =$row->nilai;
+                       $kdrek   =$row->kd_rek;      
+                       $nmrek   =$row->nm_rek;                             
+                       $kdskpd   =$row->kd_skpd;   
+                       
+                        $cRet .="<tr>                                  
+                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none;\"></td>  
+                  <td valign=\"top\" colspan=\"2\" align=\"left\" style=\"font-size:12px;border-bottom:solid 1px black;\"><b>$nmrek</b></td>
+                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:solid 1px black;\"><b>".number_format($nilai,2)."</b></td>
+                                  </tr>";  
+                    }                                  
+                 
+         $cRet .="
+                <tr>
+                    <td align=\"left\" colspan=\"4\" style=\"font-size:12px;border-top: solid 1px black;\">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td align=\"left\" colspan=\"4\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
+                </tr>                
+                <tr>
+                    <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;\"></td>
+                    <td align=\"center\" colspan=\"2\" style=\"font-size:15px;border: solid 1px white;\">Pontianak, tanggal ".$this->tanggal_format_indonesia($tgl_ttd)."</td>                                                                                                                                                                                
+                </tr>
+                <tr>                
+                    <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;\"></td>
+                    <td align=\"center\" colspan=\"2\" style=\"font-size:15px;border: solid 1px white;\">$jabatan</td>                    
+                </tr>
+                <tr>                
+                    <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;\"></td>
+                    <td align=\"center\" colspan=\"2\" style=\"font-size:15px;border: solid 1px white;\">$pangkat</td>                    
+                </tr>
+                <tr>
+                    <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
+                    <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;\"></td>
+                </tr>
+                <tr>
+                    <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
+                    <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;\"></td>
+                </tr>
+        <tr>
+                    <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
+                    <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;\"></td>
+                </tr>                
+                <tr>
+                    <td align=\"center\" colspan=\"2\" style=\"font-size:12px; border: solid 1px white;\"></td>                    
+                    <td align=\"center\" colspan=\"2\" style=\"font-size:15px; border: solid 1px white;\"><b><u>$lcNmBP</u></b></td>
+                </tr>
+                <tr>
+                    <td align=\"center\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;\"></td>
+                    <td align=\"center\" colspan=\"2\" style=\"font-size:15px;border: solid 1px white;\">NIP. $lcNipBP</td>
+      
+                </tr>";        
+                                  
+                
+        $cRet .='</table>';
+                 
+                 $juduls = "Realisasi Pengeluaran";
+                 
+         $data['prev']= $cRet;    
+         if($jnscetak=="0"){
+                echo $cRet;
+         }else if($jnscetak=="1"){
+                $this->tukd_model->_mpdf('', $cRet, 10, 5, 10, '0');
+         }else if($jnscetak=="2"){
+         header("Cache-Control: no-cache, no-store, must-revalidate");
+            header("Content-Type: application/vnd.ms-excel");
+            header("Content-Disposition: attachment; filename= $juduls.xls");
+            
+            $this->load->view('anggaran/rka/perkadaII', $data);
+         }
+         //$this->tukd_model->_mpdf('',$cRet,'10','10',5,'0');
+         //$this->tukd_model->_mpdf('', $cRet, 10, 10, 10, 'L');
+     
+    }
 }   
