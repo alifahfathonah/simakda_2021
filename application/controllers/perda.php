@@ -30,6 +30,12 @@ class Perda extends CI_Controller
         $this->template->set('title', 'CETAK PERDA LAMP. I.5');   
         $this->template->load('template','perda/cetak_perda_lampI_5',$data) ;	
 	}
+
+	function akun_krim(){
+        $data['page_title']= 'CETAK LRA';
+        $this->template->set('title', 'CETAK LRA');   
+        $this->template->load('template','perda/cetak_akun',$data) ;	
+	}
 	
 	function cetak_perda_lampI_5($bulan='',$anggaran='',$ctk='',$tglttd='', $ttd=''){
         $lntahunang = $this->session->userdata('pcThang');       
@@ -8392,5 +8398,3255 @@ function cetak_perkada_lampII_org($bulan='',$ctk='',$anggaran='',$kd_skpd='',$je
 			}
 		}
 	
+
+		function cetak_lra_pemkot_33_permen($bulan='',$ctk='',$anggaran='',$jenis='',$kd_skpd='',$ttd='',$tanggal_ttd='',$ttdperda='',$label=''){
+			 
+			$lntahunang = $this->session->userdata('pcThang');
+			$ttd1 = str_replace('n',' ',$ttdperda);
+				   
+			 switch  ($bulan){
+			case  1:
+			$judul="JANUARI";
+			break;
+			case  2:
+			$judul="FEBRUARI";
+			break;
+			case  3:
+			$judul= "TRIWULAN I";
+			break;
+			case  4:
+			$judul="APRIL";
+			break;
+			case  5:
+			$judul= "MEI";
+			break;
+			case  6:
+			$judul= "SEMESTER I";
+			break;
+			case  7:
+			$judul= "JULI";
+			break;
+			case  8:
+			$judul= "AGUSTUS";
+			break;
+			case  9:
+			$judul= "TRIWULAN III";
+			break;
+			case  10:
+			$judul= "OKTOBER";
+			break;
+			case  11:
+			$judul= "NOVEMBER";
+			break;
+			case  12:
+			$judul= "SEMESTER II";
+			break;
+		}
+			if ($kd_skpd=='-'){                               
+				$where="";            
+			} else{
+				$where="AND kd_skpd='$kd_skpd'";
+			}
+			
+			if($anggaran==1){
+				$initang = "nilai_ang";
+			}else {
+				$initang = "nilai_ang_ubah";
+			}
+			
+			if($label=='1'){
+			$label = 'UNAUDITED';
+			}else if($label=='2'){
+			$label = 'AUDITED';
+			}else{
+			$label = '&nbsp;';
+			}
 	
+		$cRet="<TABLE style=\"border-collapse:collapse;font-size:12px;font-family:Bookman Old Style\" width=\"100%\" border=\"1\" cellspacing=\"0\" cellpadding=\"1\" align=\"center\">
+						<tr>
+						<td rowspan=\"4\" align=\"center\" style=\"border-right:hidden\">
+							<img src=\"".base_url()."/image/logoHP.png\"  width=\"50\" height=\"60\" />
+							</td>
+						<td align=\"center\" style=\"border-left:hidden;border-bottom:hidden\"><strong>PEMERINTAH KOTA PONTIANAK </strong></td></tr>
+						<tr><td align=\"center\" style=\"border-left:hidden;border-bottom:hidden;border-top:hidden\"><b>LAPORAN REALISASI ANGGARAN PENDAPATAN DAN BELANJA </b></tr>
+						<tr><td align=\"center\" style=\"border-left:hidden;border-top:hidden\" ><b>UNTUK TAHUN YANG BERAKHIR SAMPAI DENGAN $judul TAHUN $lntahunang</b></tr>
+						<tr><td align=\"center\" style=\"border-left:hidden;border-top:hidden\" ><b>$label</b></tr>
+						</TABLE>";
+				
+			$cRet .="<table style=\"border-collapse:collapse;font-family:Arial;font-size:11px\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"3\" cellpadding=\"3\">
+					<thead>
+					<tr>
+						<td rowspan=\"2\" width=\"7%\" align=\"center\" bgcolor=\"#CCCCCC\" ><b>KD REK</b></td>
+						<td rowspan=\"2\" width=\"32%\" align=\"center\" bgcolor=\"#CCCCCC\" ><b>URAIAN</b></td>
+						<td colspan=\"2\" width=\"37%\" align=\"center\" bgcolor=\"#CCCCCC\" ><b>JUMLAH (Rp.)</b></td>
+						<td colspan=\"2\" width=\"23%\" align=\"center\" bgcolor=\"#CCCCCC\" ><b>BERTAMBAH/KURANG</b></td>
+					</tr>
+					<tr>
+						<td width=\"19%\" align=\"center\" bgcolor=\"#CCCCCC\" ><b>ANGGARAN</b></td>
+						<td width=\"18%\" align=\"center\" bgcolor=\"#CCCCCC\" ><b>REALISASI</b></td>
+						<td width=\"18%\" align=\"center\" bgcolor=\"#CCCCCC\" ><b>(Rp)</b></td>
+						<td width=\"5%\" align=\"center\" bgcolor=\"#CCCCCC\" ><b>%</b></td>
+						</tr>
+						<tr>
+					   <td align=\"center\" bgcolor=\"#CCCCCC\" >1</td> 
+					   <td align=\"center\" bgcolor=\"#CCCCCC\" >2</td> 
+					   <td align=\"center\" bgcolor=\"#CCCCCC\" >3</td> 
+					   <td align=\"center\" bgcolor=\"#CCCCCC\" >4</td> 
+					   <td align=\"center\" bgcolor=\"#CCCCCC\" >5</td> 
+					   <td align=\"center\" bgcolor=\"#CCCCCC\" >6</td> 
+					</tr>
+					</thead>";
+					
+				$sql = "SELECT 
+						SUM(CASE WHEN kd_rek='4' THEN (nil_ang) ELSE 0 END) - SUM(CASE WHEN kd_rek in ('5','6') THEN (nil_ang) ELSE 0 END) as ang_surplus,
+						SUM(CASE WHEN kd_rek='4' THEN (real_spj) ELSE 0 END) - SUM(CASE WHEN kd_rek in ('5','6') THEN (real_spj) ELSE 0 END) as nil_surplus
+						FROM
+						(SELECT LEFT(kd_ang,1) as kd_rek, SUM($initang) as nil_ang, SUM(real_spj) as real_spj FROM data_realisasi_pemkot where bulan='$bulan' and LEFT(kd_ang,1) IN ('4','5','6') $where
+						GROUP BY LEFT(kd_ang,1)) a;
+						";
+						  $hasil = $this->db->query($sql);
+						foreach ($hasil->result() as $row)
+						{
+						   $ang_surplus = $row->ang_surplus;
+						   $nil_surplus = $row->nil_surplus;
+						}
+						$sisa_surplus = $ang_surplus-$nil_surplus;
+							if(($ang_surplus==0) || ($ang_surplus=='')){
+							$persen_surplus=0;
+						} else{
+						$persen_surplus = $nil_surplus/$ang_surplus *100;
+						}   
+											$hasil->free_result();        
+						if($ang_surplus<0){
+							$ang_surplus1=$ang_surplus*-1;
+							$a='(';
+							$b=')';
+						} else{
+							$ang_surplus1=$ang_surplus;
+							$a='';
+							$b='';
+						}
+						if($nil_surplus<0){
+							$nil_surplus1=$nil_surplus*-1;
+							$c='(';
+							$d=')';
+						} else{
+							$nil_surplus1=$nil_surplus;
+							$c='';
+							$d='';
+						}
+						if($sisa_surplus<0){
+							$sisa_surplus1=$sisa_surplus*-1;
+							$e='(';
+							$f=')';
+						} else{
+							$sisa_surplus1=$sisa_surplus;
+							$e='';
+							$f='';
+						}
+				
+				$sql = "SELECT 
+						SUM(CASE WHEN kd_rek='71' THEN (nil_ang) ELSE 0 END) - SUM(CASE WHEN kd_rek='72' THEN (nil_ang) ELSE 0 END) as ang_netto,
+						SUM(CASE WHEN kd_rek='71' THEN (real_spj) ELSE 0 END) - SUM(CASE WHEN kd_rek='72' THEN (real_spj) ELSE 0 END) as nil_netto
+						FROM
+						(SELECT LEFT(kd_ang,2) as kd_rek, SUM($initang) as nil_ang, SUM(real_spj) as real_spj FROM data_realisasi_pemkot where bulan='$bulan' and LEFT(kd_ang,2) IN ('71','72') $where
+						GROUP BY LEFT(kd_ang,2)) a;
+						";
+						  $hasil = $this->db->query($sql);
+						foreach ($hasil->result() as $row)
+						{
+						   $ang_netto = $row->ang_netto;
+						   $nil_netto = $row->nil_netto;
+						}
+						$sisa_netto = $ang_netto-$nil_netto;
+						if(($ang_netto==0) || ($ang_netto=='')){
+							$persen_netto=0;
+						} else{
+						$persen_netto = $nil_netto/$ang_netto *100;
+						}
+						$hasil->free_result();  
+						if($ang_netto<0){
+							$ang_netto1=$ang_netto*-1;
+							$g='(';
+							$h=')';
+						} else{
+							$ang_netto1=$ang_netto;
+							$g='';
+							$h='';
+						}
+						if($nil_netto<0){
+							$nil_netto1=$nil_netto*-1;
+							$i='(';
+							$j=')';
+						} else{
+							$nil_netto1=$nil_netto;
+							$i='';
+							$j='';
+						}
+						if($sisa_netto<0){
+							$sisa_netto1=$sisa_netto*-1;
+							$k='(';
+							$l=')';
+						} else{
+							$sisa_netto1=$sisa_netto;
+							$k='';
+							$l='';
+						}   
+						
+						$ang_silpa = $ang_surplus+$ang_netto;
+						$nil_silpa = $nil_surplus+$nil_netto;
+						$sisa_silpa = $ang_silpa-$nil_silpa;
+						if($ang_silpa==0){
+							$persen_silpa=0;
+						}else{
+						$persen_silpa = $nil_silpa/$ang_silpa *100;
+						}
+						if($ang_silpa<0){
+							$ang_silpa1=$ang_silpa*-1;
+							$m='(';
+							$n=')';
+						} else{
+							$ang_silpa1=$ang_silpa;
+							$m='';
+							$n='';
+						}
+						if($nil_silpa<0){
+							$nil_silpa1=$nil_silpa*-1;
+							$o='(';
+							$p=')';
+						} else{
+							$nil_silpa1=$nil_silpa;
+							$o='';
+							$p='';
+						}
+						if($sisa_silpa<0){
+							$sisa_silpa1=$sisa_silpa*-1;
+							$q='(';
+							$r=')';
+						} else{
+							$sisa_silpa1=$sisa_silpa;
+							$q='';
+							$r='';
+						}   
+				$sql = "SELECT urut, kd_rek, uraian, kode1, kode2, kode3,kode4,kode5,spasi FROM map_lra_pemkot ORDER BY urut
+						";
+						$no=0;
+						$tot_peg=0;
+						$tot_brg=0;
+						$tot_mod=0;
+						$tot_bansos=0;
+						$hasil = $this->db->query($sql);
+						foreach ($hasil->result() as $row)
+						{
+						   $no=$no+1;
+						   $urut = $row->urut;
+						   $kode = $row->kd_rek;
+						   $nama = $row->uraian;
+						   $kode1 = $row->kode1;
+						   $kode2 = $row->kode2;
+						   $kode3 = $row->kode3;
+						   $kode4 = $row->kode4;
+						   $kode5 = $row->kode5;
+						   $spasi = $row->spasi;
+	
+						$sql = "SELECT SUM($initang) as nil_ang, SUM(real_spj) as nilai FROM data_realisasi_pemkot where bulan='$bulan' and (LEFT(kd_ang,1) IN ($kode1) or LEFT(kd_ang,2) IN ($kode2) or LEFT(kd_ang,3) IN ($kode3) or LEFT(kd_ang,5) IN ($kode4) or LEFT(kd_ang,7) IN ($kode5))$where";
+					  
+						$hasil = $this->db->query($sql);
+						foreach ($hasil->result() as $row)
+						{
+						   $nil_ang = $row->nil_ang;
+						   $nilai = $row->nilai;
+						}
+						$sel = $nil_ang-$nilai;
+						if(($nil_ang==0) || ($nil_ang=='')){
+							$persen=0;
+						} else{
+						$persen = $nilai/$nil_ang *100;
+						}
+						 switch ($spasi) {
+						 case 1:
+							$cRet .='<tr>
+								   <td align="left" valign="top"><b>'.$kode.'</b></td> 
+								   <td align="left"  valign="top"><b>'.$nama.'</b></td> 
+								   <td align="right" valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+								   <td align="right" valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+								   <td align="right" valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+								   <td align="right" valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+								</tr>'; 
+							break;  
+						case 2:
+							 $cRet .='<tr>
+								   <td align="left" valign="top"><b>'.$kode.'</b></td> 
+								   <td align="left"  valign="top"><b>&nbsp;&nbsp;'.$nama.'</b></td> 
+								   <td align="right" valign="top"><b>'.number_format($nil_ang, "2", ",", ".").'</b></td> 
+								   <td align="right" valign="top"><b>'.number_format($nilai, "2", ",", ".").'</b></td> 
+								   <td align="right" valign="top"><b>'.number_format($sel, "2", ",", ".").'</b></td> 
+								   <td align="right" valign="top"><b>'.number_format($persen, "2", ",", ".").'</b></td> 
+								</tr>';
+							break;
+						 case 3:
+							 $cRet .='<tr>
+								   <td align="left" valign="top">'.$kode.'</b></td> 
+								   <td align="left"  valign="top">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nama.'</td> 
+								   <td align="right" valign="top">'.number_format($nil_ang, "2", ",", ".").'</td> 
+								   <td align="right" valign="top">'.number_format($nilai, "2", ",", ".").'</td> 
+								   <td align="right" valign="top">'.number_format($sel, "2", ",", ".").'</td> 
+								   <td align="right" valign="top">'.number_format($persen, "2", ",", ".").'</td> 
+								</tr>';
+							break;
+						case 4:
+						   $cRet .='<tr>
+								   <td align="left" valign="top" ><b>'.$kode.'</b></td> 
+								   <td align="left"  valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nama.'</b></td> 
+								   <td align="right" valign="top"><b>'.number_format($nil_ang, "2", ",", ".").'</b></td> 
+								   <td align="right" valign="top"><b>'.number_format($nilai, "2", ",", ".").'</b></td> 
+								   <td align="right" valign="top"><b>'.number_format($sel, "2", ",", ".").'</b></td> 
+								   <td align="right" valign="top"><b>'.number_format($persen, "2", ",", ".").'</b></td> 
+								</tr>';
+							break;
+						case 5:
+						   $cRet .='<tr>
+								   <td align="left" valign="top" ><b>'.$kode.'</b></td> 
+								   <td align="right"  valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nama.'</b></td> 
+								   <td align="right" valign="top"><b>'.$a.''.number_format($ang_surplus1, "2", ",", ".").''.$b.'</b></td> 
+								   <td align="right" valign="top"><b>'.$c.''.number_format($nil_surplus1, "2", ",", ".").''.$d.'</b></td> 
+								   <td align="right" valign="top"><b>'.$e.''.number_format($sisa_surplus1, "2", ",", ".").''.$f.'</b></td> 
+								   <td align="right" valign="top"><b>'.number_format($persen_surplus, "2", ",", ".").'</b></td> 
+								</tr>';
+							break;
+						case 6;
+						   $cRet .='<tr>
+								   <td align="left" valign="top" ><b>'.$kode.'</b></td> 
+								   <td align="right"  valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nama.'</b></td> 
+								   <td align="right" valign="top" ><b>'.$g.''.number_format($ang_netto1, "2", ",", ".").''.$h.'</b></td> 
+								   <td align="right" valign="top" ><b>'.$i.''.number_format($nil_netto1, "2", ",", ".").''.$j.'</b></td> 
+								   <td align="right" valign="top" ><b>'.$k.''.number_format($sisa_netto1, "2", ",", ".").''.$l.'</b></td> 
+								   <td align="right" valign="top" ><b>'.number_format($persen_netto, "2", ",", ".").'</b></td> 
+								</tr>';
+							break;
+						case 7;
+						   $cRet .='<tr>
+								   <td align="left" valign="top" ><b>'.$kode.'</b></td> 
+								   <td align="right"  valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nama.'</b></td> 
+								   <td align="right" valign="top" ><b>'.$m.''.number_format($ang_silpa1, "2", ",", ".").''.$n.'</b></td> 
+								   <td align="right" valign="top" ><b>'.$o.''.number_format($nil_silpa1, "2", ",", ".").''.$p.'</b></td> 
+								   <td align="right" valign="top" ><b>'.$q.''.number_format($sisa_silpa1, "2", ",", ".").''.$r.'</b></td> 
+								   <td align="right" valign="top" ><b>'.number_format($persen_silpa, "2", ",", ".").'</b></td> 
+								</tr>';
+							break;
+							
+							default:
+							
+						   $cRet .='<tr>
+								   <td align="left" valign="top" ><b>'.$kode.'</b></td> 
+								   <td align="right"  valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+								   <td align="right" valign="top" ><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td>
+								   <td align="right" valign="top" ><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+								   <td align="right" valign="top" ><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+								   <td align="right" valign="top" ><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+								</tr>';
+							break;
+						}
+						}
+				 
+						  
+			
+				$cRet .="</table>";
+				
+					
+					$sqlsc="SELECT tgl_rka,provinsi,kab_kota,daerah,thn_ang FROM sclient where kd_skpd='5.02.0.00.0.00.01.0000'";
+					 $sqlsclient=$this->db->query($sqlsc);
+					 foreach ($sqlsclient->result() as $rowsc)
+					{
+						$kab     = $rowsc->kab_kota;
+						$daerah  = $rowsc->daerah;
+					   
+					}
+					
+					$sqlttd1="SELECT nama as nm,nip as nip,jabatan as jab,pangkat FROM ms_ttd where nip='$ttd1' and (kode ='agr' or kode='wk')";
+					 $sqlttd=$this->db->query($sqlttd1);
+					 foreach ($sqlttd->result() as $rowttd)
+					{
+						$nip=$rowttd->nip;                    
+						$namax= $rowttd->nm;
+						$jabatan  = $rowttd->jab;
+						$pangkat  = $rowttd->pangkat;
+					}
+					
+					
+					 if($ttd1!='1'){
+						$xx="<u>";
+						$xy="</u>";
+						$nipxx=$nip;
+						$nipx="NIP.";
+					}else{
+						$xx="";
+						$xy="";
+						$nipxx="";
+						$nipx="";
+					}
+					if($tanggal_ttd==1){
+						$tgltd = '';
+					}else{
+						$tgltd = $this->tanggal_format_indonesia($tanggal_ttd);
+					}
+			$cRet .='<TABLE style="border-collapse:collapse; font-size:13px; font-family: Bookman Old Style;"  width="100%" border="0" cellspacing="0" cellpadding="0" align=center>
+						
+						<TR>
+							<TD width="50%" align="center" ><b>&nbsp;</TD>
+							<TD align="center" >'.$daerah.', '.$tgltd.'</TD>
+						</TR>
+						
+						<TR>
+							<TD width="50%" align="center" ><b>&nbsp;</TD>
+							<TD align="center" ><b>'.$jabatan.'</b></TD>
+						</TR>
+						<TR>
+							<TD width="50%" align="center" ><b>&nbsp;</TD>
+							<TD width="50%" align="center" ><b>&nbsp;</TD>
+						</TR>
+						<TR>
+							<TD width="50%" align="center" ><b>&nbsp;</TD>
+							<TD width="50%" align="center" ><b>&nbsp;</TD>
+						</TR>
+						<TR>
+							<TD width="50%" align="center" ><b>&nbsp;</TD>
+							<TD width="50%" align="center" ><b>&nbsp;</TD>
+						</TR>                    
+						<TR>
+							<TD width="50%" align="center" ><b>&nbsp;</TD>
+							<TD align="center" >'.$xx.'<b>'.$namax.'</b>'.$xy.'</TD>
+						</TR>
+						<TR>
+							<TD width="50%" align="center" ><b>&nbsp;</TD>
+							<TD align="center" >'.$nipx.''.$nipxx.'</TD>
+						</TR>
+						</TABLE><br/>';
+		 
+				
+				$data['prev']= $cRet;    
+				$judul='LRA 33 ';
+				switch ($ctk){
+					case 0;
+					echo ("<title>$judul</title>");
+					echo $cRet;
+					break;
+					case 1;
+					$this->tukd_model->_mpdf('',$cRet,10,10,10,'P');
+					break;
+					case 2;        
+					header("Cache-Control: no-cache, no-store, must-revalidate");
+					header("Content-Type: application/vnd.ms-excel");
+					header("Content-Disposition: attachment; filename= $judul.xls");
+					$this->load->view('anggaran/rka/perkadaII', $data);
+					break;  
+				}
+			} 
+	
+			function cetak_perda_lampI_permen_spj_akun($bulan='',$ctk='',$anggaran='',$jenis='',$kd_skpd='',$ttd='',$tanggal_ttd='',$ttdperda='',$label=''){
+				$lntahunang = $this->session->userdata('pcThang');  
+				 if($tanggal_ttd!='-'){        
+				 $ttd1 = str_replace('n',' ',$ttdperda);
+				 }
+				 $modtahun= $lntahunang%4;
+				 
+				 if ($modtahun = 0){
+					 $nilaibulan=".JANUARI. FEBRUARI. MARET. APRIL. MEI. JUNI. JULI. AGUSTUS. SEPTEMBER. OKTOBER. NOVEMBER. DESEMBER";}
+						 else {
+					 $nilaibulan=".JANUARI. FEBRUARI. MARET. APRIL. MEI. JUNI. JULI. AGUSTUS. SEPTEMBER. OKTOBER. NOVEMBER. DESEMBER";}
+				 
+				 $arraybulan=explode(".",$nilaibulan);
+				 
+				if ($kd_skpd=='-'){                               
+					$where="";            
+				} else{
+					$where="AND kd_skpd='$kd_skpd'";
+				}
+				
+				if($bulan=='6'){
+					$hbulan = $arraybulan[$bulan];
+				}else{
+					$hbulan = $arraybulan[$bulan];
+				}
+				
+				if($anggaran==1){
+					$initang = "nilai_ang";
+				}else {
+					$initang = "nilai_ang_ubah";
+				}
+				
+				if($label=='1'){
+					$label = 'UNAUDITED';
+				}else if($label=='2'){
+					$label = 'AUDITED';
+				}else{
+					$label = '&nbsp;';
+				}
+				
+				//<!--<img src=\"".base_url()."/image/logoHP.png\"  width=\"75\" height=\"100\" />-->
+			$cRet="<TABLE style=\"border-collapse:collapse;font-size:11px;font-family:Bookman Old Style\" width=\"100%\" border=\"1\" cellspacing=\"0\" cellpadding=\"1\" align=\"center\">					
+							<tr>
+							<td rowspan=\"4\" align=\"center\" style=\"border-right:hidden\">
+								<img src=\"".base_url()."/image/logoHP.png\"  width=\"50\" height=\"60\" />
+								</td>
+							<td align=\"center\" style=\"border-left:hidden;border-bottom:hidden\"><strong>PEMERINTAH KOTA PONTIANAK </strong></td></tr>
+							<tr><td align=\"center\" style=\"border-left:hidden;border-bottom:hidden;border-top:hidden\"><b>LAPORAN REALISASI ANGGARAN PENDAPATAN DAN BELANJA </b></tr>
+							<tr><td align=\"center\" style=\"border-left:hidden;border-top:hidden\" ><b>UNTUK TAHUN YANG BERAKHIR SAMPAI DENGAN $hbulan TAHUN $lntahunang</b></tr>
+							<tr><td align=\"center\" style=\"border-left:hidden;border-top:hidden\" ><b>$label</b></tr>
+							</TABLE>
+							
+							";
+					
+				$cRet .="<table style=\"border-collapse:collapse;font-family:Bookman Old Style;font-size:11px\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"3\" cellpadding=\"3\">
+						<thead>
+						<tr>
+							<td rowspan=\"2\" width=\"8%\" align=\"center\" bgcolor=\"#CCCCCC\" ><b>KD REK</b></td>
+							<td rowspan=\"2\" width=\"22%\" align=\"center\" bgcolor=\"#CCCCCC\" ><b>URAIAN</b></td>
+							<td colspan=\"2\" width=\"40%\" align=\"center\" bgcolor=\"#CCCCCC\" ><b>JUMLAH (Rp.)</b></td>
+							<td colspan=\"2\" width=\"30%\" align=\"center\" bgcolor=\"#CCCCCC\" ><b>BERTAMBAH/KURANG</b></td>
+						</tr>
+						<tr>
+							<td width=\"21%\" align=\"center\" bgcolor=\"#CCCCCC\" ><b>ANGGARAN</b></td>
+							<td width=\"21%\" align=\"center\" bgcolor=\"#CCCCCC\" ><b>REALISASI</b></td>
+							<td width=\"20%\" align=\"center\" bgcolor=\"#CCCCCC\" ><b>(Rp)</b></td>
+							<td width=\"8%\" align=\"center\" bgcolor=\"#CCCCCC\" ><b>%</b></td>
+							</tr>
+							<tr>
+						   <td align=\"center\" bgcolor=\"#CCCCCC\" >1</td> 
+						   <td align=\"center\" bgcolor=\"#CCCCCC\" >2</td> 
+						   <td align=\"center\" bgcolor=\"#CCCCCC\" >3</td> 
+						   <td align=\"center\" bgcolor=\"#CCCCCC\" >4</td> 
+						   <td align=\"center\" bgcolor=\"#CCCCCC\" >5</td> 
+						   <td align=\"center\" bgcolor=\"#CCCCCC\" >6</td> 
+						</tr>
+						</thead>";
+						
+					$sql = "SELECT 
+							SUM(CASE WHEN kd_rek='4' THEN (nil_ang) ELSE 0 END) - SUM(CASE WHEN kd_rek='5' THEN (nil_ang) ELSE 0 END) as ang_surplus,
+							SUM(CASE WHEN kd_rek='4' THEN (real_spj) ELSE 0 END) - SUM(CASE WHEN kd_rek='5' THEN (real_spj) ELSE 0 END) as nil_surplus
+							FROM
+							(SELECT LEFT(kd_rek5,1) as kd_rek, SUM($initang) as nil_ang, SUM(real_spj) as real_spj FROM data_realisasi_pemkot_13 where bulan='$bulan' and LEFT(kd_rek5,1) IN ('4','5') $where
+							GROUP BY LEFT(kd_rek5,1)) a;
+							";
+							  $hasil = $this->db->query($sql);
+							foreach ($hasil->result() as $row)
+							{
+							   $ang_surplus = $row->ang_surplus;
+							   $nil_surplus = $row->nil_surplus;
+							}
+							$sisa_surplus = $ang_surplus-$nil_surplus;
+							if(($ang_surplus==0) || ($ang_surplus=='')){
+								$persen_surplus=0;
+							} else{
+							$persen_surplus = $nil_surplus/$ang_surplus *100;
+							}	
+												$hasil->free_result();        
+							if($ang_surplus<0){
+								$ang_surplus1=$ang_surplus*-1;
+								$a='(';
+								$b=')';
+							} else{
+								$ang_surplus1=$ang_surplus;
+								$a='';
+								$b='';
+							}
+							if($nil_surplus<0){
+								$nil_surplus1=$nil_surplus*-1;
+								$c='(';
+								$d=')';
+							} else{
+								$nil_surplus1=$nil_surplus;
+								$c='';
+								$d='';
+							}
+							if($sisa_surplus<0){
+								$sisa_surplus1=$sisa_surplus*-1;
+								$e='(';
+								$f=')';
+							} else{
+								$sisa_surplus1=$sisa_surplus;
+								$e='';
+								$f='';
+							}
+					
+					$sql = "SELECT 
+							SUM(CASE WHEN kd_rek='61' THEN (nil_ang) ELSE 0 END) - SUM(CASE WHEN kd_rek='62' THEN (nil_ang) ELSE 0 END) as ang_netto,
+							SUM(CASE WHEN kd_rek='61' THEN (real_spj) ELSE 0 END) - SUM(CASE WHEN kd_rek='62' THEN (real_spj) ELSE 0 END) as nil_netto
+							FROM
+							(SELECT LEFT(kd_rek5,2) as kd_rek, SUM($initang) as nil_ang, SUM(real_spj) as real_spj FROM data_realisasi_pemkot_13 where bulan='$bulan' and LEFT(kd_rek5,2) IN ('61','62') $where
+							GROUP BY LEFT(kd_rek5,2)) a;
+							";
+							  $hasil = $this->db->query($sql);
+							foreach ($hasil->result() as $row)
+							{
+							   $ang_netto = $row->ang_netto;
+							   $nil_netto = $row->nil_netto;
+							}
+							$sisa_netto = $ang_netto-$nil_netto;
+							if(($ang_netto==0) || ($ang_netto=='')){
+								$persen_netto=0;
+							} else{
+							$persen_netto = $nil_netto/$ang_netto *100;
+							}
+							$hasil->free_result();  
+							if($ang_netto<0){
+								$ang_netto1=$ang_netto*-1;
+								$g='(';
+								$h=')';
+							} else{
+								$ang_netto1=$ang_netto;
+								$g='';
+								$h='';
+							}
+							if($nil_netto<0){
+								$nil_netto1=$nil_netto*-1;
+								$i='(';
+								$j=')';
+							} else{
+								$nil_netto1=$nil_netto;
+								$i='';
+								$j='';
+							}
+							if($sisa_netto<0){
+								$sisa_netto1=$sisa_netto*-1;
+								$k='(';
+								$l=')';
+							} else{
+								$sisa_netto1=$sisa_netto;
+								$k='';
+								$l='';
+							}	
+							
+							$ang_silpa = $ang_surplus+$ang_netto;
+							$nil_silpa = $nil_surplus+$nil_netto;
+							$sisa_silpa = $ang_silpa-$nil_silpa;
+							if($ang_silpa==0){
+								$persen_silpa=0;
+							}else{
+							$persen_silpa = $nil_silpa/$ang_silpa *100;
+							}
+							if($ang_silpa<0){
+								$ang_silpa1=$ang_silpa*-1;
+								$m='(';
+								$n=')';
+							} else{
+								$ang_silpa1=$ang_silpa;
+								$m='';
+								$n='';
+							}
+							if($nil_silpa<0){
+								$nil_silpa1=$nil_silpa*-1;
+								$o='(';
+								$p=')';
+							} else{
+								$nil_silpa1=$nil_silpa;
+								$o='';
+								$p='';
+							}
+							if($sisa_silpa<0){
+								$sisa_silpa1=$sisa_silpa*-1;
+								$q='(';
+								$r=')';
+							} else{
+								$sisa_silpa1=$sisa_silpa;
+								$q='';
+								$r='';
+							}	
+					$sql = "SELECT seq, kode, nama, kode1, kode2, kode3,kode4, jenis, spasi FROM map_lra_permen ORDER BY seq
+							";
+							$no=0;
+							$tot_peg=0;
+							$tot_brg=0;
+							$tot_mod=0;
+							$tot_bansos=0;
+							$hasil = $this->db->query($sql);
+							foreach ($hasil->result() as $row)
+							{
+							   $no=$no+1;
+							   $seq = $row->seq;
+							   $kode = $row->kode;
+							   $nama = $row->nama;
+							   $kode1 = $row->kode1;
+							   $kode2 = $row->kode2;
+							   $kode3 = $row->kode3;
+							   $kode4 = $row->kode4;
+							   $jenis = $row->jenis;
+							   $spasi = $row->spasi;
+							   
+								if($kode1==' '){
+								  $kode1="'X'";
+								}
+								if($kode2==' '){
+									$kode2="'XX'";
+								}
+								if($kode3==' '){
+									$kode3="'XXX'";
+								}
+								if($kode4==' '){
+									$kode4="'XXXXX'";
+								}
+								
+							$sql = "SELECT SUM($initang) as nil_ang, SUM(real_spj) as nilai FROM data_realisasi_pemkot_13 where bulan='$bulan' and (LEFT(kd_rek5,1) IN ($kode1) or LEFT(kd_rek5,2) IN ($kode2) or LEFT(kd_rek5,3) IN ($kode3) or LEFT(kd_rek5,5) IN($kode4))$where";                  
+												
+							
+							$hasil = $this->db->query($sql);
+							foreach ($hasil->result() as $row)
+							{
+							   $nil_ang = $row->nil_ang;
+							   $nilai = $row->nilai;
+							}
+							$sel = $nil_ang-$nilai;
+							if(($nil_ang==0) || ($nil_ang=='')){
+								$persen=0;
+							} else{
+							$persen = $nilai/$nil_ang *100;
+							}
+							 switch ($spasi) {
+							 case 1:
+								$cRet .='<tr>
+									   <td align="left" valign="top"><b>'.$kode.'</b></td> 
+									   <td align="left"  valign="top"><b>'.$nama.'</b></td> 
+									   <td align="right" valign="top"><b>'.number_format($nil_ang, "2", ",", ".").'</b></td> 
+									   <td align="right" valign="top"><b>'.number_format($nilai, "2", ",", ".").'</b></td> 
+									   <td align="right" valign="top"><b>'.number_format($sel, "2", ",", ".").'</b></td> 
+									   <td align="right" valign="top"><b>'.number_format($persen, "2", ",", ".").'</b></td> 
+									</tr>'; 
+								break;	
+							case 2:
+								 $cRet .='<tr>
+									   <td align="left" valign="top"><b>'.$kode.'</b></td> 
+									   <td align="left"  valign="top"><b>&nbsp;&nbsp;'.$nama.'</b></td> 
+									   <td align="right" valign="top"><b>'.number_format($nil_ang, "2", ",", ".").'</b></td> 
+									   <td align="right" valign="top"><b>'.number_format($nilai, "2", ",", ".").'</b></td> 
+									   <td align="right" valign="top"><b>'.number_format($sel, "2", ",", ".").'</b></td> 
+									   <td align="right" valign="top"><b>'.number_format($persen, "2", ",", ".").'</b></td> 
+									</tr>';
+								break;
+							 case 3:
+								 $cRet .='<tr>
+									   <td align="left" valign="top">'.$kode.'</b></td> 
+									   <td align="left"  valign="top">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nama.'</td> 
+									   <td align="right" valign="top">'.number_format($nil_ang, "2", ",", ".").'</td> 
+									   <td align="right" valign="top">'.number_format($nilai, "2", ",", ".").'</td> 
+									   <td align="right" valign="top">'.number_format($sel, "2", ",", ".").'</td> 
+									   <td align="right" valign="top">'.number_format($persen, "2", ",", ".").'</td> 
+									</tr>';
+								break;
+							case 4:
+							   $cRet .='<tr>
+									   <td align="left" valign="top" ><b>'.$kode.'</b></td> 
+									   <td align="left"  valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nama.'</b></td> 
+									   <td align="right" valign="top"><b>'.number_format($nil_ang, "2", ",", ".").'</b></td> 
+									   <td align="right" valign="top"><b>'.number_format($nilai, "2", ",", ".").'</b></td> 
+									   <td align="right" valign="top"><b>'.number_format($sel, "2", ",", ".").'</b></td> 
+									   <td align="right" valign="top"><b>'.number_format($persen, "2", ",", ".").'</b></td> 
+									</tr>';
+								break;
+							case 5:
+							   $cRet .='<tr>
+									   <td align="left" valign="top" ><b>'.$kode.'</b></td> 
+									   <td align="right"  valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nama.'</b></td> 
+									   <td align="right" valign="top"><b>'.$a.''.number_format($ang_surplus1, "2", ",", ".").''.$b.'</b></td> 
+									   <td align="right" valign="top"><b>'.$c.''.number_format($nil_surplus1, "2", ",", ".").''.$d.'</b></td> 
+									   <td align="right" valign="top"><b>'.$e.''.number_format($sisa_surplus1, "2", ",", ".").''.$f.'</b></td> 
+									   <td align="right" valign="top"><b>'.number_format($persen_surplus, "2", ",", ".").'</b></td> 
+									</tr>';
+								break;
+							case 6;
+							   $cRet .='<tr>
+									   <td align="left" valign="top" ><b>'.$kode.'</b></td> 
+									   <td align="right"  valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nama.'</b></td> 
+									   <td align="right" valign="top" ><b>'.$g.''.number_format($ang_netto1, "2", ",", ".").''.$h.'</b></td> 
+									   <td align="right" valign="top" ><b>'.$i.''.number_format($nil_netto1, "2", ",", ".").''.$j.'</b></td> 
+									   <td align="right" valign="top" ><b>'.$k.''.number_format($sisa_netto1, "2", ",", ".").''.$l.'</b></td> 
+									   <td align="right" valign="top" ><b>'.number_format($persen_netto, "2", ",", ".").'</b></td> 
+									</tr>';
+								break;
+							case 7;
+							   $cRet .='<tr>
+									   <td align="left" valign="top" ><b>'.$kode.'</b></td> 
+									   <td align="right"  valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nama.'</b></td> 
+									   <td align="right" valign="top" ><b>'.$m.''.number_format($ang_silpa1, "2", ",", ".").''.$n.'</b></td> 
+									   <td align="right" valign="top" ><b>'.$o.''.number_format($nil_silpa1, "2", ",", ".").''.$p.'</b></td> 
+									   <td align="right" valign="top" ><b>'.$q.''.number_format($sisa_silpa1, "2", ",", ".").''.$r.'</b></td> 
+									   <td align="right" valign="top" ><b>'.number_format($persen_silpa, "2", ",", ".").'</b></td> 
+									</tr>';
+								break;
+							case 8;
+							   $cRet .='<tr>
+									   <td align="left" valign="top" ><b>'.$kode.'</b></td> 
+									   <td align="left"  valign="top"><b>'.$nama.'</b></td> 
+									   <td align="right" valign="top" ></td> 
+									   <td align="right" valign="top" ></td> 
+									   <td align="right" valign="top" ></td> 
+									   <td align="right" valign="top" ></td> 
+									</tr>';
+								break;    
+							}
+							}
+					 
+							  
+				
+					$cRet .="</table>";
+					
+					 $sqlsc="SELECT tgl_rka,provinsi,kab_kota,daerah,thn_ang FROM sclient where kd_skpd='5.02.0.00.0.00.01.0000'";
+						 $sqlsclient=$this->db->query($sqlsc);
+						 foreach ($sqlsclient->result() as $rowsc)
+						{
+							$kab     = $rowsc->kab_kota;
+							$daerah  = $rowsc->daerah;
+						   
+						}   
+					 
+					 
+					 if($tanggal_ttd!='-'){
+					 if($ttd=="1"){                                
+						
+						$sqlttd1="SELECT nama as nm,nip as nip,jabatan as jab,pangkat FROM ms_ttd where nip='$ttd1' and (kode ='agr' or kode='wk')";
+						 $sqlttd=$this->db->query($sqlttd1);
+						 foreach ($sqlttd->result() as $rowttd)
+						{
+							$nip=$rowttd->nip;                    
+							$nama= $rowttd->nm;
+							$jabatan  = $rowttd->jab;
+							$pangkat  = $rowttd->pangkat;
+						}                                
+					  }
+					  
+						if($ttd1!='1'){
+							
+							if($ttd1=='2'){
+							$xx="<u>";
+							$xy="</u>";
+							$nipxx=$nip;
+							$nipx="NIP.";
+							}else{
+							$xx="<u>";
+							$xy="</u>";
+							$nipxxx="NIP.";
+							$nipxy=$nip;
+							}	
+							
+						}else{
+							$xx="";
+							$xy="";
+							$nipxx="";
+							$nipx="";
+							$nipxy='';
+							$nipxxx="";
+						} 	
+					}
+					
+					$cRet .='<TABLE style="border-collapse:collapse; font-size:11px; font-family: Bookman Old Style;"  width="100%" border="0" cellspacing="0" cellpadding="0" align=center>
+						
+							<TR>
+								<TD width="50%" align="center" ><b>&nbsp;</TD>
+								<TD align="center" >'.$daerah.', '.$this->tanggal_format_indonesia($tanggal_ttd).'</TD>
+							</TR>		
+							<TR>
+								<TD width="50%" align="center" ><b>&nbsp;</TD>
+								<TD align="center" ><b>'.$jabatan.'</b></TD>
+							</TR>
+							<TR>
+								<TD width="50%" align="center" ><b>&nbsp;</TD>
+								<TD width="50%" align="center" ><b>&nbsp;</TD>
+							</TR>
+							<TR>
+								<TD width="50%" align="center" ><b>&nbsp;</TD>
+								<TD width="50%" align="center" ><b>&nbsp;</TD>
+							</TR>
+							<TR>
+								<TD width="50%" align="center" ><b>&nbsp;</TD>
+								<TD width="50%" align="center" ><b>&nbsp;</TD>
+							</TR>
+							<TR>
+								<TD width="50%" align="center" ><b>&nbsp;</TD>
+								<TD width="50%" align="center" ><b>&nbsp;</TD>
+							</TR>                    
+							<TR>
+								<TD width="50%" align="center" ><b>&nbsp;</TD>
+								<TD align="center" >'.$xx.'<b>'.$nama.'</b>'.$xy.'</TD>
+							</TR>
+							<TR>
+								<TD width="50%" align="center" ><b>&nbsp;</TD>
+								<TD align="center" >'.$nipxxx.''.$nipxy.'</TD>
+							</TR>
+							</TABLE><br/>';
+					
+					$data['prev']= $cRet;    
+					$judul='LRA 13 ';
+					switch ($ctk){
+						case 0;
+						echo ("<title>$judul</title>");
+						echo $cRet;
+						break;
+						case 1;
+						$this->tukd_model->_mpdf('',$cRet,10,10,10,'P');
+						break;
+						case 2;        
+						header("Cache-Control: no-cache, no-store, must-revalidate");
+						header("Content-Type: application/vnd.ms-excel");
+						header("Content-Disposition: attachment; filename= $judul.xls");
+						$this->load->view('anggaran/rka/perkadaII', $data);
+						break;	
+					}
+				}
+				function cetak_lra_pemkot_64_permen($bulan='',$ctk='',$anggaran='',$jenis='',$kd_skpd='',$ttd='',$tanggal_ttd='',$ttdperda='',$label=''){
+					$lntahunang = $this->session->userdata('pcThang');
+					$ttd1 = str_replace('n',' ',$ttdperda);
+						   
+					 switch  ($bulan){
+					case  1:
+					$judul="JANUARI";
+					break;
+					case  2:
+					$judul="FEBRUARI";
+					break;
+					case  3:
+					$judul= "TRIWULAN I";
+					break;
+					case  4:
+					$judul="APRIL";
+					break;
+					case  5:
+					$judul= "MEI";
+					break;
+					case  6:
+					$judul= "SEMESTER I";
+					break;
+					case  7:
+					$judul= "JULI";
+					break;
+					case  8:
+					$judul= "AGUSTUS";
+					break;
+					case  9:
+					$judul= "TRIWULAN III";
+					break;
+					case  10:
+					$judul= "OKTOBER";
+					break;
+					case  11:
+					$judul= "NOVEMBER";
+					break;
+					case  12:
+					$judul= "SEMESTER II";
+					break;
+				}
+					if ($kd_skpd=='-'){                               
+						$where="";            
+					} else{
+						$where="AND kd_skpd='$kd_skpd'";
+					}
+					
+					if($anggaran==1){
+						$initang = "nilai_ang";
+					}else {
+						$initang = "nilai_ang_ubah";
+					}
+					
+					if($label=='1'){
+					$label = 'UNAUDITED';
+					}else if($label=='2'){
+					$label = 'AUDITED';
+					}else{
+					$label = '&nbsp;';
+					}
+			
+				$cRet="<TABLE style=\"border-collapse:collapse;font-size:12px;font-family:Bookman Old Style\" width=\"100%\" border=\"1\" cellspacing=\"0\" cellpadding=\"1\" align=\"center\">
+								<tr>
+								<td rowspan=\"4\" align=\"center\" style=\"border-right:hidden\">
+									<img src=\"".base_url()."/image/logoHP.png\"  width=\"50\" height=\"60\" />
+									</td>
+								<td align=\"center\" style=\"border-left:hidden;border-bottom:hidden\"><strong>PEMERINTAH KOTA PONTIANAK </strong></td></tr>
+								<tr><td align=\"center\" style=\"border-left:hidden;border-bottom:hidden;border-top:hidden\"><b>LAPORAN REALISASI ANGGARAN PENDAPATAN DAN BELANJA </b></tr>
+								<tr><td align=\"center\" style=\"border-left:hidden;border-top:hidden\" ><b>UNTUK TAHUN YANG BERAKHIR SAMPAI DENGAN $judul TAHUN $lntahunang</b></tr>
+								<tr><td align=\"center\" style=\"border-left:hidden;border-top:hidden\" ><b>$label</b></tr>
+								</TABLE>";
+						
+					$cRet .="<table style=\"border-collapse:collapse;font-family:Arial;font-size:11px\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"3\" cellpadding=\"3\">
+							<thead>
+							<tr>
+								<td rowspan=\"2\" width=\"7%\" align=\"center\" bgcolor=\"#CCCCCC\" ><b>KD REK</b></td>
+								<td rowspan=\"2\" width=\"32%\" align=\"center\" bgcolor=\"#CCCCCC\" ><b>URAIAN</b></td>
+								<td colspan=\"2\" width=\"37%\" align=\"center\" bgcolor=\"#CCCCCC\" ><b>JUMLAH (Rp.)</b></td>
+								<td colspan=\"2\" width=\"23%\" align=\"center\" bgcolor=\"#CCCCCC\" ><b>BERTAMBAH/KURANG</b></td>
+							</tr>
+							<tr>
+								<td width=\"19%\" align=\"center\" bgcolor=\"#CCCCCC\" ><b>ANGGARAN</b></td>
+								<td width=\"18%\" align=\"center\" bgcolor=\"#CCCCCC\" ><b>REALISASI</b></td>
+								<td width=\"18%\" align=\"center\" bgcolor=\"#CCCCCC\" ><b>(Rp)</b></td>
+								<td width=\"5%\" align=\"center\" bgcolor=\"#CCCCCC\" ><b>%</b></td>
+								</tr>
+								<tr>
+							   <td align=\"center\" bgcolor=\"#CCCCCC\" >1</td> 
+							   <td align=\"center\" bgcolor=\"#CCCCCC\" >2</td> 
+							   <td align=\"center\" bgcolor=\"#CCCCCC\" >3</td> 
+							   <td align=\"center\" bgcolor=\"#CCCCCC\" >4</td> 
+							   <td align=\"center\" bgcolor=\"#CCCCCC\" >5</td> 
+							   <td align=\"center\" bgcolor=\"#CCCCCC\" >6</td> 
+							</tr>
+							</thead>";
+							
+						$sql = "SELECT 
+								SUM(CASE WHEN kd_rek='4' THEN (nil_ang) ELSE 0 END) - SUM(CASE WHEN kd_rek in ('5','6') THEN (nil_ang) ELSE 0 END) as ang_surplus,
+								SUM(CASE WHEN kd_rek='4' THEN (real_spj) ELSE 0 END) - SUM(CASE WHEN kd_rek in ('5','6') THEN (real_spj) ELSE 0 END) as nil_surplus
+								FROM
+								(SELECT LEFT(kd_rek5,1) as kd_rek, SUM($initang) as nil_ang, SUM(real_spj) as real_spj FROM data_realisasi_pemkot where bulan='$bulan' and LEFT(kd_rek5,1) IN ('4','5','6') $where
+								GROUP BY LEFT(kd_rek5,1)) a;
+								";
+								  $hasil = $this->db->query($sql);
+								foreach ($hasil->result() as $row)
+								{
+								   $ang_surplus = $row->ang_surplus;
+								   $nil_surplus = $row->nil_surplus;
+								}
+								$sisa_surplus = $ang_surplus-$nil_surplus;
+									if(($ang_surplus==0) || ($ang_surplus=='')){
+									$persen_surplus=0;
+								} else{
+								$persen_surplus = $nil_surplus/$ang_surplus *100;
+								}	
+													$hasil->free_result();        
+								if($ang_surplus<0){
+									$ang_surplus1=$ang_surplus*-1;
+									$a='(';
+									$b=')';
+								} else{
+									$ang_surplus1=$ang_surplus;
+									$a='';
+									$b='';
+								}
+								if($nil_surplus<0){
+									$nil_surplus1=$nil_surplus*-1;
+									$c='(';
+									$d=')';
+								} else{
+									$nil_surplus1=$nil_surplus;
+									$c='';
+									$d='';
+								}
+								if($sisa_surplus<0){
+									$sisa_surplus1=$sisa_surplus*-1;
+									$e='(';
+									$f=')';
+								} else{
+									$sisa_surplus1=$sisa_surplus;
+									$e='';
+									$f='';
+								}
+						
+						$sql = "SELECT 
+								SUM(CASE WHEN kd_rek='71' THEN (nil_ang) ELSE 0 END) - SUM(CASE WHEN kd_rek='72' THEN (nil_ang) ELSE 0 END) as ang_netto,
+								SUM(CASE WHEN kd_rek='71' THEN (real_spj) ELSE 0 END) - SUM(CASE WHEN kd_rek='72' THEN (real_spj) ELSE 0 END) as nil_netto
+								FROM
+								(SELECT LEFT(kd_rek5,2) as kd_rek, SUM($initang) as nil_ang, SUM(real_spj) as real_spj FROM data_realisasi_pemkot where bulan='$bulan' and LEFT(kd_rek5,2) IN ('71','72') $where
+								GROUP BY LEFT(kd_rek5,2)) a;
+								";
+								  $hasil = $this->db->query($sql);
+								foreach ($hasil->result() as $row)
+								{
+								   $ang_netto = $row->ang_netto;
+								   $nil_netto = $row->nil_netto;
+								}
+								$sisa_netto = $ang_netto-$nil_netto;
+								if(($ang_netto==0) || ($ang_netto=='')){
+									$persen_netto=0;
+								} else{
+								$persen_netto = $nil_netto/$ang_netto *100;
+								}
+								$hasil->free_result();  
+								if($ang_netto<0){
+									$ang_netto1=$ang_netto*-1;
+									$g='(';
+									$h=')';
+								} else{
+									$ang_netto1=$ang_netto;
+									$g='';
+									$h='';
+								}
+								if($nil_netto<0){
+									$nil_netto1=$nil_netto*-1;
+									$i='(';
+									$j=')';
+								} else{
+									$nil_netto1=$nil_netto;
+									$i='';
+									$j='';
+								}
+								if($sisa_netto<0){
+									$sisa_netto1=$sisa_netto*-1;
+									$k='(';
+									$l=')';
+								} else{
+									$sisa_netto1=$sisa_netto;
+									$k='';
+									$l='';
+								}	
+								
+								$ang_silpa = $ang_surplus+$ang_netto;
+								$nil_silpa = $nil_surplus+$nil_netto;
+								$sisa_silpa = $ang_silpa-$nil_silpa;
+								if($ang_silpa==0){
+									$persen_silpa=0;
+								}else{
+								$persen_silpa = $nil_silpa/$ang_silpa *100;
+								}
+								if($ang_silpa<0){
+									$ang_silpa1=$ang_silpa*-1;
+									$m='(';
+									$n=')';
+								} else{
+									$ang_silpa1=$ang_silpa;
+									$m='';
+									$n='';
+								}
+								if($nil_silpa<0){
+									$nil_silpa1=$nil_silpa*-1;
+									$o='(';
+									$p=')';
+								} else{
+									$nil_silpa1=$nil_silpa;
+									$o='';
+									$p='';
+								}
+								if($sisa_silpa<0){
+									$sisa_silpa1=$sisa_silpa*-1;
+									$q='(';
+									$r=')';
+								} else{
+									$sisa_silpa1=$sisa_silpa;
+									$q='';
+									$r='';
+								}	
+						$sql = "SELECT urut, kd_rek, uraian, kode1, kode2, kode3,kode4,spasi FROM map_lra_pemkot_64 ORDER BY urut
+								";
+								$no=0;
+								$tot_peg=0;
+								$tot_brg=0;
+								$tot_mod=0;
+								$tot_bansos=0;
+								$hasil = $this->db->query($sql);
+								foreach ($hasil->result() as $row)
+								{
+								   $no=$no+1;
+								   $urut = $row->urut;
+								   $kode = $row->kd_rek;
+								   $nama = $row->uraian;
+								   $kode1 = $row->kode1;
+								   $kode2 = $row->kode2;
+								   $kode3 = $row->kode3;
+								   $kode4 = $row->kode4;
+								   $spasi = $row->spasi;
+			
+								$sql = "SELECT SUM($initang) as nil_ang, SUM(real_spj) as nilai FROM data_realisasi_pemkot where bulan='$bulan' and (LEFT(kd_rek5,1) IN ($kode1) or LEFT(kd_rek5,2) IN ($kode2) or LEFT(kd_rek5,3) IN ($kode3) or LEFT(kd_rek5,5) IN ($kode4))$where";
+							  
+								$hasil = $this->db->query($sql);
+								foreach ($hasil->result() as $row)
+								{
+								   $nil_ang = $row->nil_ang;
+								   $nilai = $row->nilai;
+								}
+								$sel = $nil_ang-$nilai;
+								if(($nil_ang==0) || ($nil_ang=='')){
+									$persen=0;
+								} else{
+								$persen = $nilai/$nil_ang *100;
+								}
+								 switch ($spasi) {
+								 case 1:
+									$cRet .='<tr>
+										   <td align="left" valign="top"><b>'.$kode.'</b></td> 
+										   <td align="left"  valign="top"><b>'.$nama.'</b></td> 
+										   <td align="right" valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+										   <td align="right" valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+										   <td align="right" valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+										   <td align="right" valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+										</tr>'; 
+									break;	
+								case 2:
+									 $cRet .='<tr>
+										   <td align="left" valign="top"><b>'.$kode.'</b></td> 
+										   <td align="left"  valign="top"><b>&nbsp;&nbsp;'.$nama.'</b></td> 
+										   <td align="right" valign="top"><b>'.number_format($nil_ang, "2", ",", ".").'</b></td> 
+										   <td align="right" valign="top"><b>'.number_format($nilai, "2", ",", ".").'</b></td> 
+										   <td align="right" valign="top"><b>'.number_format($sel, "2", ",", ".").'</b></td> 
+										   <td align="right" valign="top"><b>'.number_format($persen, "2", ",", ".").'</b></td> 
+										</tr>';
+									break;
+								 case 3:
+									 $cRet .='<tr>
+										   <td align="left" valign="top">'.$kode.'</b></td> 
+										   <td align="left"  valign="top">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nama.'</td> 
+										   <td align="right" valign="top">'.number_format($nil_ang, "2", ",", ".").'</td> 
+										   <td align="right" valign="top">'.number_format($nilai, "2", ",", ".").'</td> 
+										   <td align="right" valign="top">'.number_format($sel, "2", ",", ".").'</td> 
+										   <td align="right" valign="top">'.number_format($persen, "2", ",", ".").'</td> 
+										</tr>';
+									break;
+								case 4:
+								   $cRet .='<tr>
+										   <td align="left" valign="top" ><b>'.$kode.'</b></td> 
+										   <td align="left"  valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nama.'</b></td> 
+										   <td align="right" valign="top"><b>'.number_format($nil_ang, "2", ",", ".").'</b></td> 
+										   <td align="right" valign="top"><b>'.number_format($nilai, "2", ",", ".").'</b></td> 
+										   <td align="right" valign="top"><b>'.number_format($sel, "2", ",", ".").'</b></td> 
+										   <td align="right" valign="top"><b>'.number_format($persen, "2", ",", ".").'</b></td> 
+										</tr>';
+									break;
+								case 5:
+								   $cRet .='<tr>
+										   <td align="left" valign="top" ><b>'.$kode.'</b></td> 
+										   <td align="right"  valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nama.'</b></td> 
+										   <td align="right" valign="top"><b>'.$a.''.number_format($ang_surplus1, "2", ",", ".").''.$b.'</b></td> 
+										   <td align="right" valign="top"><b>'.$c.''.number_format($nil_surplus1, "2", ",", ".").''.$d.'</b></td> 
+										   <td align="right" valign="top"><b>'.$e.''.number_format($sisa_surplus1, "2", ",", ".").''.$f.'</b></td> 
+										   <td align="right" valign="top"><b>'.number_format($persen_surplus, "2", ",", ".").'</b></td> 
+										</tr>';
+									break;
+								case 6;
+								   $cRet .='<tr>
+										   <td align="left" valign="top" ><b>'.$kode.'</b></td> 
+										   <td align="right"  valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nama.'</b></td> 
+										   <td align="right" valign="top" ><b>'.$g.''.number_format($ang_netto1, "2", ",", ".").''.$h.'</b></td> 
+										   <td align="right" valign="top" ><b>'.$i.''.number_format($nil_netto1, "2", ",", ".").''.$j.'</b></td> 
+										   <td align="right" valign="top" ><b>'.$k.''.number_format($sisa_netto1, "2", ",", ".").''.$l.'</b></td> 
+										   <td align="right" valign="top" ><b>'.number_format($persen_netto, "2", ",", ".").'</b></td> 
+										</tr>';
+									break;
+								case 7;
+								   $cRet .='<tr>
+										   <td align="left" valign="top" ><b>'.$kode.'</b></td> 
+										   <td align="right"  valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nama.'</b></td> 
+										   <td align="right" valign="top" ><b>'.$m.''.number_format($ang_silpa1, "2", ",", ".").''.$n.'</b></td> 
+										   <td align="right" valign="top" ><b>'.$o.''.number_format($nil_silpa1, "2", ",", ".").''.$p.'</b></td> 
+										   <td align="right" valign="top" ><b>'.$q.''.number_format($sisa_silpa1, "2", ",", ".").''.$r.'</b></td> 
+										   <td align="right" valign="top" ><b>'.number_format($persen_silpa, "2", ",", ".").'</b></td> 
+										</tr>';
+									break;
+									
+									default:
+									
+								   $cRet .='<tr>
+										   <td align="left" valign="top" ><b>'.$kode.'</b></td> 
+										   <td align="right"  valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+										   <td align="right" valign="top" ><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td>
+										   <td align="right" valign="top" ><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+										   <td align="right" valign="top" ><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+										   <td align="right" valign="top" ><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+										</tr>';
+									break;
+								}
+								}
+						 
+								  
+					
+						$cRet .="</table>";
+						
+							
+							$sqlsc="SELECT tgl_rka,provinsi,kab_kota,daerah,thn_ang FROM sclient where kd_skpd='5.02.0.00.0.00.01.0000'";
+							 $sqlsclient=$this->db->query($sqlsc);
+							 foreach ($sqlsclient->result() as $rowsc)
+							{
+								$kab     = $rowsc->kab_kota;
+								$daerah  = $rowsc->daerah;
+							   
+							}
+							
+							$sqlttd1="SELECT nama as nm,nip as nip,jabatan as jab,pangkat FROM ms_ttd where nip='$ttd1' and (kode ='agr' or kode='wk')";
+							 $sqlttd=$this->db->query($sqlttd1);
+							 foreach ($sqlttd->result() as $rowttd)
+							{
+								$nip=$rowttd->nip;                    
+								$namax= $rowttd->nm;
+								$jabatan  = $rowttd->jab;
+								$pangkat  = $rowttd->pangkat;
+							}
+							
+							
+							 if($ttd1!='1'){
+								$xx="<u>";
+								$xy="</u>";
+								$nipxx=$nip;
+								$nipx="NIP.";
+							}else{
+								$xx="";
+								$xy="";
+								$nipxx="";
+								$nipx="";
+							}			
+					$cRet .='<TABLE style="border-collapse:collapse; font-size:13px; font-family: Bookman Old Style;"  width="100%" border="0" cellspacing="0" cellpadding="0" align=center>
+								
+								<TR>
+									<TD width="50%" align="center" ><b>&nbsp;</TD>
+									<TD align="center" >'.$daerah.', '.$this->tanggal_format_indonesia($tanggal_ttd).'</TD>
+								</TR>
+								
+								<TR>
+									<TD width="50%" align="center" ><b>&nbsp;</TD>
+									<TD align="center" ><b>'.$jabatan.'</b></TD>
+								</TR>
+								<TR>
+									<TD width="50%" align="center" ><b>&nbsp;</TD>
+									<TD width="50%" align="center" ><b>&nbsp;</TD>
+								</TR>
+								<TR>
+									<TD width="50%" align="center" ><b>&nbsp;</TD>
+									<TD width="50%" align="center" ><b>&nbsp;</TD>
+								</TR>
+								<TR>
+									<TD width="50%" align="center" ><b>&nbsp;</TD>
+									<TD width="50%" align="center" ><b>&nbsp;</TD>
+								</TR>                    
+								<TR>
+									<TD width="50%" align="center" ><b>&nbsp;</TD>
+									<TD align="center" >'.$xx.'<b>'.$namax.'</b>'.$xy.'</TD>
+								</TR>
+								<TR>
+									<TD width="50%" align="center" ><b>&nbsp;</TD>
+									<TD align="center" >'.$nipx.''.$nipxx.'</TD>
+								</TR>
+								</TABLE><br/>';
+				 
+						
+						$data['prev']= $cRet;    
+						$judul='LRA 64 ';
+						switch ($ctk){
+							case 0;
+							echo ("<title>$judul</title>");
+							echo $cRet;
+							break;
+							case 1;
+							$this->tukd_model->_mpdf('',$cRet,10,10,10,'P');
+							break;
+							case 2;        
+							header("Cache-Control: no-cache, no-store, must-revalidate");
+							header("Content-Type: application/vnd.ms-excel");
+							header("Content-Disposition: attachment; filename= $judul.xls");
+							$this->load->view('anggaran/rka/perkadaII', $data);
+							break;	
+						}
+					}
+
+					function cetak_lra_pemkot_64_akun_4($bulan='',$ctk='',$anggaran='',$jenis='',$kd_skpd='',$ttd='',$tanggal_ttd='',$ttdperda='',$label=''){
+						$lntahunang = $this->session->userdata('pcThang');
+						$lntahunang_1 = $lntahunang-1;
+						$ttd1 = str_replace('n',' ',$ttdperda);
+							   
+						 switch  ($bulan){
+						case  1:
+						$judul="31 JANUARI";
+						break;
+						case  2:
+						$judul="28 FEBRUARI";
+						break;
+						case  3:
+						$judul= "31 MARET";
+						break;
+						case  4:
+						$judul="30 APRIL";
+						break;
+						case  5:
+						$judul= "31 MEI";
+						break;
+						case  6:
+						$judul= "30 JUNI";
+						break;
+						case  7:
+						$judul= "31 JULI";
+						break;
+						case  8:
+						$judul= "31 AGUSTUS";
+						break;
+						case  9:
+						$judul= "30 SEPTEMBER";
+						break;
+						case  10:
+						$judul= "31 OKTOBER";
+						break;
+						case  11:
+						$judul= "30 NOVEMBER";
+						break;
+						case  12:
+						$judul= "31 DESEMBER";
+						break;
+					}
+						if ($kd_skpd=='-'){                               
+							$where="";            
+						} else{
+							$where="AND kd_skpd='$kd_skpd'";
+						}
+						
+						
+						if($anggaran==1){
+							$initang = "nilai_ang";
+						}else {
+							$initang = "nilai_ang_ubah";
+						}
+						
+						if($label=='1'){
+						$label = 'UNAUDITED';
+						}else if($label=='2'){
+						$label = 'AUDITED';
+						}{
+						$label = '&nbsp;';
+						}
+				
+					$cRet="<TABLE style=\"border-collapse:collapse;font-size:12px;font-family:Bookman Old Style\" width=\"100%\" border=\"1\" cellspacing=\"0\" cellpadding=\"1\" align=\"center\">
+									<tr>
+									<td rowspan=\"4\" align=\"center\" style=\"border-right:hidden\">
+										<img src=\"".base_url()."/image/logoHP.png\"  width=\"75\" height=\"100\" />
+										</td>
+									<td align=\"center\" style=\"border-left:hidden;border-bottom:hidden\"><strong>PEMERINTAH KOTA PONTIANAK </strong></td></tr>
+									<tr><td align=\"center\" style=\"border-left:hidden;border-bottom:hidden;border-top:hidden\"><b>LAPORAN REALISASI ANGGARAN PENDAPATAN DAN BELANJA DAERAH UNTUK</b></tr>
+									<tr><td align=\"center\" style=\"border-left:hidden;border-top:hidden\" ><b>TAHUN YANG BERAKHIR SAMPAI DENGAN $judul TAHUN $lntahunang</b></tr>
+									<tr><td align=\"center\" style=\"border-left:hidden;border-top:hidden\" ><b>$label</b></tr>
+									</TABLE>";
+							
+						$cRet .="<table style=\"border-collapse:collapse;font-family:Arial;font-size:11px\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"3\" cellpadding=\"3\">
+								<thead>
+								<tr>
+									<td rowspan=\"2\" width=\"7%\" align=\"center\" bgcolor=\"#CCCCCC\" ><b>NO.</b></td>
+									<td rowspan=\"2\" width=\"40%\" align=\"center\" bgcolor=\"#CCCCCC\" ><b>URAIAN</b></td>
+									<td colspan=\"2\" width=\"16%\" align=\"center\" bgcolor=\"#CCCCCC\" ><b>JUMLAH(Rp)</b></td>
+									<td colspan=\"2\" width=\"16%\" align=\"center\" bgcolor=\"#CCCCCC\" ><b>BERTAMBAH/KURANG</b></td>
+								</tr>
+								<tr>
+									<td width=\"16%\" align=\"center\" bgcolor=\"#CCCCCC\" ><b>ANGGARAN</b></td>
+									<td width=\"16%\" align=\"center\" bgcolor=\"#CCCCCC\" ><b>REALISASI</b></td>                    
+									<td width=\"16%\" align=\"center\" bgcolor=\"#CCCCCC\" ><b>(Rp)</b></td>  
+									<td width=\"5%\" align=\"center\" bgcolor=\"#CCCCCC\" ><b>%</b></td>              
+								</tr>
+								<tr>
+									<td align=\"center\" bgcolor=\"#CCCCCC\" >1</td>
+									<td align=\"center\" bgcolor=\"#CCCCCC\" >2</td>
+									<td align=\"center\" bgcolor=\"#CCCCCC\" >3</td>
+									<td align=\"center\" bgcolor=\"#CCCCCC\" >4</td>
+									<td align=\"center\" bgcolor=\"#CCCCCC\" >5</td>                     
+									<td align=\"center\" bgcolor=\"#CCCCCC\" >6</td>   
+								</tr>
+								</thead>";
+								
+							$sql = "SELECT 
+									SUM(CASE WHEN kd_rek='4' THEN (nil_ang) ELSE 0 END) - SUM(CASE WHEN kd_rek in ('5','6') THEN (nil_ang) ELSE 0 END) as ang_surplus,
+									SUM(CASE WHEN kd_rek='4' THEN (real_spj) ELSE 0 END) - SUM(CASE WHEN kd_rek in ('5','6') THEN (real_spj) ELSE 0 END) as nil_surplus
+									FROM
+									(SELECT LEFT(kd_rek5,1) as kd_rek, SUM($initang) as nil_ang, SUM(real_spj) as real_spj FROM data_realisasi_pemkot where bulan='$bulan' and LEFT(kd_rek5,1) IN ('4','5','6') $where
+									GROUP BY LEFT(kd_rek5,1)) a;
+									";
+									  $hasil = $this->db->query($sql);
+									foreach ($hasil->result() as $row)
+									{
+									   $ang_surplus = $row->ang_surplus;
+									   $nil_surplus = $row->nil_surplus;
+									}
+									$sisa_surplus = $ang_surplus-$nil_surplus;
+										if(($ang_surplus==0) || ($ang_surplus=='')){
+										$persen_surplus=0;
+									} else{
+									$persen_surplus = $nil_surplus/$ang_surplus *100;
+									}   
+														$hasil->free_result();        
+									if($ang_surplus<0){
+										$ang_surplus1=$ang_surplus*-1;
+										$a='(';
+										$b=')';
+									} else{
+										$ang_surplus1=$ang_surplus;
+										$a='';
+										$b='';
+									}
+									if($nil_surplus<0){
+										$nil_surplus1=$nil_surplus*-1;
+										$c='(';
+										$d=')';
+									} else{
+										$nil_surplus1=$nil_surplus;
+										$c='';
+										$d='';
+									}
+							
+							$sql = "SELECT 
+									SUM(CASE WHEN kd_rek='71' THEN (nil_ang) ELSE 0 END) - SUM(CASE WHEN kd_rek='72' THEN (nil_ang) ELSE 0 END) as ang_netto,
+									SUM(CASE WHEN kd_rek='71' THEN (real_spj) ELSE 0 END) - SUM(CASE WHEN kd_rek='72' THEN (real_spj) ELSE 0 END) as nil_netto
+									FROM
+									(SELECT LEFT(kd_rek5,2) as kd_rek, SUM($initang) as nil_ang, SUM(real_spj) as real_spj FROM data_realisasi_pemkot where bulan='$bulan' and LEFT(kd_rek5,2) IN ('71','72') $where
+									GROUP BY LEFT(kd_rek5,2)) a;
+									";
+									  $hasil = $this->db->query($sql);
+									foreach ($hasil->result() as $row)
+									{
+									   $ang_netto = $row->ang_netto;
+									   $nil_netto = $row->nil_netto;
+									}
+									$sisa_netto = $ang_netto-$nil_netto;
+									if(($ang_netto==0) || ($ang_netto=='')){
+										$persen_netto=0;
+									} else{
+									$persen_netto = $nil_netto/$ang_netto *100;
+									}
+									$hasil->free_result();  
+									if($ang_netto<0){
+										$ang_netto1=$ang_netto*-1;
+										$g='(';
+										$h=')';
+									} else{
+										$ang_netto1=$ang_netto;
+										$g='';
+										$h='';
+									}
+									if($nil_netto<0){
+										$nil_netto1=$nil_netto*-1;
+										$i='(';
+										$j=')';
+									} else{
+										$nil_netto1=$nil_netto;
+										$i='';
+										$j='';
+									}   
+									
+									$ang_silpa = $ang_surplus+$ang_netto;
+									$nil_silpa = $nil_surplus+$nil_netto;
+									$sisa_silpa = $ang_silpa-$nil_silpa;
+									if($ang_silpa==0){
+										$persen_silpa=0;
+									}else{
+									$persen_silpa = $nil_silpa/$ang_silpa *100;
+									}
+									if($ang_silpa<0){
+										$ang_silpa1=$ang_silpa*-1;
+										$m='(';
+										$n=')';
+									} else{
+										$ang_silpa1=$ang_silpa;
+										$m='';
+										$n='';
+									}
+									if($nil_silpa<0){
+										$nil_silpa1=$nil_silpa*-1;
+										$o='(';
+										$p=')';
+									} else{
+										$nil_silpa1=$nil_silpa;
+										$o='';
+										$p='';
+									}
+							$sql = "SELECT nor, uraian, kode1, kode2, kode3,kode4,bold,thn_m1,kode_ctk,no_ctk FROM map_lra_kab ORDER BY nor
+									";
+									$no=0;
+									$tot_peg=0;
+									$tot_brg=0;
+									$tot_mod=0;
+									$tot_bansos=0;
+									$hasil = $this->db->query($sql);
+									foreach ($hasil->result() as $row)
+									{
+									   $no=$no+1;
+									   $kode = $row->nor;
+									   $nama = $row->uraian;
+									   $kode1 = $row->kode1;
+									   $kode2 = $row->kode2;
+									   $kode3 = $row->kode3;
+									   $kode4 = $row->kode4;
+									   $spasi = $row->bold;
+									   $nilai_ll = $row->thn_m1;
+									   $kodeakun = $row->kode_ctk;
+									   $noakun = $row->no_ctk;
+									   
+									if($nilai_ll<0){
+										$nilai_ll1=$nilai_ll*-1;
+										$x='(';
+										$y=')';
+									} else{
+										$nilai_ll1=$nilai_ll;
+										$x='';
+										$y='';
+									}
+				
+									$sql = "SELECT SUM($initang) as nil_ang, SUM(real_spj) as nilai FROM data_realisasi_pemkot where bulan='$bulan' and (LEFT(kd_rek5,1) IN ($kode1) or LEFT(kd_rek5,2) IN ($kode2) or LEFT(kd_rek5,3) IN ($kode3) or LEFT(kd_rek5,5) IN ($kode4))$where";              
+									
+									$hasil = $this->db->query($sql);
+									foreach ($hasil->result() as $row)
+									{
+									   $nil_ang = $row->nil_ang;
+									   $nilai = $row->nilai;
+									}
+									$sel = $nil_ang-$nilai;
+									if(($nil_ang==0) || ($nil_ang=='')){
+										$persen=0;
+									} else{
+										$persen = $nilai/$nil_ang *100;
+									}
+									 switch ($spasi) {
+									 case 1:
+										$cRet .='
+											<tr>
+											   <td align="left" valign="top">'.$kodeakun.'</td> 
+											   <td align="left"  valign="top"><b>'.$nama.'</b></td> 
+											   <td align="right" valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+											   <td align="right" valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+											   <td align="right" valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+											   <td align="right" valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+											</tr>'; 
+										break;  
+									case 2:
+										 $cRet .='<tr>
+											   <td align="left" valign="top">'.$kodeakun.'</td> 
+											   <td align="left"  valign="top"><b>&nbsp;&nbsp;'.$nama.'</b></td>  
+											   <td align="right" valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+											   <td align="right" valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+											   <td align="right" valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+											   <td align="right" valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+											</tr>';
+										break;
+									 case 3:
+				
+									 if($noakun<>''){
+										 $cRet .='<tr>
+											   <td align="left" valign="top">'.$kodeakun.'</td> 
+											   <td align="left"  valign="top">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>'.$nama.'</b></td> 
+											   <td align="right" valign="top"><b>'.number_format($nil_ang, "2", ",", ".").'</b></td> 
+											   <td align="right" valign="top"><b>'.number_format($nilai, "2", ",", ".").'</b></td> 
+											   <td align="right" valign="top"><b>'.number_format($nil_ang-$nilai, "2", ",", ".").'</b></td>                             
+											   <td align="right" valign="top"><b>'.number_format($persen, "2", ",", ".").'</b></td> 
+											</tr>';
+				
+											switch ($noakun) {
+												case 411:
+													
+													$sql = "select c.kd_rek,c.nm_rek,c.nilai_ang,c.nilai_real,c.nilai_2018 from(
+				select left(a.kd_rek5,5) as kd_rek,d.nm_rek4_64 as nm_rek,sum(a.nilai_ang_ubah) nilai_ang,isnull(sum(a.real_spj),0) nilai_real,isnull(b.nilai_real,0) nilai_2018 from data_realisasi_pemkot a 
+				left join (
+				select left(kd_rek5,5) kd_rek,isnull(sum(nilai_ang_ubah),0) nilai_ang,isnull(sum(real_spj),0) nilai_real from data_realisasi_pemkot_2020 
+				where bulan=12 and left(kd_rek5,1)=4 group by left(kd_rek5,5)
+				)b on b.kd_rek=left(a.kd_rek5,5)
+				left join ms_rek4_64 d on d.kd_rek4_64=left(a.kd_rek5,5)
+				where a.bulan=12 and left(a.kd_rek5,1)=4 group by left(a.kd_rek5,5),d.kd_rek4_64,d.nm_rek4_64,b.nilai_real
+				)c where left(kd_rek,3)=$noakun order by kd_rek";              
+									
+													$hasil = $this->db->query($sql);
+													foreach ($hasil->result() as $row)
+													{
+														$kd_rek = $row->kd_rek;    
+														$nil_ang = $row->nilai_ang;
+														$nm_rek = $row->nm_rek;
+														$nilai = $row->nilai_real;
+														$nilai_lalu = $row->nilai_2018;
+														
+														if(($nil_ang==0) || ($nil_ang=='')){
+															$persen=0;
+														}else{
+															$persen = $nilai/$nil_ang *100;
+														}
+				
+													$cRet .='<tr>
+													<td align="left" valign="top">'.$kd_rek.'</td> 
+													<td align="left"  valign="top">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nm_rek.'</td> 
+													<td align="right" valign="top">'.number_format($nil_ang, "2", ",", ".").'</td> 
+													<td align="right" valign="top">'.number_format($nilai, "2", ",", ".").'</td> 
+													<td align="right" valign="top">'.number_format($nil_ang-$nilai, "2", ",", ".").'</td> 
+													<td align="right" valign="top">'.number_format($persen, "2", ",", ".").'</td> 
+													</tr>';
+													}
+				
+													break;
+											   
+											case 412:
+													
+													$sql = "select c.kd_rek,c.nm_rek,c.nilai_ang,c.nilai_real,c.nilai_2018 from(
+				select left(a.kd_rek5,5) as kd_rek,d.nm_rek4_64 as nm_rek,sum(a.nilai_ang_ubah) nilai_ang,isnull(sum(a.real_spj),0) nilai_real,isnull(b.nilai_real,0) nilai_2018 from data_realisasi_pemkot a 
+				left join (
+				select left(kd_rek5,5) kd_rek,isnull(sum(nilai_ang_ubah),0) nilai_ang,isnull(sum(real_spj),0) nilai_real from data_realisasi_pemkot_2020 
+				where bulan=12 and left(kd_rek5,1)=4 group by left(kd_rek5,5)
+				)b on b.kd_rek=left(a.kd_rek5,5)
+				left join ms_rek4_64 d on d.kd_rek4_64=left(a.kd_rek5,5)
+				where a.bulan=12 and left(a.kd_rek5,1)=4 group by left(a.kd_rek5,5),d.kd_rek4_64,d.nm_rek4_64,b.nilai_real
+				)c where left(kd_rek,3)=$noakun order by kd_rek";              
+									
+													$hasil = $this->db->query($sql);
+													foreach ($hasil->result() as $row)
+													{
+														$kd_rek = $row->kd_rek;
+														$nil_ang = $row->nilai_ang;
+														$nm_rek = $row->nm_rek;
+														$nilai = $row->nilai_real;
+														$nilai_lalu = $row->nilai_2018;
+														
+														if(($nil_ang==0) || ($nil_ang=='')){
+															$persen=0;
+														}else{
+															$persen = $nilai/$nil_ang *100;
+														}
+				
+													$cRet .='<tr>
+													<td align="left" valign="top">'.$kd_rek.'</td> 
+													<td align="left"  valign="top">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nm_rek.'</td> 
+													<td align="right" valign="top">'.number_format($nil_ang, "2", ",", ".").'</td> 
+													<td align="right" valign="top">'.number_format($nilai, "2", ",", ".").'</td> 
+													<td align="right" valign="top">'.number_format($nil_ang-$nilai, "2", ",", ".").'</td>                                    
+													<td align="right" valign="top">'.number_format($persen, "2", ",", ".").'</td>  
+													</tr>';
+													}
+				
+													break;        
+				
+										case 413:
+													
+													$sql = "select c.kd_rek,c.nm_rek,c.nilai_ang,c.nilai_real,c.nilai_2018 from(
+				select left(a.kd_rek5,5) as kd_rek,d.nm_rek4_64 as nm_rek,sum(a.nilai_ang_ubah) nilai_ang,isnull(sum(a.real_spj),0) nilai_real,isnull(b.nilai_real,0) nilai_2018 from data_realisasi_pemkot a 
+				left join (
+				select left(kd_rek5,5) kd_rek,isnull(sum(nilai_ang_ubah),0) nilai_ang,isnull(sum(real_spj),0) nilai_real from data_realisasi_pemkot_2020 
+				where bulan=12 and left(kd_rek5,1)=4 group by left(kd_rek5,5)
+				)b on b.kd_rek=left(a.kd_rek5,5)
+				left join ms_rek4_64 d on d.kd_rek4_64=left(a.kd_rek5,5)
+				where a.bulan=12 and left(a.kd_rek5,1)=4 group by left(a.kd_rek5,5),d.kd_rek4_64,d.nm_rek4_64,b.nilai_real
+				)c where left(kd_rek,3)=$noakun order by kd_rek";              
+									
+													$hasil = $this->db->query($sql);
+													foreach ($hasil->result() as $row)
+													{
+														$kd_rek = $row->kd_rek;
+														$nil_ang = $row->nilai_ang;
+														$nm_rek = $row->nm_rek;
+														$nilai = $row->nilai_real;
+														$nilai_lalu = $row->nilai_2018;
+														
+														if(($nil_ang==0) || ($nil_ang=='')){
+															$persen=0;
+														}else{
+															$persen = $nilai/$nil_ang *100;
+														}
+				
+													$cRet .='<tr>
+													<td align="left" valign="top">'.$kd_rek.'</td> 
+													<td align="left"  valign="top">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nm_rek.'</td> 
+													<td align="right" valign="top">'.number_format($nil_ang, "2", ",", ".").'</td> 
+													<td align="right" valign="top">'.number_format($nilai, "2", ",", ".").'</td>                                     
+													<td align="right" valign="top">'.number_format($nil_ang-$nilai, "2", ",", ".").'</td> 
+													<td align="right" valign="top">'.number_format($persen, "2", ",", ".").'</td> 
+													</tr>';
+													}
+				
+													break; 
+				
+										case 414:
+													
+													$sql = "select c.kd_rek,c.nm_rek,c.nilai_ang,c.nilai_real,c.nilai_2018 from(
+				select left(a.kd_rek5,5) as kd_rek,d.nm_rek4_64 as nm_rek,sum(a.nilai_ang_ubah) nilai_ang,isnull(sum(a.real_spj),0) nilai_real,isnull(b.nilai_real,0) nilai_2018 from data_realisasi_pemkot a 
+				left join (
+				select left(kd_rek5,5) kd_rek,isnull(sum(nilai_ang_ubah),0) nilai_ang,isnull(sum(real_spj),0) nilai_real from data_realisasi_pemkot_2020 
+				where bulan=12 and left(kd_rek5,1)=4 group by left(kd_rek5,5)
+				)b on b.kd_rek=left(a.kd_rek5,5)
+				left join ms_rek4_64 d on d.kd_rek4_64=left(a.kd_rek5,5)
+				where a.bulan=12 and left(a.kd_rek5,1)=4 group by left(a.kd_rek5,5),d.kd_rek4_64,d.nm_rek4_64,b.nilai_real
+				)c where left(kd_rek,3)=$noakun order by kd_rek";              
+									
+													$hasil = $this->db->query($sql);
+													foreach ($hasil->result() as $row)
+													{
+														$kd_rek = $row->kd_rek;
+														$nil_ang = $row->nilai_ang;
+														$nm_rek = $row->nm_rek;
+														$nilai = $row->nilai_real;
+														$nilai_lalu = $row->nilai_2018;
+														
+														if(($nil_ang==0) || ($nil_ang=='')){
+															$persen=0;
+														}else{
+															$persen = $nilai/$nil_ang *100;
+														}
+				
+													$cRet .='<tr>
+													<td align="left" valign="top">'.$kd_rek.'</td> 
+													<td align="left"  valign="top">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nm_rek.'</td> 
+													<td align="right" valign="top">'.number_format($nil_ang, "2", ",", ".").'</td> 
+													<td align="right" valign="top">'.number_format($nilai, "2", ",", ".").'</td>  
+													<td align="right" valign="top">'.number_format($nil_ang-$nilai, "2", ",", ".").'</td>                                    
+													<td align="right" valign="top">'.number_format($persen, "2", ",", ".").'</td> 
+													</tr>';
+													}
+				
+													break; 
+				
+										case 431:
+													
+													$sql = "select c.kd_rek,c.nm_rek,c.nilai_ang,c.nilai_real,c.nilai_2018 from(
+				select left(a.kd_rek5,5) as kd_rek,d.nm_rek4_64 as nm_rek,sum(a.nilai_ang_ubah) nilai_ang,isnull(sum(a.real_spj),0) nilai_real,isnull(b.nilai_real,0) nilai_2018 from data_realisasi_pemkot a 
+				left join (
+				select left(kd_rek5,5) kd_rek,isnull(sum(nilai_ang_ubah),0) nilai_ang,isnull(sum(real_spj),0) nilai_real from data_realisasi_pemkot_2020 
+				where bulan=12 and left(kd_rek5,1)=4 group by left(kd_rek5,5)
+				)b on b.kd_rek=left(a.kd_rek5,5)
+				left join ms_rek4_64 d on d.kd_rek4_64=left(a.kd_rek5,5)
+				where a.bulan=12 and left(a.kd_rek5,1)=4 group by left(a.kd_rek5,5),d.kd_rek4_64,d.nm_rek4_64,b.nilai_real
+				)c where left(kd_rek,3)=$noakun order by kd_rek";              
+									
+													$hasil = $this->db->query($sql);
+													foreach ($hasil->result() as $row)
+													{
+														$kd_rek = $row->kd_rek;
+														$nil_ang = $row->nilai_ang;
+														$nm_rek = $row->nm_rek;
+														$nilai = $row->nilai_real;
+														$nilai_lalu = $row->nilai_2018;
+														
+														if(($nil_ang==0) || ($nil_ang=='')){
+															$persen=0;
+														}else{
+															$persen = $nilai/$nil_ang *100;
+														}
+				
+													$cRet .='<tr>
+													<td align="left" valign="top">'.$kd_rek.'</td> 
+													<td align="left"  valign="top">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nm_rek.'</td> 
+													<td align="right" valign="top">'.number_format($nil_ang, "2", ",", ".").'</td> 
+													<td align="right" valign="top">'.number_format($nilai, "2", ",", ".").'</td>                                    
+													<td align="right" valign="top">'.number_format($nil_ang-$nilai, "2", ",", ".").'</td>
+													<td align="right" valign="top">'.number_format($persen, "2", ",", ".").'</td>  
+													</tr>';
+													}
+				
+													break;              
+				
+								case 511:
+													
+													$sql = "select c.kd_rek,c.nm_rek,c.nilai_ang,c.nilai_real,c.nilai_2018 from(
+				select left(a.kd_rek5,5) as kd_rek,d.nm_rek4_64 as nm_rek,sum(a.nilai_ang_ubah) nilai_ang,isnull(sum(a.real_spj),0) nilai_real,isnull(b.nilai_real,0) nilai_2018 from data_realisasi_pemkot a 
+				left join (
+				select left(kd_rek5,5) kd_rek,isnull(sum(nilai_ang_ubah),0) nilai_ang,isnull(sum(real_spj),0) nilai_real from data_realisasi_pemkot_2020 
+				where bulan=12 and left(kd_rek5,1)=5 group by left(kd_rek5,5)
+				)b on b.kd_rek=left(a.kd_rek5,5)
+				left join ms_rek4_64 d on d.kd_rek4_64=left(a.kd_rek5,5)
+				where a.bulan=12 and left(a.kd_rek5,1)=5 group by left(a.kd_rek5,5),d.kd_rek4_64,d.nm_rek4_64,b.nilai_real
+				)c where left(kd_rek,3)=$noakun order by kd_rek";              
+									
+													$hasil = $this->db->query($sql);
+													foreach ($hasil->result() as $row)
+													{
+														$kd_rek = $row->kd_rek;
+														$nil_ang = $row->nilai_ang;
+														$nm_rek = $row->nm_rek;
+														$nilai = $row->nilai_real;
+														$nilai_lalu = $row->nilai_2018;
+														
+														if(($nil_ang==0) || ($nil_ang=='')){
+															$persen=0;
+														}else{
+															$persen = $nilai/$nil_ang *100;
+														}
+				
+													$cRet .='<tr>
+													<td align="left" valign="top">'.$kd_rek.'</td> 
+													<td align="left"  valign="top">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nm_rek.'</td> 
+													<td align="right" valign="top">'.number_format($nil_ang, "2", ",", ".").'</td> 
+													<td align="right" valign="top">'.number_format($nilai, "2", ",", ".").'</td> 
+													<td align="right" valign="top">'.number_format($nil_ang-$nilai, "2", ",", ".").'</td>                                     
+													<td align="right" valign="top">'.number_format($persen, "2", ",", ".").'</td> 
+													</tr>';
+													}
+				
+													break;                      
+				
+								case 512:
+													
+													$sql = "select c.kd_rek,c.nm_rek,c.nilai_ang,c.nilai_real,c.nilai_2018 from(
+				select left(a.kd_rek5,5) as kd_rek,d.nm_rek4_64 as nm_rek,sum(a.nilai_ang_ubah) nilai_ang,isnull(sum(a.real_spj),0) nilai_real,isnull(b.nilai_real,0) nilai_2018 from data_realisasi_pemkot a 
+				left join (
+				select left(kd_rek5,5) kd_rek,isnull(sum(nilai_ang_ubah),0) nilai_ang,isnull(sum(real_spj),0) nilai_real from data_realisasi_pemkot_2020 
+				where bulan=12 and left(kd_rek5,1)=5 group by left(kd_rek5,5)
+				)b on b.kd_rek=left(a.kd_rek5,5)
+				left join ms_rek4_64 d on d.kd_rek4_64=left(a.kd_rek5,5)
+				where a.bulan=12 and left(a.kd_rek5,1)=5 group by left(a.kd_rek5,5),d.kd_rek4_64,d.nm_rek4_64,b.nilai_real
+				)c where left(kd_rek,3)=$noakun order by kd_rek";              
+									
+													$hasil = $this->db->query($sql);
+													foreach ($hasil->result() as $row)
+													{
+														$kd_rek = $row->kd_rek;
+														$nil_ang = $row->nilai_ang;
+														$nm_rek = $row->nm_rek;
+														$nilai = $row->nilai_real;
+														$nilai_lalu = $row->nilai_2018;
+														
+														if(($nil_ang==0) || ($nil_ang=='')){
+															$persen=0;
+														}else{
+															$persen = $nilai/$nil_ang *100;
+														}
+				
+													$cRet .='<tr>
+													<td align="left" valign="top">'.$kd_rek.'</td> 
+													<td align="left"  valign="top">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nm_rek.'</td> 
+													<td align="right" valign="top">'.number_format($nil_ang, "2", ",", ".").'</td> 
+													<td align="right" valign="top">'.number_format($nilai, "2", ",", ".").'</td>                                     
+													<td align="right" valign="top">'.number_format($nil_ang-$nilai, "2", ",", ".").'</td> 
+													<td align="right" valign="top">'.number_format($persen, "2", ",", ".").'</td> 
+													</tr>';
+													}
+				
+													break; 
+				
+									case 513:
+													
+													$sql = "select c.kd_rek,c.nm_rek,c.nilai_ang,c.nilai_real,c.nilai_2018 from(
+				select left(a.kd_rek5,5) as kd_rek,d.nm_rek4_64 as nm_rek,sum(a.nilai_ang_ubah) nilai_ang,isnull(sum(a.real_spj),0) nilai_real,isnull(b.nilai_real,0) nilai_2018 from data_realisasi_pemkot a 
+				left join (
+				select left(kd_rek5,5) kd_rek,isnull(sum(nilai_ang_ubah),0) nilai_ang,isnull(sum(real_spj),0) nilai_real from data_realisasi_pemkot_2020 
+				where bulan=12 and left(kd_rek5,1)=5 group by left(kd_rek5,5)
+				)b on b.kd_rek=left(a.kd_rek5,5)
+				left join ms_rek4_64 d on d.kd_rek4_64=left(a.kd_rek5,5)
+				where a.bulan=12 and left(a.kd_rek5,1)=5 group by left(a.kd_rek5,5),d.kd_rek4_64,d.nm_rek4_64,b.nilai_real
+				)c where left(kd_rek,3)=$noakun order by kd_rek";              
+									
+													$hasil = $this->db->query($sql);
+													foreach ($hasil->result() as $row)
+													{
+														$kd_rek = $row->kd_rek;
+														$nil_ang = $row->nilai_ang;
+														$nm_rek = $row->nm_rek;
+														$nilai = $row->nilai_real;
+														$nilai_lalu = $row->nilai_2018;
+														
+														if(($nil_ang==0) || ($nil_ang=='')){
+															$persen=0;
+														}else{
+															$persen = $nilai/$nil_ang *100;
+														}
+				
+													$cRet .='<tr>
+													<td align="left" valign="top">'.$kd_rek.'</td> 
+													<td align="left"  valign="top">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nm_rek.'</td> 
+													<td align="right" valign="top">'.number_format($nil_ang, "2", ",", ".").'</td> 
+													<td align="right" valign="top">'.number_format($nilai, "2", ",", ".").'</td>  
+													<td align="right" valign="top">'.number_format($nil_ang-$nilai, "2", ",", ".").'</td>                                    
+													<td align="right" valign="top">'.number_format($persen, "2", ",", ".").'</td> 
+													</tr>';
+													}
+				
+													break; 
+				
+									case 514:
+													
+													$sql = "select c.kd_rek,c.nm_rek,c.nilai_ang,c.nilai_real,c.nilai_2018 from(
+				select left(a.kd_rek5,5) as kd_rek,d.nm_rek4_64 as nm_rek,sum(a.nilai_ang_ubah) nilai_ang,isnull(sum(a.real_spj),0) nilai_real,isnull(b.nilai_real,0) nilai_2018 from data_realisasi_pemkot a 
+				left join (
+				select left(kd_rek5,5) kd_rek,isnull(sum(nilai_ang_ubah),0) nilai_ang,isnull(sum(real_spj),0) nilai_real from data_realisasi_pemkot_2020 
+				where bulan=12 and left(kd_rek5,1)=5 group by left(kd_rek5,5)
+				)b on b.kd_rek=left(a.kd_rek5,5)
+				left join ms_rek4_64 d on d.kd_rek4_64=left(a.kd_rek5,5)
+				where a.bulan=12 and left(a.kd_rek5,1)=5 group by left(a.kd_rek5,5),d.kd_rek4_64,d.nm_rek4_64,b.nilai_real
+				)c where left(kd_rek,3)=$noakun order by kd_rek";              
+									
+													$hasil = $this->db->query($sql);
+													foreach ($hasil->result() as $row)
+													{
+														$kd_rek = $row->kd_rek;
+														$nil_ang = $row->nilai_ang;
+														$nm_rek = $row->nm_rek;
+														$nilai = $row->nilai_real;
+														$nilai_lalu = $row->nilai_2018;
+														
+														if(($nil_ang==0) || ($nil_ang=='')){
+															$persen=0;
+														}else{
+															$persen = $nilai/$nil_ang *100;
+														}
+				
+													$cRet .='<tr>
+													<td align="left" valign="top">'.$kd_rek.'</td> 
+													<td align="left"  valign="top">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nm_rek.'</td> 
+													<td align="right" valign="top">'.number_format($nil_ang, "2", ",", ".").'</td> 
+													<td align="right" valign="top">'.number_format($nilai, "2", ",", ".").'</td> 
+													<td align="right" valign="top">'.number_format($nil_ang-$nilai, "2", ",", ".").'</td>                                     
+													<td align="right" valign="top">'.number_format($persen, "2", ",", ".").'</td> 
+													</tr>';
+													}
+				
+													break; 
+				
+				
+									case 515:
+													
+													$sql = "select c.kd_rek,c.nm_rek,c.nilai_ang,c.nilai_real,c.nilai_2018 from(
+				select left(a.kd_rek5,5) as kd_rek,d.nm_rek4_64 as nm_rek,sum(a.nilai_ang_ubah) nilai_ang,isnull(sum(a.real_spj),0) nilai_real,isnull(b.nilai_real,0) nilai_2018 from data_realisasi_pemkot a 
+				left join (
+				select left(kd_rek5,5) kd_rek,isnull(sum(nilai_ang_ubah),0) nilai_ang,isnull(sum(real_spj),0) nilai_real from data_realisasi_pemkot_2020 
+				where bulan=12 and left(kd_rek5,1)=5 group by left(kd_rek5,5)
+				)b on b.kd_rek=left(a.kd_rek5,5)
+				left join ms_rek4_64 d on d.kd_rek4_64=left(a.kd_rek5,5)
+				where a.bulan=12 and left(a.kd_rek5,1)=5 group by left(a.kd_rek5,5),d.kd_rek4_64,d.nm_rek4_64,b.nilai_real
+				)c where left(kd_rek,3)=$noakun order by kd_rek";              
+									
+													$hasil = $this->db->query($sql);
+													foreach ($hasil->result() as $row)
+													{
+														$kd_rek = $row->kd_rek;
+														$nil_ang = $row->nilai_ang;
+														$nm_rek = $row->nm_rek;
+														$nilai = $row->nilai_real;
+														$nilai_lalu = $row->nilai_2018;
+														
+														if(($nil_ang==0) || ($nil_ang=='')){
+															$persen=0;
+														}else{
+															$persen = $nilai/$nil_ang *100;
+														}
+				
+													$cRet .='<tr>
+													<td align="left" valign="top">'.$kd_rek.'</td> 
+													<td align="left"  valign="top">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nm_rek.'</td> 
+													<td align="right" valign="top">'.number_format($nil_ang, "2", ",", ".").'</td> 
+													<td align="right" valign="top">'.number_format($nilai, "2", ",", ".").'</td> 
+													<td align="right" valign="top">'.number_format($nil_ang-$nilai, "2", ",", ".").'</td>                                     
+													<td align="right" valign="top">'.number_format($persen, "2", ",", ".").'</td> 
+													</tr>';
+													}
+				
+													break; 
+				
+									case 516:
+													
+													$sql = "select c.kd_rek,c.nm_rek,c.nilai_ang,c.nilai_real,c.nilai_2018 from(
+				select left(a.kd_rek5,5) as kd_rek,d.nm_rek4_64 as nm_rek,sum(a.nilai_ang_ubah) nilai_ang,isnull(sum(a.real_spj),0) nilai_real,isnull(b.nilai_real,0) nilai_2018 from data_realisasi_pemkot a 
+				left join (
+				select left(kd_rek5,5) kd_rek,isnull(sum(nilai_ang_ubah),0) nilai_ang,isnull(sum(real_spj),0) nilai_real from data_realisasi_pemkot_2020 
+				where bulan=12 and left(kd_rek5,1)=5 group by left(kd_rek5,5)
+				)b on b.kd_rek=left(a.kd_rek5,5)
+				left join ms_rek4_64 d on d.kd_rek4_64=left(a.kd_rek5,5)
+				where a.bulan=12 and left(a.kd_rek5,1)=5 group by left(a.kd_rek5,5),d.kd_rek4_64,d.nm_rek4_64,b.nilai_real
+				)c where left(kd_rek,3)=$noakun order by kd_rek";              
+									
+													$hasil = $this->db->query($sql);
+													foreach ($hasil->result() as $row)
+													{
+														$kd_rek = $row->kd_rek;
+														$nil_ang = $row->nilai_ang;
+														$nm_rek = $row->nm_rek;
+														$nilai = $row->nilai_real;
+														$nilai_lalu = $row->nilai_2018;
+														
+														if(($nil_ang==0) || ($nil_ang=='')){
+															$persen=0;
+														}else{
+															$persen = $nilai/$nil_ang *100;
+														}
+				
+													$cRet .='<tr>
+													<td align="left" valign="top">'.$kd_rek.'</td> 
+													<td align="left"  valign="top">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nm_rek.'</td> 
+													<td align="right" valign="top">'.number_format($nil_ang, "2", ",", ".").'</td> 
+													<td align="right" valign="top">'.number_format($nilai, "2", ",", ".").'</td> 
+													<td align="right" valign="top">'.number_format($nil_ang-$nilai, "2", ",", ".").'</td>                                     
+													<td align="right" valign="top">'.number_format($persen, "2", ",", ".").'</td> 
+													</tr>';
+													}
+				
+													break; 
+				
+									case 521:
+													
+													$sql = "select c.kd_rek,c.nm_rek,c.nilai_ang,c.nilai_real,c.nilai_2018 from(
+				select left(a.kd_rek5,5) as kd_rek,d.nm_rek4_64 as nm_rek,sum(a.nilai_ang_ubah) nilai_ang,isnull(sum(a.real_spj),0) nilai_real,isnull(b.nilai_real,0) nilai_2018 from data_realisasi_pemkot a 
+				left join (
+				select left(kd_rek5,5) kd_rek,isnull(sum(nilai_ang_ubah),0) nilai_ang,isnull(sum(real_spj),0) nilai_real from data_realisasi_pemkot_2020 
+				where bulan=12 and left(kd_rek5,1)=5 group by left(kd_rek5,5)
+				)b on b.kd_rek=left(a.kd_rek5,5)
+				left join ms_rek4_64 d on d.kd_rek4_64=left(a.kd_rek5,5)
+				where a.bulan=12 and left(a.kd_rek5,1)=5 group by left(a.kd_rek5,5),d.kd_rek4_64,d.nm_rek4_64,b.nilai_real
+				)c where left(kd_rek,3)=$noakun order by kd_rek";              
+									
+													$hasil = $this->db->query($sql);
+													foreach ($hasil->result() as $row)
+													{
+														$kd_rek = $row->kd_rek;
+														$nil_ang = $row->nilai_ang;
+														$nm_rek = $row->nm_rek;
+														$nilai = $row->nilai_real;
+														$nilai_lalu = $row->nilai_2018;
+														
+														if(($nil_ang==0) || ($nil_ang=='')){
+															$persen=0;
+														}else{
+															$persen = $nilai/$nil_ang *100;
+														}
+				
+													$cRet .='<tr>
+													<td align="left" valign="top">'.$kd_rek.'</td> 
+													<td align="left"  valign="top">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nm_rek.'</td> 
+													<td align="right" valign="top">'.number_format($nil_ang, "2", ",", ".").'</td> 
+													<td align="right" valign="top">'.number_format($nilai, "2", ",", ".").'</td> 
+													<td align="right" valign="top">'.number_format($nil_ang-$nilai, "2", ",", ".").'</td>                                    
+													<td align="right" valign="top">'.number_format($persen, "2", ",", ".").'</td>  
+													</tr>';
+													}
+				
+													break;
+				
+									case 522:
+													
+													$sql = "select c.kd_rek,c.nm_rek,c.nilai_ang,c.nilai_real,c.nilai_2018 from(
+				select left(a.kd_rek5,5) as kd_rek,d.nm_rek4_64 as nm_rek,sum(a.nilai_ang_ubah) nilai_ang,isnull(sum(a.real_spj),0) nilai_real,isnull(b.nilai_real,0) nilai_2018 from data_realisasi_pemkot a 
+				left join (
+				select left(kd_rek5,5) kd_rek,isnull(sum(nilai_ang_ubah),0) nilai_ang,isnull(sum(real_spj),0) nilai_real from data_realisasi_pemkot_2020 
+				where bulan=12 and left(kd_rek5,1)=5 group by left(kd_rek5,5)
+				)b on b.kd_rek=left(a.kd_rek5,5)
+				left join ms_rek4_64 d on d.kd_rek4_64=left(a.kd_rek5,5)
+				where a.bulan=12 and left(a.kd_rek5,1)=5 group by left(a.kd_rek5,5),d.kd_rek4_64,d.nm_rek4_64,b.nilai_real
+				)c where left(kd_rek,3)=$noakun order by kd_rek";              
+									
+													$hasil = $this->db->query($sql);
+													foreach ($hasil->result() as $row)
+													{
+														$kd_rek = $row->kd_rek;
+														$nil_ang = $row->nilai_ang;
+														$nm_rek = $row->nm_rek;
+														$nilai = $row->nilai_real;
+														$nilai_lalu = $row->nilai_2018;
+														
+														if(($nil_ang==0) || ($nil_ang=='')){
+															$persen=0;
+														}else{
+															$persen = $nilai/$nil_ang *100;
+														}
+				
+													$cRet .='<tr>
+													<td align="left" valign="top">'.$kd_rek.'</td> 
+													<td align="left"  valign="top">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nm_rek.'</td> 
+													<td align="right" valign="top">'.number_format($nil_ang, "2", ",", ".").'</td> 
+													<td align="right" valign="top">'.number_format($nilai, "2", ",", ".").'</td>                                     
+													<td align="right" valign="top">'.number_format($nil_ang-$nilai, "2", ",", ".").'</td> 
+													<td align="right" valign="top">'.number_format($persen, "2", ",", ".").'</td> 
+													</tr>';
+													}
+				
+													break;  
+													
+									case 523:
+													
+													$sql = "select c.kd_rek,c.nm_rek,c.nilai_ang,c.nilai_real,c.nilai_2018 from(
+				select left(a.kd_rek5,5) as kd_rek,d.nm_rek4_64 as nm_rek,sum(a.nilai_ang_ubah) nilai_ang,isnull(sum(a.real_spj),0) nilai_real,isnull(b.nilai_real,0) nilai_2018 from data_realisasi_pemkot a 
+				left join (
+				select left(kd_rek5,5) kd_rek,isnull(sum(nilai_ang_ubah),0) nilai_ang,isnull(sum(real_spj),0) nilai_real from data_realisasi_pemkot_2020 
+				where bulan=12 and left(kd_rek5,1)=5 group by left(kd_rek5,5)
+				)b on b.kd_rek=left(a.kd_rek5,5)
+				left join ms_rek4_64 d on d.kd_rek4_64=left(a.kd_rek5,5)
+				where a.bulan=12 and left(a.kd_rek5,1)=5 group by left(a.kd_rek5,5),d.kd_rek4_64,d.nm_rek4_64,b.nilai_real
+				)c where left(kd_rek,3)=$noakun order by kd_rek";              
+									
+													$hasil = $this->db->query($sql);
+													foreach ($hasil->result() as $row)
+													{
+														$kd_rek = $row->kd_rek;
+														$nil_ang = $row->nilai_ang;
+														$nm_rek = $row->nm_rek;
+														$nilai = $row->nilai_real;
+														$nilai_lalu = $row->nilai_2018;
+														
+														if(($nil_ang==0) || ($nil_ang=='')){
+															$persen=0;
+														}else{
+															$persen = $nilai/$nil_ang *100;
+														}
+				
+													$cRet .='<tr>
+													<td align="left" valign="top">'.$kd_rek.'</td> 
+													<td align="left"  valign="top">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nm_rek.'</td> 
+													<td align="right" valign="top">'.number_format($nil_ang, "2", ",", ".").'</td> 
+													<td align="right" valign="top">'.number_format($nilai, "2", ",", ".").'</td> 
+													<td align="right" valign="top">'.number_format($nil_ang-$nilai, "2", ",", ".").'</td>                                    
+													<td align="right" valign="top">'.number_format($persen, "2", ",", ".").'</td>  
+													</tr>';
+													}
+				
+													break;
+													
+									case 524:
+													
+													$sql = "select c.kd_rek,c.nm_rek,c.nilai_ang,c.nilai_real,c.nilai_2018 from(
+				select left(a.kd_rek5,5) as kd_rek,d.nm_rek4_64 as nm_rek,sum(a.nilai_ang_ubah) nilai_ang,isnull(sum(a.real_spj),0) nilai_real,isnull(b.nilai_real,0) nilai_2018 from data_realisasi_pemkot a 
+				left join (
+				select left(kd_rek5,5) kd_rek,isnull(sum(nilai_ang_ubah),0) nilai_ang,isnull(sum(real_spj),0) nilai_real from data_realisasi_pemkot_2020 
+				where bulan=12 and left(kd_rek5,1)=5 group by left(kd_rek5,5)
+				)b on b.kd_rek=left(a.kd_rek5,5)
+				left join ms_rek4_64 d on d.kd_rek4_64=left(a.kd_rek5,5)
+				where a.bulan=12 and left(a.kd_rek5,1)=5 group by left(a.kd_rek5,5),d.kd_rek4_64,d.nm_rek4_64,b.nilai_real
+				)c where left(kd_rek,3)=$noakun order by kd_rek";              
+									
+													$hasil = $this->db->query($sql);
+													foreach ($hasil->result() as $row)
+													{
+														$kd_rek = $row->kd_rek;
+														$nil_ang = $row->nilai_ang;
+														$nm_rek = $row->nm_rek;
+														$nilai = $row->nilai_real;
+														$nilai_lalu = $row->nilai_2018;
+														
+														if(($nil_ang==0) || ($nil_ang=='')){
+															$persen=0;
+														}else{
+															$persen = $nilai/$nil_ang *100;
+														}
+				
+													$cRet .='<tr>
+													<td align="left" valign="top">'.$kd_rek.'</td> 
+													<td align="left"  valign="top">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nm_rek.'</td> 
+													<td align="right" valign="top">'.number_format($nil_ang, "2", ",", ".").'</td> 
+													<td align="right" valign="top">'.number_format($nilai, "2", ",", ".").'</td>                                     
+													<td align="right" valign="top">'.number_format($nil_ang-$nilai, "2", ",", ".").'</td>
+													<td align="right" valign="top">'.number_format($persen, "2", ",", ".").'</td>  
+													</tr>';
+													}
+				
+													break;                            
+				
+									case 525:
+													
+													$sql = "select c.kd_rek,c.nm_rek,c.nilai_ang,c.nilai_real,c.nilai_2018 from(
+				select left(a.kd_rek5,5) as kd_rek,d.nm_rek4_64 as nm_rek,sum(a.nilai_ang_ubah) nilai_ang,isnull(sum(a.real_spj),0) nilai_real,isnull(b.nilai_real,0) nilai_2018 from data_realisasi_pemkot a 
+				left join (
+				select left(kd_rek5,5) kd_rek,isnull(sum(nilai_ang_ubah),0) nilai_ang,isnull(sum(real_spj),0) nilai_real from data_realisasi_pemkot_2020 
+				where bulan=12 and left(kd_rek5,1)=5 group by left(kd_rek5,5)
+				)b on b.kd_rek=left(a.kd_rek5,5)
+				left join ms_rek4_64 d on d.kd_rek4_64=left(a.kd_rek5,5)
+				where a.bulan=12 and left(a.kd_rek5,1)=5 group by left(a.kd_rek5,5),d.kd_rek4_64,d.nm_rek4_64,b.nilai_real
+				)c where left(kd_rek,3)=$noakun order by kd_rek";              
+									
+													$hasil = $this->db->query($sql);
+													foreach ($hasil->result() as $row)
+													{
+														$kd_rek = $row->kd_rek;
+														$nil_ang = $row->nilai_ang;
+														$nm_rek = $row->nm_rek;
+														$nilai = $row->nilai_real;
+														$nilai_lalu = $row->nilai_2018;
+														
+														if(($nil_ang==0) || ($nil_ang=='')){
+															$persen=0;
+														}else{
+															$persen = $nilai/$nil_ang *100;
+														}
+				
+													$cRet .='<tr>
+													<td align="left" valign="top">'.$kd_rek.'</td> 
+													<td align="left"  valign="top">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nm_rek.'</td> 
+													<td align="right" valign="top">'.number_format($nil_ang, "2", ",", ".").'</td> 
+													<td align="right" valign="top">'.number_format($nilai, "2", ",", ".").'</td>  
+													<td align="right" valign="top">'.number_format($nil_ang-$nilai, "2", ",", ".").'</td>                                    
+													<td align="right" valign="top">'.number_format($persen, "2", ",", ".").'</td> 
+													</tr>';
+													}
+				
+													break;                                  
+				
+									case 526:
+													
+													$sql = "select c.kd_rek,c.nm_rek,c.nilai_ang,c.nilai_real,c.nilai_2018 from(
+				select left(a.kd_rek5,5) as kd_rek,d.nm_rek4_64 as nm_rek,sum(a.nilai_ang_ubah) nilai_ang,isnull(sum(a.real_spj),0) nilai_real,isnull(b.nilai_real,0) nilai_2018 from data_realisasi_pemkot a 
+				left join (
+				select left(kd_rek5,5) kd_rek,isnull(sum(nilai_ang_ubah),0) nilai_ang,isnull(sum(real_spj),0) nilai_real from data_realisasi_pemkot_2020 
+				where bulan=12 and left(kd_rek5,1)=5 group by left(kd_rek5,5)
+				)b on b.kd_rek=left(a.kd_rek5,5)
+				left join ms_rek4_64 d on d.kd_rek4_64=left(a.kd_rek5,5)
+				where a.bulan=12 and left(a.kd_rek5,1)=5 group by left(a.kd_rek5,5),d.kd_rek4_64,d.nm_rek4_64,b.nilai_real
+				)c where left(kd_rek,3)=$noakun order by kd_rek";              
+									
+													$hasil = $this->db->query($sql);
+													foreach ($hasil->result() as $row)
+													{
+														$kd_rek = $row->kd_rek;
+														$nil_ang = $row->nilai_ang;
+														$nm_rek = $row->nm_rek;
+														$nilai = $row->nilai_real;
+														$nilai_lalu = $row->nilai_2018;
+														
+														if(($nil_ang==0) || ($nil_ang=='')){
+															$persen=0;
+														}else{
+															$persen = $nilai/$nil_ang *100;
+														}
+				
+													$cRet .='<tr>
+													<td align="left" valign="top">'.$kd_rek.'</td> 
+													<td align="left"  valign="top">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nm_rek.'</td> 
+													<td align="right" valign="top">'.number_format($nil_ang, "2", ",", ".").'</td> 
+													<td align="right" valign="top">'.number_format($nilai, "2", ",", ".").'</td>  
+													<td align="right" valign="top">'.number_format($nil_ang-$nilai, "2", ",", ".").'</td>                                    
+													<td align="right" valign="top">'.number_format($persen, "2", ",", ".").'</td> 
+													</tr>';
+													}
+				
+													break;                    
+				
+									case 531:
+													
+													$sql = "select c.kd_rek,c.nm_rek,c.nilai_ang,c.nilai_real,c.nilai_2018 from(
+				select left(a.kd_rek5,5) as kd_rek,d.nm_rek4_64 as nm_rek,sum(a.nilai_ang_ubah) nilai_ang,isnull(sum(a.real_spj),0) nilai_real,isnull(b.nilai_real,0) nilai_2018 from data_realisasi_pemkot a 
+				left join (
+				select left(kd_rek5,5) kd_rek,isnull(sum(nilai_ang_ubah),0) nilai_ang,isnull(sum(real_spj),0) nilai_real from data_realisasi_pemkot_2020 
+				where bulan=12 and left(kd_rek5,1)=5 group by left(kd_rek5,5)
+				)b on b.kd_rek=left(a.kd_rek5,5)
+				left join ms_rek4_64 d on d.kd_rek4_64=left(a.kd_rek5,5)
+				where a.bulan=12 and left(a.kd_rek5,1)=5 group by left(a.kd_rek5,5),d.kd_rek4_64,d.nm_rek4_64,b.nilai_real
+				)c where left(kd_rek,3)=$noakun order by kd_rek";              
+									
+													$hasil = $this->db->query($sql);
+													foreach ($hasil->result() as $row)
+													{
+														$kd_rek = $row->kd_rek;
+														$nil_ang = $row->nilai_ang;
+														$nm_rek = $row->nm_rek;
+														$nilai = $row->nilai_real;
+														$nilai_lalu = $row->nilai_2018;
+														
+														if(($nil_ang==0) || ($nil_ang=='')){
+															$persen=0;
+														}else{
+															$persen = $nilai/$nil_ang *100;
+														}
+				
+													$cRet .='<tr>
+													<td align="left" valign="top">'.$kd_rek.'</td> 
+													<td align="left"  valign="top">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nm_rek.'</td> 
+													<td align="right" valign="top">'.number_format($nil_ang, "2", ",", ".").'</td> 
+													<td align="right" valign="top">'.number_format($nilai, "2", ",", ".").'</td>                                     
+													<td align="right" valign="top">'.number_format($nil_ang-$nilai, "2", ",", ".").'</td>
+													<td align="right" valign="top">'.number_format($persen, "2", ",", ".").'</td>  
+													</tr>';
+													}
+				
+													break; 
+				
+									case 611:
+													
+													$sql = "select c.kd_rek,c.nm_rek,c.nilai_ang,c.nilai_real,c.nilai_2018 from(
+				select left(a.kd_rek5,5) as kd_rek,d.nm_rek4_64 as nm_rek,sum(a.nilai_ang_ubah) nilai_ang,isnull(sum(a.real_spj),0) nilai_real,isnull(b.nilai_real,0) nilai_2018 from data_realisasi_pemkot a 
+				left join (
+				select left(kd_rek5,5) kd_rek,isnull(sum(nilai_ang_ubah),0) nilai_ang,isnull(sum(real_spj),0) nilai_real from data_realisasi_pemkot_2020 
+				where bulan=12 and left(kd_rek5,1)=6 group by left(kd_rek5,5)
+				)b on b.kd_rek=left(a.kd_rek5,5)
+				left join ms_rek4_64 d on d.kd_rek4_64=left(a.kd_rek5,5)
+				where a.bulan=12 and left(a.kd_rek5,1)=6 group by left(a.kd_rek5,5),d.kd_rek4_64,d.nm_rek4_64,b.nilai_real
+				)c where left(kd_rek,3)=$noakun order by kd_rek";              
+									
+													$hasil = $this->db->query($sql);
+													foreach ($hasil->result() as $row)
+													{
+														$kd_rek = $row->kd_rek;
+														$nil_ang = $row->nilai_ang;
+														$nm_rek = $row->nm_rek;
+														$nilai = $row->nilai_real;
+														$nilai_lalu = $row->nilai_2018;
+														
+														if(($nil_ang==0) || ($nil_ang=='')){
+															$persen=0;
+														}else{
+															$persen = $nilai/$nil_ang *100;
+														}
+				
+													$cRet .='<tr>
+													<td align="left" valign="top">'.$kd_rek.'</td> 
+													<td align="left"  valign="top">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nm_rek.'</td> 
+													<td align="right" valign="top">'.number_format($nil_ang, "2", ",", ".").'</td> 
+													<td align="right" valign="top">'.number_format($nilai, "2", ",", ".").'</td>  
+													<td align="right" valign="top">'.number_format($nil_ang-$nilai, "2", ",", ".").'</td>                                    
+													<td align="right" valign="top">'.number_format($persen, "2", ",", ".").'</td> 
+													</tr>';
+													}
+				
+													break;                
+				
+								case 621:
+													
+													$sql = "select c.kd_rek,c.nm_rek,c.nilai_ang,c.nilai_real,c.nilai_2018 from(
+				select left(a.kd_rek5,5) as kd_rek,d.nm_rek4_64 as nm_rek,sum(a.nilai_ang_ubah) nilai_ang,isnull(sum(a.real_spj),0) nilai_real,isnull(b.nilai_real,0) nilai_2018 from data_realisasi_pemkot a 
+				left join (
+				select left(kd_rek5,5) kd_rek,isnull(sum(nilai_ang_ubah),0) nilai_ang,isnull(sum(real_spj),0) nilai_real from data_realisasi_pemkot_2020 
+				where bulan=12 and left(kd_rek5,1)=6 group by left(kd_rek5,5)
+				)b on b.kd_rek=left(a.kd_rek5,5)
+				left join ms_rek4_64 d on d.kd_rek4_64=left(a.kd_rek5,5)
+				where a.bulan=12 and left(a.kd_rek5,1)=6 group by left(a.kd_rek5,5),d.kd_rek4_64,d.nm_rek4_64,b.nilai_real
+				)c where left(kd_rek,3)=$noakun order by kd_rek";              
+									
+													$hasil = $this->db->query($sql);
+													foreach ($hasil->result() as $row)
+													{
+														$kd_rek = $row->kd_rek;
+														$nil_ang = $row->nilai_ang;
+														$nm_rek = $row->nm_rek;
+														$nilai = $row->nilai_real;
+														$nilai_lalu = $row->nilai_2018;
+														
+														if(($nil_ang==0) || ($nil_ang=='')){
+															$persen=0;
+														}else{
+															$persen = $nilai/$nil_ang *100;
+														}
+				
+													$cRet .='<tr>
+													<td align="left" valign="top">'.$kd_rek.'</td> 
+													<td align="left"  valign="top">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nm_rek.'</td> 
+													<td align="right" valign="top">'.number_format($nil_ang, "2", ",", ".").'</td> 
+													<td align="right" valign="top">'.number_format($nilai, "2", ",", ".").'</td> 
+													<td align="right" valign="top">'.number_format($nil_ang-$nilai, "2", ",", ".").'</td>                                    
+													<td align="right" valign="top">'.number_format($persen, "2", ",", ".").'</td>  
+													</tr>';
+													}
+				
+													break; 
+													
+								case 623:
+													
+													$sql = "select c.kd_rek,c.nm_rek,c.nilai_ang,c.nilai_real,c.nilai_2018 from(
+				select left(a.kd_rek5,5) as kd_rek,d.nm_rek4_64 as nm_rek,sum(a.nilai_ang_ubah) nilai_ang,isnull(sum(a.real_spj),0) nilai_real,isnull(b.nilai_real,0) nilai_2018 from data_realisasi_pemkot a 
+				left join (
+				select left(kd_rek5,5) kd_rek,isnull(sum(nilai_ang_ubah),0) nilai_ang,isnull(sum(real_spj),0) nilai_real from data_realisasi_pemkot_2020 
+				where bulan=12 and left(kd_rek5,1)=6 group by left(kd_rek5,5)
+				)b on b.kd_rek=left(a.kd_rek5,5)
+				left join ms_rek4_64 d on d.kd_rek4_64=left(a.kd_rek5,5)
+				where a.bulan=12 and left(a.kd_rek5,1)=6 group by left(a.kd_rek5,5),d.kd_rek4_64,d.nm_rek4_64,b.nilai_real
+				)c where left(kd_rek,3)=$noakun order by kd_rek";              
+									
+													$hasil = $this->db->query($sql);
+													foreach ($hasil->result() as $row)
+													{
+														$kd_rek = $row->kd_rek;
+														$nil_ang = $row->nilai_ang;
+														$nm_rek = $row->nm_rek;
+														$nilai = $row->nilai_real;
+														$nilai_lalu = $row->nilai_2018;
+														
+														if(($nil_ang==0) || ($nil_ang=='')){
+															$persen=0;
+														}else{
+															$persen = $nilai/$nil_ang *100;
+														}
+				
+													$cRet .='<tr>
+													<td align="left" valign="top">'.$kd_rek.'</td> 
+													<td align="left"  valign="top">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nm_rek.'</td> 
+													<td align="right" valign="top">'.number_format($nil_ang, "2", ",", ".").'</td> 
+													<td align="right" valign="top">'.number_format($nilai, "2", ",", ".").'</td>                                     
+													<td align="right" valign="top">'.number_format($nil_ang-$nilai, "2", ",", ".").'</td> 
+													<td align="right" valign="top">'.number_format($persen, "2", ",", ".").'</td> 
+													</tr>';
+													}
+				
+													break;                                         
+								case 711:
+													
+													$sql = "select c.kd_rek,c.nm_rek,c.nilai_ang,c.nilai_real,c.nilai_2018 from(
+				select left(a.kd_rek5,5) as kd_rek,d.nm_rek4_64 as nm_rek,sum(a.nilai_ang_ubah) nilai_ang,isnull(sum(a.real_spj),0) nilai_real,isnull(b.nilai_real,0) nilai_2018 from data_realisasi_pemkot a 
+				left join (
+				select left(kd_rek5,5) kd_rek,isnull(sum(nilai_ang_ubah),0) nilai_ang,isnull(sum(real_spj),0) nilai_real from data_realisasi_pemkot_2020 
+				where bulan=12 and left(kd_rek5,1)=7 group by left(kd_rek5,5)
+				)b on b.kd_rek=left(a.kd_rek5,5)
+				left join ms_rek4_64 d on d.kd_rek4_64=left(a.kd_rek5,5)
+				where a.bulan=12 and left(a.kd_rek5,1)=7 group by left(a.kd_rek5,5),d.kd_rek4_64,d.nm_rek4_64,b.nilai_real
+				)c where left(kd_rek,3)=$noakun order by kd_rek";              
+									
+													$hasil = $this->db->query($sql);
+													foreach ($hasil->result() as $row)
+													{
+														$kd_rek = $row->kd_rek;
+														$nil_ang = $row->nilai_ang;
+														$nm_rek = $row->nm_rek;
+														$nilai = $row->nilai_real;
+														$nilai_lalu = $row->nilai_2018;
+														
+														if(($nil_ang==0) || ($nil_ang=='')){
+															$persen=0;
+														}else{
+															$persen = $nilai/$nil_ang *100;
+														}
+				
+													$cRet .='<tr>
+													<td align="left" valign="top">'.$kd_rek.'</td> 
+													<td align="left"  valign="top">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nm_rek.'</td> 
+													<td align="right" valign="top">'.number_format($nil_ang, "2", ",", ".").'</td> 
+													<td align="right" valign="top">'.number_format($nilai, "2", ",", ".").'</td> 
+													<td align="right" valign="top">'.number_format($nil_ang-$nilai, "2", ",", ".").'</td>                                    
+													<td align="right" valign="top">'.number_format($persen, "2", ",", ".").'</td>  
+													</tr>';
+													}
+				
+													break; 
+				
+				
+								case 712:
+													
+													$sql = "select c.kd_rek,c.nm_rek,c.nilai_ang,c.nilai_real,c.nilai_2018 from(
+				select left(a.kd_rek5,5) as kd_rek,d.nm_rek4_64 as nm_rek,sum(a.nilai_ang_ubah) nilai_ang,isnull(sum(a.real_spj),0) nilai_real,isnull(b.nilai_real,0) nilai_2018 from data_realisasi_pemkot a 
+				left join (
+				select left(kd_rek5,5) kd_rek,isnull(sum(nilai_ang_ubah),0) nilai_ang,isnull(sum(real_spj),0) nilai_real from data_realisasi_pemkot_2020 
+				where bulan=12 and left(kd_rek5,1)=7 group by left(kd_rek5,5)
+				)b on b.kd_rek=left(a.kd_rek5,5)
+				left join ms_rek4_64 d on d.kd_rek4_64=left(a.kd_rek5,5)
+				where a.bulan=12 and left(a.kd_rek5,1)=7 group by left(a.kd_rek5,5),d.kd_rek4_64,d.nm_rek4_64,b.nilai_real
+				)c where left(kd_rek,3)=$noakun order by kd_rek";              
+									
+													$hasil = $this->db->query($sql);
+													foreach ($hasil->result() as $row)
+													{
+														$kd_rek = $row->kd_rek;
+														$nil_ang = $row->nilai_ang;
+														$nm_rek = $row->nm_rek;
+														$nilai = $row->nilai_real;
+														$nilai_lalu = $row->nilai_2018;
+														
+														if(($nil_ang==0) || ($nil_ang=='')){
+															$persen=0;
+														}else{
+															$persen = $nilai/$nil_ang *100;
+														}
+				
+													$cRet .='<tr>
+													<td align="left" valign="top">'.$kd_rek.'</td> 
+													<td align="left"  valign="top">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nm_rek.'</td> 
+													<td align="right" valign="top">'.number_format($nil_ang, "2", ",", ".").'</td> 
+													<td align="right" valign="top">'.number_format($nilai, "2", ",", ".").'</td> 
+													<td align="right" valign="top">'.number_format($nil_ang-$nilai, "2", ",", ".").'</td>                                    
+													<td align="right" valign="top">'.number_format($persen, "2", ",", ".").'</td>  
+													</tr>';
+													}
+				
+													break;                     
+				
+				
+								case 71505:
+													
+													$sql = "select c.kd_rek,c.nm_rek,c.nilai_ang,c.nilai_real,c.nilai_2018 from(
+				select left(a.kd_rek5,5) as kd_rek,d.nm_rek4_64 as nm_rek,sum(a.nilai_ang_ubah) nilai_ang,isnull(sum(a.real_spj),0) nilai_real,isnull(b.nilai_real,0) nilai_2018 from data_realisasi_pemkot a 
+				left join (
+				select left(kd_rek5,5) kd_rek,isnull(sum(nilai_ang_ubah),0) nilai_ang,isnull(sum(real_spj),0) nilai_real from data_realisasi_pemkot_2020 
+				where bulan=12 and left(kd_rek5,1)=7 group by left(kd_rek5,5)
+				)b on b.kd_rek=left(a.kd_rek5,5)
+				left join ms_rek4_64 d on d.kd_rek4_64=left(a.kd_rek5,5)
+				where a.bulan=12 and left(a.kd_rek5,1)=7 group by left(a.kd_rek5,5),d.kd_rek4_64,d.nm_rek4_64,b.nilai_real
+				)c where left(kd_rek,5)=$noakun order by kd_rek";              
+									
+													$hasil = $this->db->query($sql);
+													foreach ($hasil->result() as $row)
+													{
+														$kd_rek = $row->kd_rek;
+														$nil_ang = $row->nilai_ang;
+														$nm_rek = $row->nm_rek;
+														$nilai = $row->nilai_real;
+														$nilai_lalu = $row->nilai_2018;
+														
+														if(($nil_ang==0) || ($nil_ang=='')){
+															$persen=0;
+														}else{
+															$persen = $nilai/$nil_ang *100;
+														}
+				
+													$cRet .='<tr>
+													<td align="left" valign="top">'.$kd_rek.'</td> 
+													<td align="left"  valign="top">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nm_rek.'</td> 
+													<td align="right" valign="top">'.number_format($nil_ang, "2", ",", ".").'</td> 
+													<td align="right" valign="top">'.number_format($nilai, "2", ",", ".").'</td> 
+													<td align="right" valign="top">'.number_format($nil_ang-$nilai, "2", ",", ".").'</td>                                    
+													<td align="right" valign="top">'.number_format($persen, "2", ",", ".").'</td>  
+													</tr>';
+													}
+				
+													break;   
+													
+				
+								case 722:
+													
+													$sql = "select c.kd_rek,c.nm_rek,c.nilai_ang,c.nilai_real,c.nilai_2018 from(
+				select left(a.kd_rek5,5) as kd_rek,d.nm_rek4_64 as nm_rek,sum(a.nilai_ang_ubah) nilai_ang,isnull(sum(a.real_spj),0) nilai_real,isnull(b.nilai_real,0) nilai_2018 from data_realisasi_pemkot a 
+				left join (
+				select left(kd_rek5,5) kd_rek,isnull(sum(nilai_ang_ubah),0) nilai_ang,isnull(sum(real_spj),0) nilai_real from data_realisasi_pemkot_2020 
+				where bulan=12 and left(kd_rek5,1)=7 group by left(kd_rek5,5)
+				)b on b.kd_rek=left(a.kd_rek5,5)
+				left join ms_rek4_64 d on d.kd_rek4_64=left(a.kd_rek5,5)
+				where a.bulan=12 and left(a.kd_rek5,1)=7 group by left(a.kd_rek5,5),d.kd_rek4_64,d.nm_rek4_64,b.nilai_real
+				)c where left(kd_rek,3)=$noakun order by kd_rek";              
+									
+													$hasil = $this->db->query($sql);
+													foreach ($hasil->result() as $row)
+													{
+														$kd_rek = $row->kd_rek;
+														$nil_ang = $row->nilai_ang;
+														$nm_rek = $row->nm_rek;
+														$nilai = $row->nilai_real;
+														$nilai_lalu = $row->nilai_2018;
+														
+														if(($nil_ang==0) || ($nil_ang=='')){
+															$persen=0;
+														}else{
+															$persen = $nilai/$nil_ang *100;
+														}
+				
+													$cRet .='<tr>
+													<td align="left" valign="top">'.$kd_rek.'</td> 
+													<td align="left"  valign="top">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nm_rek.'</td> 
+													<td align="right" valign="top">'.number_format($nil_ang, "2", ",", ".").'</td> 
+													<td align="right" valign="top">'.number_format($nilai, "2", ",", ".").'</td> 
+													<td align="right" valign="top">'.number_format($nil_ang-$nilai, "2", ",", ".").'</td>                                    
+													<td align="right" valign="top">'.number_format($persen, "2", ",", ".").'</td>  
+													</tr>';
+													}
+				
+													break;                                       
+				
+												//akhir    
+												default:
+													# code...
+													break;
+											}
+										}else{
+				
+											$cRet .='<tr>
+											   <td align="left" valign="top">'.$kodeakun.'</td> 
+											   <td align="left"  valign="top">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nama.'</td> 
+											   <td align="right" valign="top">'.number_format($nil_ang, "2", ",", ".").'</td> 
+											   <td align="right" valign="top">'.number_format($nilai, "2", ",", ".").'</td> 
+											   <td align="right" valign="top">'.number_format($nil_ang-$nilai, "2", ",", ".").'</td>                                
+											   <td align="right" valign="top">'.number_format($persen, "2", ",", ".").'</td> 
+											</tr>';
+											
+										}
+										break;
+									 case 6:
+										 $cRet .='<tr>
+											   <td align="left" valign="top">'.$kodeakun.'</b></td> 
+											   <td align="left"  valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nama.'</b></td>  
+											   <td align="right" valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+											   <td align="right" valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+											   <td align="right" valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+											   <td align="right" valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+											</tr>';
+										break;
+									case 4:
+									   $cRet .='<tr>
+											   <td align="left" valign="top" >'.$kodeakun.'</td> 
+											   <td align="left"  valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nama.'</b></td> 
+											   <td align="right" valign="top"><b>'.number_format($nil_ang, "2", ",", ".").'</b></td> 
+											   <td align="right" valign="top"><b>'.number_format($nilai, "2", ",", ".").'</b></td>                                
+											   <td align="right" valign="top"><b>'.number_format($nil_ang-$nilai, "2", ",", ".").'</b></td>
+											   <td align="right" valign="top"><b>'.number_format($persen, "2", ",", ".").'</b></td>  
+											</tr>';
+										break;
+									case 5:
+									   $cRet .='<tr>
+											   <td align="left" valign="top" >'.$kodeakun.'</td> 
+											   <td align="left"  valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nama.'</b></td> 
+											   <td align="right" valign="top"><b>'.number_format($nil_ang, "2", ",", ".").'</b></td> 
+											   <td align="right" valign="top"><b>'.number_format($nilai, "2", ",", ".").'</b></td>  
+											   <td align="right" valign="top"><b>'.number_format($nil_ang-$nilai, "2", ",", ".").'</b></td>                               
+											   <td align="right" valign="top"><b>'.number_format($persen, "2", ",", ".").'</b></td> 
+											</tr>';
+										break;
+									case 7:
+									   $cRet .='<tr>
+											   <td align="left" valign="top" >'.$kodeakun.'</td> 
+											   <td align="left"  valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nama.'</b></td> 
+											   <td align="right" valign="top"><b>'.number_format($nil_ang, "2", ",", ".").'</b></td> 
+											   <td align="right" valign="top"><b>'.number_format($nilai, "2", ",", ".").'</b></td>                               
+											   <td align="right" valign="top"><b>'.number_format($nil_ang-$nilai, "2", ",", ".").'</b></td> 
+											   <td align="right" valign="top"><b>'.number_format($persen, "2", ",", ".").'</b></td>  
+											</tr>';
+										break;
+									case 8:
+									   $cRet .='<tr>
+											   <td align="left" valign="top" >'.$kodeakun.'</td> 
+											   <td align="center"  valign="top"><b>'.$nama.'</b></td> 
+											   <td align="right" valign="top"><b>'.$a.''.number_format($ang_surplus1, "2", ",", ".").''.$b.'</b></td> 
+											   <td align="right" valign="top"><b>'.$c.''.number_format($nil_surplus1, "2", ",", ".").''.$d.'</b></td>                               
+											   <td align="right" valign="top"><b>'.$x.''.number_format($ang_surplus1-$nil_surplus1, "2", ",", ".").''.$y.'</b></td> 
+											   <td align="right" valign="top"><b>'.number_format($persen_surplus, "2", ",", ".").'</b></td>  
+											</tr>';
+										break;
+									case 9;
+									   $cRet .='<tr>
+											   <td align="left" valign="top" >'.$kodeakun.'</td> 
+											   <td align="center"  valign="top"><b>'.$nama.'</b></td> 
+											   <td align="right" valign="top" ><b>'.$g.''.number_format($ang_netto1, "2", ",", ".").''.$h.'</b></td> 
+											   <td align="right" valign="top" ><b>'.$i.''.number_format($nil_netto1, "2", ",", ".").''.$j.'</b></td> 
+											   <td align="right" valign="top" ><b>'.$x.''.number_format($ang_netto1-$nil_netto1, "2", ",", ".").''.$y.'</b></td>                                
+											   <td align="right" valign="top" ><b>'.number_format($persen_netto, "2", ",", ".").'</b></td> 
+											</tr>';
+										break;
+									case 10;
+									   $cRet .='<tr>
+											   <td align="left" valign="top" >'.$kodeakun.'</td> 
+											   <td align="center"  valign="top"><b>'.$nama.'</b></td> 
+											   <td align="right" valign="top" ><b>'.$m.''.number_format($ang_silpa1, "2", ",", ".").''.$n.'</b></td> 
+											   <td align="right" valign="top" ><b>'.$o.''.number_format($nil_silpa1, "2", ",", ".").''.$p.'</b></td>                                
+											   <td align="right" valign="top" ><b>'.$x.''.number_format($ang_silpa1-$nil_silpa1, "2", ",", ".").''.$y.'</b></td> 
+											   <td align="right" valign="top" ><b>'.number_format($persen_silpa, "2", ",", ".").'</b></td> 
+											</tr>';
+										break;
+										
+										default:
+										
+									   $cRet .='<tr>
+											   <td align="left" valign="top" >'.$kodeakun.'</td> 
+											   <td align="right"  valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+											   <td align="right" valign="top" ><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td>
+											   <td align="right" valign="top" ><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+											   <td align="right" valign="top" ><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+											   <td align="right" valign="top" ><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+											</tr>';
+										break;
+									}
+									}
+							 
+									  
+						
+							$cRet .="</table>";
+							
+							 if($ttd=="1"){
+								
+								$sqlsc="SELECT tgl_rka,provinsi,kab_kota,daerah,thn_ang FROM sclient where kd_skpd='5.02.0.00.0.00.01.0000'";
+								 $sqlsclient=$this->db->query($sqlsc);
+								 foreach ($sqlsclient->result() as $rowsc)
+								{
+									$kab     = $rowsc->kab_kota;
+									$daerah  = $rowsc->daerah;
+								   
+								}
+								
+								$sqlttd1="SELECT nama as nm,nip as nip,jabatan as jab,pangkat FROM ms_ttd where nip='$ttd1' and (kode ='agr' or kode='wk')";
+								 $sqlttd=$this->db->query($sqlttd1);
+								 foreach ($sqlttd->result() as $rowttd)
+								{
+									$nip=$rowttd->nip;                    
+									$namax= $rowttd->nm;
+									$jabatan  = $rowttd->jab;
+									$pangkat  = $rowttd->pangkat;
+								}
+								
+								
+								 if($ttd1!='1'){
+									$xx="<u>";
+									$xy="</u>";
+									$nipxx=$nip;
+									$nipx="NIP. ";
+								}else{
+									$xx="";
+									$xy="";
+									$nipxx="";
+									$nipx="";
+								}           
+						$cRet .='<TABLE style="border-collapse:collapse; font-size:16px" width="100%" border="0" cellspacing="0" cellpadding="0" align=center>
+									<TR>
+										<TD width="50%" align="center" ><b>&nbsp;</TD>
+										<TD width="50%" align="center" ><b>&nbsp;</TD>
+									</TR>
+									<TR>
+										<TD width="50%" align="center" ><b>&nbsp;</TD>
+										<TD width="50%" align="center" ><b>&nbsp;</TD>
+									</TR>
+									<TR>
+										<TD width="50%" align="center" ><b>&nbsp;</TD>
+										<TD align="center" >'.$daerah.', '.$this->tanggal_format_indonesia($tanggal_ttd).'</TD>
+									</TR>
+									
+									<TR>
+										<TD width="50%" align="center" ><b>&nbsp;</TD>
+										<TD align="center" ><b>'.$jabatan.'</b></TD>
+									</TR>
+									<TR>
+										<TD width="50%" align="center" ><b>&nbsp;</TD>
+										<TD width="50%" align="center" ><b>&nbsp;</TD>
+									</TR>
+									<TR>
+										<TD width="50%" align="center" ><b>&nbsp;</TD>
+										<TD width="50%" align="center" ><b>&nbsp;</TD>
+									</TR>
+									<TR>
+										<TD width="50%" align="center" ><b>&nbsp;</TD>
+										<TD width="50%" align="center" ><b>&nbsp;</TD>
+									</TR>
+									<TR>
+										<TD width="50%" align="center" ><b>&nbsp;</TD>
+										<TD width="50%" align="center" ><b>&nbsp;</TD>
+									</TR>                    
+									<TR>
+										<TD width="50%" align="center" ><b>&nbsp;</TD>
+										<TD align="center" >'.$xx.'<b>'.$namax.'</b>'.$xy.'</TD>
+									</TR>
+									<TR>
+										<TD width="50%" align="center" ><b>&nbsp;</TD>
+										<TD align="center" >'.$nipx.''.$nipxx.'</TD>
+									</TR>
+									</TABLE><br/>';
+							}
+							
+							$data['prev']= $cRet;    
+							$judul='LRA 64 ';
+							switch ($ctk){
+								case 0;
+								echo ("<title>$judul</title>");
+								echo $cRet;
+								break;
+								case 1;
+								$this->tukd_model->_mpdf('',$cRet,10,10,10,'P');
+								break;
+								case 2;        
+								header("Cache-Control: no-cache, no-store, must-revalidate");
+								header("Content-Type: application/vnd.ms-excel");
+								header("Content-Disposition: attachment; filename= $judul.xls");
+								$this->load->view('anggaran/rka/perkadaII', $data);
+								break;  
+							}
+						}
+						function cetak_lra_pemkot_64_akun($bulan='',$ctk='',$anggaran='',$jenis='',$kd_skpd='',$ttd='',$tanggal_ttd='',$ttdperda='',$label=''){
+							$lntahunang = $this->session->userdata('pcThang');
+							$lntahunang_1 = $lntahunang-1;
+							$ttd1 = str_replace('n',' ',$ttdperda);
+								   
+							 switch  ($bulan){
+							case  1:
+							$judul="31 JANUARI";
+							break;
+							case  2:
+							$judul="28 FEBRUARI";
+							break;
+							case  3:
+							$judul= "31 MARET";
+							break;
+							case  4:
+							$judul="30 APRIL";
+							break;
+							case  5:
+							$judul= "31 MEI";
+							break;
+							case  6:
+							$judul= "30 JUNI";
+							break;
+							case  7:
+							$judul= "31 JULI";
+							break;
+							case  8:
+							$judul= "31 AGUSTUS";
+							break;
+							case  9:
+							$judul= "30 SEPTEMBER";
+							break;
+							case  10:
+							$judul= "31 OKTOBER";
+							break;
+							case  11:
+							$judul= "30 NOVEMBER";
+							break;
+							case  12:
+							$judul= "31 DESEMBER";
+							break;
+							}
+							
+							if ($kd_skpd=='-'){                               
+								$where="";            
+							} else{
+								$where="AND kd_skpd='$kd_skpd'";
+							}
+							
+							
+							if($anggaran==1){
+								$initang = "nilai_ang";
+							}else {
+								$initang = "nilai_ang_ubah";
+							}
+							
+							if($label=='1'){
+							$label = 'UNAUDITED';
+							}else if($label=='2'){
+							$label = 'AUDITED';
+							}{
+							$label = '&nbsp;';
+							}
+					
+						$cRet="<TABLE style=\"border-collapse:collapse;font-size:12px;font-family:Bookman Old Style\" width=\"100%\" border=\"1\" cellspacing=\"0\" cellpadding=\"1\" align=\"center\">
+										<tr>
+										<td rowspan=\"4\" align=\"center\" style=\"border-right:hidden\">
+											<img src=\"".base_url()."/image/logoHP.png\"  width=\"75\" height=\"100\" />
+											</td>
+										<td align=\"center\" style=\"border-left:hidden;border-bottom:hidden\"><strong>PEMERINTAH KOTA PONTIANAK </strong></td></tr>
+										<tr><td align=\"center\" style=\"border-left:hidden;border-bottom:hidden;border-top:hidden\"><b>LAPORAN REALISASI ANGGARAN PENDAPATAN DAN BELANJA DAERAH UNTUK</b></tr>
+										<tr><td align=\"center\" style=\"border-left:hidden;border-top:hidden\" ><b>TAHUN YANG BERAKHIR SAMPAI DENGAN $judul TAHUN $lntahunang</b></tr>
+										<tr><td align=\"center\" style=\"border-left:hidden;border-top:hidden\" ><b>$label</b></tr>
+										</TABLE>";
+								
+							$cRet .="<table style=\"border-collapse:collapse;font-family:Arial;font-size:11px\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"3\" cellpadding=\"3\">
+									<thead>
+									<tr>
+										<td width=\"7%\" align=\"center\" bgcolor=\"#CCCCCC\" ><b>NO.</b></td>
+										<td width=\"40%\" align=\"center\" bgcolor=\"#CCCCCC\" ><b>URAIAN</b></td>
+										<td width=\"16%\" align=\"center\" bgcolor=\"#CCCCCC\" ><b>ANGGARAN $lntahunang</b></td>
+										<td width=\"16%\" align=\"center\" bgcolor=\"#CCCCCC\" ><b>REALISASI $lntahunang</b></td>
+										<td width=\"5%\" align=\"center\" bgcolor=\"#CCCCCC\" ><b>%</b></td>
+										<td width=\"16%\" align=\"center\" bgcolor=\"#CCCCCC\" ><b>REALISASI $lntahunang_1</b></td>
+									</tr>
+									</thead>";
+									
+								$sql = "SELECT 
+										SUM(CASE WHEN kd_rek='4' THEN (nil_ang) ELSE 0 END) - SUM(CASE WHEN kd_rek in ('5','6') THEN (nil_ang) ELSE 0 END) as ang_surplus,
+										SUM(CASE WHEN kd_rek='4' THEN (real_spj) ELSE 0 END) - SUM(CASE WHEN kd_rek in ('5','6') THEN (real_spj) ELSE 0 END) as nil_surplus
+										FROM
+										(SELECT LEFT(kd_rek5,1) as kd_rek, SUM($initang) as nil_ang, SUM(real_spj) as real_spj FROM data_realisasi_pemkot where bulan='$bulan' and LEFT(kd_rek5,1) IN ('4','5','6') $where
+										GROUP BY LEFT(kd_rek5,1)) a;
+										";
+										  $hasil = $this->db->query($sql);
+										foreach ($hasil->result() as $row)
+										{
+										   $ang_surplus = $row->ang_surplus;
+										   $nil_surplus = $row->nil_surplus;
+										}
+										$sisa_surplus = $ang_surplus-$nil_surplus;
+											if(($ang_surplus==0) || ($ang_surplus=='')){
+											$persen_surplus=0;
+										} else{
+										$persen_surplus = $nil_surplus/$ang_surplus *100;
+										}	
+															$hasil->free_result();        
+										if($ang_surplus<0){
+											$ang_surplus1=$ang_surplus*-1;
+											$a='(';
+											$b=')';
+										} else{
+											$ang_surplus1=$ang_surplus;
+											$a='';
+											$b='';
+										}
+										if($nil_surplus<0){
+											$nil_surplus1=$nil_surplus*-1;
+											$c='(';
+											$d=')';
+										} else{
+											$nil_surplus1=$nil_surplus;
+											$c='';
+											$d='';
+										}
+								
+								$sql = "SELECT 
+										SUM(CASE WHEN kd_rek='71' THEN (nil_ang) ELSE 0 END) - SUM(CASE WHEN kd_rek='72' THEN (nil_ang) ELSE 0 END) as ang_netto,
+										SUM(CASE WHEN kd_rek='71' THEN (real_spj) ELSE 0 END) - SUM(CASE WHEN kd_rek='72' THEN (real_spj) ELSE 0 END) as nil_netto
+										FROM
+										(SELECT LEFT(kd_rek5,2) as kd_rek, SUM($initang) as nil_ang, SUM(real_spj) as real_spj FROM data_realisasi_pemkot where bulan='$bulan' and LEFT(kd_rek5,2) IN ('71','72') $where
+										GROUP BY LEFT(kd_rek5,2)) a;
+										";
+										  $hasil = $this->db->query($sql);
+										foreach ($hasil->result() as $row)
+										{
+										   $ang_netto = $row->ang_netto;
+										   $nil_netto = $row->nil_netto;
+										}
+										$sisa_netto = $ang_netto-$nil_netto;
+										if(($ang_netto==0) || ($ang_netto=='')){
+											$persen_netto=0;
+										} else{
+										$persen_netto = $nil_netto/$ang_netto *100;
+										}
+										$hasil->free_result();  
+										if($ang_netto<0){
+											$ang_netto1=$ang_netto*-1;
+											$g='(';
+											$h=')';
+										} else{
+											$ang_netto1=$ang_netto;
+											$g='';
+											$h='';
+										}
+										if($nil_netto<0){
+											$nil_netto1=$nil_netto*-1;
+											$i='(';
+											$j=')';
+										} else{
+											$nil_netto1=$nil_netto;
+											$i='';
+											$j='';
+										}	
+										
+										$ang_silpa = $ang_surplus+$ang_netto;
+										$nil_silpa = $nil_surplus+$nil_netto;
+										$sisa_silpa = $ang_silpa-$nil_silpa;
+										if($ang_silpa==0){
+											$persen_silpa=0;
+										}else{
+										$persen_silpa = $nil_silpa/$ang_silpa *100;
+										}
+										if($ang_silpa<0){
+											$ang_silpa1=$ang_silpa*-1;
+											$m='(';
+											$n=')';
+										} else{
+											$ang_silpa1=$ang_silpa;
+											$m='';
+											$n='';
+										}
+										if($nil_silpa<0){
+											$nil_silpa1=$nil_silpa*-1;
+											$o='(';
+											$p=')';
+										} else{
+											$nil_silpa1=$nil_silpa;
+											$o='';
+											$p='';
+										}
+								$sql = "SELECT nor, uraian, kode1, kode2, kode3,kode4,bold,thn_m1 FROM map_lra_kab ORDER BY nor
+										";
+										$no=0;
+										$tot_peg=0;
+										$tot_brg=0;
+										$tot_mod=0;
+										$tot_bansos=0;
+										$hasil = $this->db->query($sql);
+										foreach ($hasil->result() as $row)
+										{
+										   $no=$no+1;
+										   $kode = $row->nor;
+										   $nama = $row->uraian;
+										   $kode1 = $row->kode1;
+										   $kode2 = $row->kode2;
+										   $kode3 = $row->kode3;
+										   $kode4 = $row->kode4;
+										   $spasi = $row->bold;
+										   $nilai_ll = $row->thn_m1;
+										   
+										   
+										if($nilai_ll<0){
+											$nilai_ll1=$nilai_ll*-1;
+											$x='(';
+											$y=')';
+										} else{
+											$nilai_ll1=$nilai_ll;
+											$x='';
+											$y='';
+										}
+					
+										$sql = "SELECT SUM($initang) as nil_ang, SUM(real_spj) as nilai FROM data_realisasi_pemkot where bulan='$bulan' and (LEFT(kd_rek5,1) IN ($kode1) or LEFT(kd_rek5,2) IN ($kode2) or LEFT(kd_rek5,3) IN ($kode3) or LEFT(kd_rek5,5) IN ($kode4))$where";
+									  
+															
+										
+										$hasil = $this->db->query($sql);
+										foreach ($hasil->result() as $row)
+										{
+										   $nil_ang = $row->nil_ang;
+										   $nilai = $row->nilai;
+										}
+										$sel = $nil_ang-$nilai;
+										if(($nil_ang==0) || ($nil_ang=='')){
+											$persen=0;
+										} else{
+										$persen = $nilai/$nil_ang *100;
+										}
+										 switch ($spasi) {
+										 case 1:
+											$cRet .='
+												<tr>
+												   <td align="left" valign="top">'.$kode.'</td> 
+												   <td align="left"  valign="top"><b>'.$nama.'</b></td> 
+												   <td align="right" valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+												   <td align="right" valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+												   <td align="right" valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+												   <td align="right" valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+												</tr>'; 
+											break;	
+										case 2:
+											 $cRet .='<tr>
+												   <td align="left" valign="top">'.$kode.'</td> 
+												   <td align="left"  valign="top"><b>&nbsp;&nbsp;'.$nama.'</b></td>  
+												   <td align="right" valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+												   <td align="right" valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+												   <td align="right" valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+												   <td align="right" valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+												</tr>';
+											break;
+										 case 3:
+											 $cRet .='<tr>
+												   <td align="left" valign="top">'.$kode.'</td> 
+												   <td align="left"  valign="top">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nama.'</td> 
+												   <td align="right" valign="top">'.number_format($nil_ang, "2", ",", ".").'</td> 
+												   <td align="right" valign="top">'.number_format($nilai, "2", ",", ".").'</td> 
+												   <td align="right" valign="top">'.number_format($persen, "2", ",", ".").'</td> 
+												   <td align="right" valign="top">'.number_format($nilai_ll1, "2", ",", ".").'</td> 
+												</tr>';
+											break;
+										 case 6:
+											 $cRet .='<tr>
+												   <td align="left" valign="top">'.$kode.'</b></td> 
+												   <td align="left"  valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nama.'</b></td>  
+												   <td align="right" valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+												   <td align="right" valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+												   <td align="right" valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+												   <td align="right" valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+												</tr>';
+											break;
+										case 4:
+										   $cRet .='<tr>
+												   <td align="left" valign="top" >'.$kode.'</td> 
+												   <td align="left"  valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nama.'</b></td> 
+												   <td align="right" valign="top"><b>'.number_format($nil_ang, "2", ",", ".").'</b></td> 
+												   <td align="right" valign="top"><b>'.number_format($nilai, "2", ",", ".").'</b></td> 
+												   <td align="right" valign="top"><b>'.number_format($persen, "2", ",", ".").'</b></td> 
+												   <td align="right" valign="top"><b>'.number_format($nilai_ll1, "2", ",", ".").'</b></td> 
+												</tr>';
+											break;
+										case 5:
+										   $cRet .='<tr>
+												   <td align="left" valign="top" >'.$kode.'</td> 
+												   <td align="left"  valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nama.'</b></td> 
+												   <td align="right" valign="top"><b>'.number_format($nil_ang, "2", ",", ".").'</b></td> 
+												   <td align="right" valign="top"><b>'.number_format($nilai, "2", ",", ".").'</b></td> 
+												   <td align="right" valign="top"><b>'.number_format($persen, "2", ",", ".").'</b></td> 
+												   <td align="right" valign="top"><b>'.number_format($nilai_ll1, "2", ",", ".").'</b></td> 
+												</tr>';
+											break;
+										case 7:
+										   $cRet .='<tr>
+												   <td align="left" valign="top" >'.$kode.'</td> 
+												   <td align="left"  valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$nama.'</b></td> 
+												   <td align="right" valign="top"><b>'.number_format($nil_ang, "2", ",", ".").'</b></td> 
+												   <td align="right" valign="top"><b>'.number_format($nilai, "2", ",", ".").'</b></td> 
+												   <td align="right" valign="top"><b>'.number_format($persen, "2", ",", ".").'</b></td> 
+												   <td align="right" valign="top"><b>'.number_format($nilai_ll1, "2", ",", ".").'</b></td> 
+												</tr>';
+											break;
+										case 8:
+										   $cRet .='<tr>
+												   <td align="left" valign="top" >'.$kode.'</td> 
+												   <td align="center"  valign="top"><b>'.$nama.'</b></td> 
+												   <td align="right" valign="top"><b>'.$a.''.number_format($ang_surplus1, "2", ",", ".").''.$b.'</b></td> 
+												   <td align="right" valign="top"><b>'.$c.''.number_format($nil_surplus1, "2", ",", ".").''.$d.'</b></td> 
+												   <td align="right" valign="top"><b>'.number_format($persen_surplus, "2", ",", ".").'</b></td> 
+												   <td align="right" valign="top"><b>'.$x.''.number_format($nilai_ll1, "2", ",", ".").''.$y.'</b></td> 
+												</tr>';
+											break;
+										case 9;
+										   $cRet .='<tr>
+												   <td align="left" valign="top" >'.$kode.'</td> 
+												   <td align="center"  valign="top"><b>'.$nama.'</b></td> 
+												   <td align="right" valign="top" ><b>'.$g.''.number_format($ang_netto1, "2", ",", ".").''.$h.'</b></td> 
+												   <td align="right" valign="top" ><b>'.$i.''.number_format($nil_netto1, "2", ",", ".").''.$j.'</b></td> 
+												   <td align="right" valign="top" ><b>'.number_format($persen_netto, "2", ",", ".").'</b></td> 
+												   <td align="right" valign="top" ><b>'.$x.''.number_format($nilai_ll1, "2", ",", ".").''.$y.'</b></td> 
+												</tr>';
+											break;
+										case 10;
+										   $cRet .='<tr>
+												   <td align="left" valign="top" >'.$kode.'</td> 
+												   <td align="center"  valign="top"><b>'.$nama.'</b></td> 
+												   <td align="right" valign="top" ><b>'.$m.''.number_format($ang_silpa1, "2", ",", ".").''.$n.'</b></td> 
+												   <td align="right" valign="top" ><b>'.$o.''.number_format($nil_silpa1, "2", ",", ".").''.$p.'</b></td> 
+												   <td align="right" valign="top" ><b>'.number_format($persen_silpa, "2", ",", ".").'</b></td> 
+												   <td align="right" valign="top" ><b>'.$x.''.number_format($nilai_ll1, "2", ",", ".").''.$y.'</b></td> 
+												</tr>';
+											break;
+											
+											default:
+											
+										   $cRet .='<tr>
+												   <td align="left" valign="top" >'.$kode.'</td> 
+												   <td align="right"  valign="top"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+												   <td align="right" valign="top" ><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td>
+												   <td align="right" valign="top" ><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+												   <td align="right" valign="top" ><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+												   <td align="right" valign="top" ><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</b></td> 
+												</tr>';
+											break;
+										}
+										}
+								 
+										  
+							
+								$cRet .="</table>";
+								
+								 if($ttd=="1"){
+									
+									$sqlsc="SELECT tgl_rka,provinsi,kab_kota,daerah,thn_ang FROM sclient where kd_skpd='5.02.0.00.0.00.01.0000'";
+									 $sqlsclient=$this->db->query($sqlsc);
+									 foreach ($sqlsclient->result() as $rowsc)
+									{
+										$kab     = $rowsc->kab_kota;
+										$daerah  = $rowsc->daerah;
+									   
+									}
+									
+									$sqlttd1="SELECT nama as nm,nip as nip,jabatan as jab,pangkat FROM ms_ttd where nip='$ttd1' and (kode ='agr' or kode='wk')";
+									 $sqlttd=$this->db->query($sqlttd1);
+									 foreach ($sqlttd->result() as $rowttd)
+									{
+										$nip=$rowttd->nip;                    
+										$namax= $rowttd->nm;
+										$jabatan  = $rowttd->jab;
+										$pangkat  = $rowttd->pangkat;
+									}
+									
+									
+									 if($ttd1!='1'){
+										$xx="<u>";
+										$xy="</u>";
+										$nipxx=$nip;
+										$nipx="NIP. ";
+									}else{
+										$xx="";
+										$xy="";
+										$nipxx="";
+										$nipx="";
+									}			
+							$cRet .='<TABLE style="border-collapse:collapse; font-size:16px" width="100%" border="0" cellspacing="0" cellpadding="0" align=center>
+										<TR>
+											<TD width="50%" align="center" ><b>&nbsp;</TD>
+											<TD width="50%" align="center" ><b>&nbsp;</TD>
+										</TR>
+										<TR>
+											<TD width="50%" align="center" ><b>&nbsp;</TD>
+											<TD width="50%" align="center" ><b>&nbsp;</TD>
+										</TR>
+										<TR>
+											<TD width="50%" align="center" ><b>&nbsp;</TD>
+											<TD align="center" >'.$daerah.', '.$this->tanggal_format_indonesia($tanggal_ttd).'</TD>
+										</TR>
+										
+										<TR>
+											<TD width="50%" align="center" ><b>&nbsp;</TD>
+											<TD align="center" ><b>'.$jabatan.'</b></TD>
+										</TR>
+										<TR>
+											<TD width="50%" align="center" ><b>&nbsp;</TD>
+											<TD width="50%" align="center" ><b>&nbsp;</TD>
+										</TR>
+										<TR>
+											<TD width="50%" align="center" ><b>&nbsp;</TD>
+											<TD width="50%" align="center" ><b>&nbsp;</TD>
+										</TR>
+										<TR>
+											<TD width="50%" align="center" ><b>&nbsp;</TD>
+											<TD width="50%" align="center" ><b>&nbsp;</TD>
+										</TR>
+										<TR>
+											<TD width="50%" align="center" ><b>&nbsp;</TD>
+											<TD width="50%" align="center" ><b>&nbsp;</TD>
+										</TR>                    
+										<TR>
+											<TD width="50%" align="center" ><b>&nbsp;</TD>
+											<TD align="center" >'.$xx.'<b>'.$namax.'</b>'.$xy.'</TD>
+										</TR>
+										<TR>
+											<TD width="50%" align="center" ><b>&nbsp;</TD>
+											<TD align="center" >'.$nipx.''.$nipxx.'</TD>
+										</TR>
+										</TABLE><br/>';
+								}
+								
+								$data['prev']= $cRet;    
+								$judul='LRA 64 SAP';
+								switch ($ctk){
+									case 0;
+									echo ("<title>$judul</title>");
+									echo $cRet;
+									break;
+									case 1;
+									$this->tukd_model->_mpdf('',$cRet,10,10,10,'P');
+									break;
+									case 2;        
+									header("Cache-Control: no-cache, no-store, must-revalidate");
+									header("Content-Type: application/vnd.ms-excel");
+									header("Content-Disposition: attachment; filename= $judul.xls");
+									$this->load->view('anggaran/rka/perkadaII', $data);
+									break;	
+								}
+							}
 }

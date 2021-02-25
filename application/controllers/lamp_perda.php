@@ -20,6 +20,32 @@ class Lamp_perda extends CI_Controller
         $this->template->set('title', 'INPUT NOMOR DAN TANGGAL LAMP');   
         $this->template->load('template','lamp_perda/nomor_pergub',$data) ; 
     }
+
+	function load_ttd_perda() {
+        $lccr='';        
+        $lccr = $this->input->post('q');        
+        $sql = "SELECT nip,nama,jabatan,pangkat FROM ms_ttd WHERE nip IN ('1','2','19611019 198412 1 002') and (kode ='agr' or kode='wk') order by nip";   
+
+        $query1 = $this->db->query($sql);  
+        $result = array();
+        $ii = 0;        
+        foreach($query1->result_array() as $resulte)
+        { 
+           
+            $result[] = array(
+                        'id' => $ii,        
+                        'nip' => $resulte['nip'],  
+                        'nama' => $resulte['nama'],
+                        'jabatan' => $resulte['jabatan'],  
+                        'pangkat' => $resulte['pangkat']      
+                        );
+                        $ii++;
+        }           
+           
+        echo json_encode($result);
+        $query1->free_result();
+           
+    }
 	
 	 function get_nogub(){
       
