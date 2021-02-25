@@ -51136,4 +51136,11 @@ SELECT '2' as kk,a.no_kas as kode,a.no_kas as no_kas,a.no_sts, a.kd_skpd, a.tgl_
 		}
 		
 	}
+
+    function penerimaan_skpd()
+    {
+        $data['page_title']= 'Penerimaan SKPD';
+        $this->template->set('title', 'Penerimaan SKPD');   
+        $this->template->load('template','tukd/pendapatan/penerimaan_skpd',$data) ; 
+    }
 }   

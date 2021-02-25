@@ -4285,4 +4285,1410 @@ class Lamp_pmk extends CI_Controller
 			}
 		}
 
+	
+		function cetak_pend_skpd($periode='',$ctk='',$anggaran='',$kd_skpd='',$jenis='',$tglttd='',$ttd=''){
+			$lntahunang = $this->session->userdata('pcThang');   
+			
+			$ceklen = strlen($periode);
+			if($ceklen<'3'){
+			  $where = "AND MONTH(tgl_kas)='".$periode."'";
+				switch  ($periode){
+				case  1:
+				$judul="BULAN JANUARI $lntahunang";
+				break;
+				case  2:
+				$judul="BULAN FEBRUARI $lntahunang";
+				break;
+				case  3:
+				$judul= "BULAN MARET $lntahunang";
+				break;
+				case  4:
+				$judul="BULAN APRIL $lntahunang";
+				break;
+				case  5:
+				$judul= "BULAN MEI $lntahunang";
+				break;
+				case  6:
+				$judul= "BULAN JUNI $lntahunang";
+				break;
+				case  7:
+				$judul= "BULAN JULI $lntahunang";
+				break;
+				case  8:
+				$judul= "BULAN AGUSTUS $lntahunang";
+				break;
+				case  9:
+				$judul= "BULAN SEPTEMBER $lntahunang";
+				break;
+				case  10:
+				$judul= "BULAN OKTOBER $lntahunang";
+				break;
+				case  11:
+				$judul= "BULAN NOVEMBER $lntahunang";
+				break;
+				case  12:
+				$judul= "BULAN DESEMBER $lntahunang";
+				break;
+				}
+			} else {
+				 $judul = strtoupper($this->tanggal_format_indonesia($periode));
+				$where = "AND tgl_kas <='$periode'";  
+			  
+				
+			}
+		$tanggal = $tglttd == '-' ? '' : 'Pontianak, '.$this->tukd_model->tanggal_format_indonesia($tglttd) ;
+		if($ttd=='-'){
+			$nama='';
+			$pangkat='';
+			$jabatan='';
+			$nip='';
+		}else{
+		$ttd=str_replace("abc"," ",$ttd);
+		$sqlsc="SELECT TOP 1 nama as nm,nip as nip,jabatan as jab,pangkat FROM ms_ttd where kode='BUD' and nip='$ttd'";
+					 $sqlsclient=$this->db->query($sqlsc);
+					 foreach ($sqlsclient->result() as $rowttd)
+					{
+						$nama_ttd = $rowttd->nm;
+						$jabatan = $rowttd->jab;
+						$pangkat = $rowttd->pangkat;
+						$nip = 'NIP. '.$ttd;
+					} 
+		$sqlsc="SELECT sld_awal FROM ms_skpd where kd_skpd='5.02.0.00.0.00.01.0000'";
+					 $sqlsclient=$this->db->query($sqlsc);
+					 foreach ($sqlsclient->result() as $rowttd)
+					{
+						$saldoawal = $rowttd->sld_awal;  
+					} 			
+		
+		}
+		
+		
+		
+		$cRet ='';
+		$cRet .="<TABLE style=\"border-collapse:collapse;font-family:Arial\" width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"1\" align=\"center\">
+						<tr>
+						<td rowspan=\"4\" align=\"center\" style=\"border-right:hidden\">
+							<img src=\"".base_url()."/image/logoHP.png\"  width=\"100\" height=\"100\" />
+							</td>
+						<td align=\"center\" style=\"border-left:hidden;border-bottom:hidden\"><strong>BADAN PENGELOLAAN KEUANGAN DAN ASET DAERAH</strong></td></tr>
+						<tr><td align=\"center\" style=\"border-left:hidden;border-bottom:hidden;border-top:hidden\"><b>SUB BAGIAN PENGELOLAAN KAS DAERAH KOTA PONTIANAK </b></tr>
+						<tr><td align=\"center\" style=\"border-left:hidden;border-bottom:hidden;border-top:hidden\"><b>LAPORAN SKPD PENERIMAAN </b></tr>
+						<tr><td align=\"center\" style=\"border-left:hidden;border-top:hidden\" ><b>PADA $judul </b></tr>
+						</TABLE>
+						<hr  width=\"100%\"> 
+						";
+						
+				
+			$cRet .="<table style=\"border-collapse:collapse;font-family:Arial;font-size:12px\" width=\"100%\" align=\"center\" border=\"0\" cellspacing=\"3\" cellpadding=\"3\">
+					";
+			//Untuk Total Pendapatan 		
+			$sql = "select c.kode1,c.nama,sum(c.nilai) as nilai from (
+					select '1' as kode1,'TOTAL PENDAPATAN + PENERIMAAN PEMBIAYAAN + CP' as nama, SUM(b.rupiah) as nilai
+					FROM trhkasin_ppkd a INNER JOIN trdkasin_ppkd b 
+					on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+					WHERE LEFT(kd_rek5,2) in ('41','42','43','61') $where
+					UNION
+					select '2' as kode1,'TOTAL PENDAPATAN' as nama, SUM(b.rupiah) as nilai
+					FROM trhkasin_ppkd a INNER JOIN trdkasin_ppkd b 
+					on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+					WHERE LEFT(kd_rek5,2) in ('41','42','43') $where				
+					UNION
+					select '1' as kode1, 'TOTAL PENDAPATAN + PENERIMAAN PEMBIAYAAN + CP' as nama,SUM(b.rupiah) as nilai
+					FROM trhkasin_ppkd a INNER JOIN trdkasin_ppkd b 
+					on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+					WHERE LEFT(kd_rek5,1) in ('5','1') $where
+					) c
+					group by c.kode1,c.nama
+					order by c.kode1
+					";
+					
+			/*$sql = "select 'TOTAL PENDAPATAN' as nama, SUM(b.rupiah) as nilai
+					FROM trhkasin_ppkd a INNER JOIN trdkasin_ppkd b 
+					on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+					WHERE LEFT(kd_rek5,1)='4' AND a.kd_skpd !='5.02.0.00.0.00.01.0000' $where
+					UNION ALL
+					select 'TOTAL PENDAPATAN PAJAK DAN RETRIBUSI' as nama, SUM(b.rupiah) as nilai
+					FROM trhkasin_ppkd a INNER JOIN trdkasin_ppkd b 
+					on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+					WHERE LEFT(kd_rek5,3) IN ('411','412') AND a.kd_skpd !='5.02.0.00.0.00.01.0000' $where";                
+			*/
+				
+				$hasil = $this->db->query($sql);
+			foreach ($hasil->result() as $row)
+				{
+				   $nama = $row->nama;
+				   $nilai = $row->nilai;
+				$cRet .="<tr>
+						<td width=\"50%\" align=\"left\"> <b>$nama</b></td>
+						<td width=\"50%\" align=\"right\"> <b>".number_format($nilai, "2", ",", ".")."</b></td>
+					</tr>";
+					}
+				$cRet .="<tr>
+						<td width=\"50%\" align=\"left\"> <b>SISA KAS TAHUN LALU</b></td>
+						<td width=\"50%\" align=\"right\"> <b>".number_format($saldoawal, "2", ",", ".")."</b></td>
+					</tr>";
+				$cRet .="	</table>";
+				
+				// Untuk Rincian selain PPKD
+				$cRet .="<table style=\"border-collapse:collapse;font-family:Arial;font-size:12px\" width=\"100%\" align=\"center\" border=\"0\" cellspacing=\"3\" cellpadding=\"3\">
+					";
+					
+					$sql = "SELECT a.kode,nama,ISNULL(nilai,0) as nilai FROM (
+							SELECT LEFT(kd_rek6,3) as kode, b.nm_rek3 as nama FROM trdrka a 
+							INNER JOIN ms_rek3 b ON LEFT(a.kd_rek6,3)=kd_rek3
+							WHERE LEFT(kd_rek6,1)='4' AND kd_skpd !='5.02.0.00.0.00.01.0000'
+							GROUP BY LEFT(kd_rek6,3), b.nm_rek3) a
+							LEFT JOIN 
+							(SELECT LEFT(kd_rek5,3) as kode, SUM(rupiah) as nilai FROM trhkasin_ppkd a 
+							INNER JOIN trdkasin_ppkd b on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+							WHERE LEFT(kd_rek5,1)='4' AND a.kd_skpd !='5.02.0.00.0.00.01.0000' $where
+							GROUP BY LEFT(kd_rek5,3))b
+							ON a.kode=b.kode
+	
+							UNION ALL
+	
+							SELECT a.kode,nama,ISNULL(nilai,0) as nilai FROM (
+							SELECT LEFT(kd_rek6,3)+'.'+kd_skpd as kode, nm_skpd as nama FROM trdrka a 
+							WHERE LEFT(kd_rek6,1)='4' AND kd_skpd !='5.02.0.00.0.00.01.0000'
+							GROUP BY LEFT(kd_rek6,3), kd_skpd,nm_skpd) a
+							LEFT JOIN
+							(SELECT LEFT(kd_rek5,3)+'.'+a.kd_skpd as kode, SUM(rupiah) as nilai FROM trhkasin_ppkd a 
+							INNER JOIN trdkasin_ppkd b on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+							WHERE LEFT(kd_rek5,1)='4' AND a.kd_skpd !='5.02.0.00.0.00.01.0000' $where
+							GROUP BY LEFT(kd_rek5,3),a.kd_skpd)b
+							ON a.kode=b.kode
+							UNION ALL
+							SELECT LEFT(a.kode,3)+'.'+SUBSTRING(a.kode,7,10)+'.'+SUBSTRING(a.kode,4,2) as kode,
+							nama,ISNULL(nilai,0) as nilai FROM (
+							SELECT LEFT(kd_rek6,5)+'.'+kd_skpd kode, b.nm_rek4 as nama FROM trdrka a 
+							INNER JOIN ms_rek4 b ON LEFT(a.kd_rek6,5)=kd_rek4
+							WHERE LEFT(kd_rek6,1)='4' AND kd_skpd !='5.02.0.00.0.00.01.0000' 
+							GROUP BY LEFT(kd_rek6,5),kd_skpd, b.nm_rek4)a
+							LEFT JOIN 
+							(SELECT LEFT(kd_rek5,5)+'.'+a.kd_skpd as kode, SUM(rupiah) as nilai FROM trhkasin_ppkd a 
+							INNER JOIN trdkasin_ppkd b on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+							WHERE LEFT(kd_rek5,1)='4' AND a.kd_skpd !='5.02.0.00.0.00.01.0000' $where
+							GROUP BY LEFT(kd_rek5,5),a.kd_skpd)b
+							ON a.kode=b.kode
+							ORDER BY kode";
+				$no=0;
+				$hasil = $this->db->query($sql);
+				foreach ($hasil->result() as $row)
+				{
+				   $kode = $row->kode;
+				   $nama = $row->nama;
+				   $nilai = $row->nilai;
+				   $leng=strlen($kode);
+				   
+					switch ($leng){
+					case 3;
+					$cRet .="<tr>
+						<td valign=\"top\" width=\"3%\" align=\"left\">&nbsp;</td>
+						<td valign=\"top\" width=\"5%\" align=\"left\">&nbsp;</td>
+						<td valign=\"top\" width=\"10%\" align=\"left\">&nbsp;</td>
+						<td valign=\"top\" width=\"40%\" align=\"left\">&nbsp;</td>
+						<td valign=\"top\" width=\"15%\" align=\"right\">&nbsp;</td>
+						<td valign=\"top\" width=\"15%\" align=\"right\">&nbsp;</td>
+						<td valign=\"top\" width=\"15%\" align=\"right\">&nbsp;</td>
+					</tr>";
+					
+						$cRet .="<tr>
+						<td valign=\"top\" width=\"3%\" align=\"left\"> </td>
+						<td valign=\"top\" width=\"5%\" align=\"left\"> <b>".$this->left($kode,3)."</b></td>
+						<td valign=\"top\" width=\"10%\" align=\"left\"> <b></b></td>
+						<td valign=\"top\" width=\"40%\" align=\"left\"> <b>".strtoupper($nama)."</b></td>
+						<td valign=\"top\" width=\"15%\" align=\"right\"> <b></b></td>
+						<td valign=\"top\" width=\"15%\" align=\"right\"> <b></b></td>
+						<td valign=\"top\" width=\"15%\" align=\"right\"> <b>".number_format($nilai, "2", ",", ".")."</b></td>
+					</tr>";
+					break;
+					case 14;
+						$no=$no+1;
+						$cRet .="<tr>
+						<td valign=\"top\" width=\"3%\" align=\"left\">&nbsp;</td>
+						<td valign=\"top\" width=\"5%\" align=\"left\">&nbsp;</td>
+						<td valign=\"top\" width=\"10%\" align=\"left\">&nbsp;</td>
+						<td valign=\"top\" width=\"40%\" align=\"left\">&nbsp;</td>
+						<td valign=\"top\" width=\"15%\" align=\"right\">&nbsp;</td>
+						<td valign=\"top\" width=\"15%\" align=\"right\">&nbsp;</td>
+						<td valign=\"top\" width=\"15%\" align=\"right\">&nbsp;</td>
+					</tr>";
+						$cRet .="<tr>
+						<td valign=\"top\" width=\"3%\" align=\"left\"><b>$no</b></td>
+						<td valign=\"top\" width=\"5%\" align=\"left\"> <b></b></td>
+						<td valign=\"top\" width=\"10%\" align=\"left\"> <b>".substr($kode,4)."</b></td>
+						<td valign=\"top\" width=\"40%\" align=\"left\"> <b>$nama</b></td>
+						<td valign=\"top\" width=\"15%\" align=\"right\"> <b></b></td>
+						<td valign=\"top\" width=\"15%\" align=\"right\"> <b>".number_format($nilai, "2", ",", ".")."</b></td>
+						<td valign=\"top\" width=\"15%\" align=\"right\"> <b></b></td>
+					</tr>";
+					break;
+					default;
+					$cRet .="<tr>
+						<td valign=\"top\" width=\"3%\" align=\"left\"></td>
+						<td valign=\"top\" width=\"5%\" align=\"left\"> ".$this->left($kode,3)."".$this->right($kode,2)." </td>
+						<td valign=\"top\" width=\"10%\" align=\"left\"> <b></b></td>
+						<td valign=\"top\" width=\"40%\" align=\"left\"> $nama</td>
+						<td valign=\"top\" width=\"15%\" align=\"right\"> ".number_format($nilai, "2", ",", ".")."</td>
+						<td valign=\"top\" width=\"15%\" align=\"right\"> </td>
+						<td valign=\"top\" width=\"15%\" align=\"right\"></td>
+					</tr>";
+					break;
+					}
+				
+					}
+					
+				$cRet .="	</table> <br>";
+		
+				//TOTAL UNTUK PPKD
+				$cRet .="<table style=\"border-collapse:collapse;font-family:Arial;font-size:12px\" width=\"100%\" align=\"center\" border=\"0\" cellspacing=\"3\" cellpadding=\"3\">
+					";
+				$sql = "select SUM(b.rupiah) as nilai
+					FROM trhkasin_ppkd a INNER JOIN trdkasin_ppkd b 
+					on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+					WHERE LEFT(kd_rek5,1)='4' AND a.kd_skpd='5.02.0.00.0.00.01.0000' $where ";
+				
+				$hasil = $this->db->query($sql);
+				foreach ($hasil->result() as $row)
+				{
+				   $nilai = $row->nilai;
+				$cRet .="<tr>
+						<td colspan =\"2\" width=\"8%\" align=\"left\"> <b>4.02.00</b></td>
+						<td width=\"42%\" align=\"left\"> <b>PPKD</b></td>
+						<td width=\"50%\" align=\"right\"> <b>".number_format($nilai, "2", ",", ".")."</b></td>
+					</tr>";
+					}
+				$cRet .="	</table>";
+				$cRet .="<table style=\"border-collapse:collapse;font-family:Arial;font-size:12px\" width=\"100%\" align=\"center\" border=\"0\" cellspacing=\"3\" cellpadding=\"3\">
+					";
+				
+				// PPKD
+				$sql = "SELECT a.kode,nama, ISNULL(nilai,0) as nilai FROM 
+						(SELECT LEFT(kd_rek6,2) as kode, nm_rek2 as nama FROM trdrka a
+						INNER JOIN ms_rek2 b ON LEFT(kd_rek6,2)=b.kd_rek2
+						WHERE LEFT(kd_rek6,1) IN ('4','6') AND kd_skpd='5.02.0.00.0.00.01.0000' 
+						GROUP BY LEFT(kd_rek6,2),nm_rek2) a
+						LEFT JOIN 
+						(SELECT LEFT(kd_rek5,2) as kode, SUM(rupiah) as nilai FROM trhkasin_ppkd a 
+						INNER JOIN trdkasin_ppkd b on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+						WHERE LEFT(kd_rek5,1) IN ('4','6') AND a.kd_skpd ='5.02.0.00.0.00.01.0000' $where
+						GROUP BY LEFT(kd_rek5,2))b
+						ON a.kode=b.kode
+	
+						UNION ALL
+	
+						SELECT a.kode,nama, ISNULL(nilai,0) as nilai FROM 
+						(SELECT LEFT(kd_rek6,3) as kode, nm_rek3 as nama FROM trdrka a
+						INNER JOIN ms_rek3 b ON LEFT(kd_rek6,3)=b.kd_rek3
+						WHERE LEFT(kd_rek6,1) IN ('4','6')  AND kd_skpd='5.02.0.00.0.00.01.0000' 
+						GROUP BY LEFT(kd_rek6,3),nm_rek3) a
+						LEFT JOIN 
+						(SELECT LEFT(kd_rek5,3) as kode, SUM(rupiah) as nilai FROM trhkasin_ppkd a 
+						INNER JOIN trdkasin_ppkd b on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+						WHERE LEFT(kd_rek5,1) IN ('4','6')  AND a.kd_skpd ='5.02.0.00.0.00.01.0000' $where
+						GROUP BY LEFT(kd_rek5,3))b 
+						ON a.kode=b.kode
+	
+						
+						UNION ALL
+	
+						SELECT a.kode,nama, ISNULL(nilai,0) as nilai FROM 
+						(SELECT LEFT(kd_rek6,7) as kode, nm_rek6 as nama FROM trdrka a
+						WHERE LEFT(kd_rek6,1) IN ('4','6')  AND kd_skpd='5.02.0.00.0.00.01.0000' 
+						GROUP BY LEFT(kd_rek6,7),nm_rek6) a
+						LEFT JOIN 
+						(SELECT LEFT(kd_rek5,7) as kode, SUM(rupiah) as nilai FROM trhkasin_ppkd a 
+						INNER JOIN trdkasin_ppkd b on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+						WHERE LEFT(kd_rek5,1) IN ('4','6')  AND a.kd_skpd ='5.02.0.00.0.00.01.0000' $where
+						GROUP BY LEFT(kd_rek5,7))b
+						ON a.kode=b.kode
+	
+						ORDER BY a.kode";
+				
+				$hasil = $this->db->query($sql);
+			foreach ($hasil->result() as $row)
+				{
+				   $kode = $row->kode;
+				   $nama = $row->nama;
+				   $nilai = $row->nilai;
+				   $leng=strlen($kode);
+				switch ($leng){
+					case 2;
+					$cRet .="<tr>
+						<td valign=\"top\" width=\"3%\" align=\"left\">&nbsp;</td>
+						<td colspan=\"2\" valign=\"top\" width=\"15%\" align=\"left\">  </td>
+						<td valign=\"top\" width=\"40%\" align=\"left\"> </td>
+						<td valign=\"top\" width=\"15%\" align=\"right\"> </td>
+						<td valign=\"top\" width=\"15%\" align=\"right\"> </td>
+						<td valign=\"top\" width=\"15%\" align=\"right\"></td>
+					</tr>";
+					$cRet .="<tr>
+						<td valign=\"top\" width=\"3%\" align=\"left\">&nbsp;</td>
+						<td colspan=\"2\" valign=\"top\" width=\"15%\" align=\"left\"> <b>$kode</></td>
+						<td valign=\"top\" width=\"40%\" align=\"left\"><b> $nama</td>
+						<td valign=\"top\" width=\"15%\" align=\"right\"> </td>
+						<td valign=\"top\" width=\"15%\" align=\"right\"> </td>
+						<td valign=\"top\" width=\"15%\" align=\"right\"><b>".number_format($nilai, "2", ",", ".")."<b></td>
+					</tr>";
+					break;
+					case 3;
+					$cRet .="<tr>
+						<td valign=\"top\" width=\"3%\" align=\"left\">&nbsp;</td>
+						<td colspan=\"2\" valign=\"top\" width=\"15%\" align=\"left\"> <b>$kode</></td>
+						<td valign=\"top\" width=\"40%\" align=\"left\"><b> $nama</td>
+						<td valign=\"top\" width=\"15%\" align=\"right\"> </td>
+						<td valign=\"top\" width=\"15%\" align=\"right\"><b>".number_format($nilai, "2", ",", ".")."<b> </td>
+						<td valign=\"top\" width=\"15%\" align=\"right\"></td>
+					</tr>";
+					break;
+					default;
+					$cRet .="<tr>
+						<td valign=\"top\" width=\"3%\" align=\"left\">&nbsp;</td>
+						<td colspan=\"2\" valign=\"top\" width=\"15%\" align=\"left\"> $kode </td>
+						<td valign=\"top\" width=\"40%\" align=\"left\"> $nama</td>
+						<td valign=\"top\" width=\"15%\" align=\"right\"> ".number_format($nilai, "2", ",", ".")."</td>
+						<td valign=\"top\" width=\"15%\" align=\"right\"> </td>
+						<td valign=\"top\" width=\"15%\" align=\"right\"></td>
+					</tr>";
+					break;
+					}
+				}
+				$cRet .="	</table><br>";
+				
+				//CONTRA POST
+				$cRet .="<table style=\"border-collapse:collapse;font-family:Arial;font-size:12px\" width=\"100%\" align=\"center\" border=\"0\" cellspacing=\"3\" cellpadding=\"3\">
+					";
+				$sql = "select SUM(b.rupiah) as nilai
+					FROM trhkasin_ppkd a INNER JOIN trdkasin_ppkd b 
+					on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+					WHERE LEFT(kd_rek5,1) in ('1','5') $where";
+				
+				$hasil = $this->db->query($sql);
+				foreach ($hasil->result() as $row)
+				{
+				   $nilai = $row->nilai;
+				$cRet .="<tr>
+						<td colspan =\"2\" width=\"20%\" align=\"left\"> <b></b></td>
+						<td width=\"40%\" align=\"left\"> <b>CONTRA POS</b></td>
+						<td width=\"25%\" align=\"right\"> <b>".number_format($nilai, "2", ",", ".")."</b></td>
+						<td width=\"15%\" align=\"right\"> &nbsp;</td>
+					</tr>";
+					}
+				$cRet .="	</table>";
+				$cRet .="<table style=\"border-collapse:collapse;font-family:Arial;font-size:12px\" width=\"100%\" align=\"center\" border=\"0\" cellspacing=\"3\" cellpadding=\"3\">
+					";
+				
+				
+				$cRet .="<table style=\"border-collapse:collapse;font-family:Arial;font-size:12px\" width=\"100%\" align=\"center\" border=\"0\" cellspacing=\"1\" cellpadding=\"1\">
+					<tr>
+						<td width=\"50%\" align=\"center\">&nbsp;</td>
+						<td width=\"50%\" align=\"center\"></td>
+					</tr>
+					<tr>
+						<td width=\"50%\" align=\"center\">&nbsp;</td>
+						<td width=\"50%\" align=\"center\">$tanggal<br>$jabatan<br>$pangkat<br><br><br><br><br><b><u>$nama_ttd</u></b><br>$nip
+						</td>
+					</tr>
+					</table>";
+				
+				$data['prev']= $cRet;    
+				$judul='Penerimaan_skpd ';
+				switch ($ctk){
+					case 0;
+					echo ("<title>$judul</title>");
+					echo $cRet;
+					break;
+					case 1;
+					$this->tukd_model->_mpdf('',$cRet,10,10,10,'L');
+					break;
+					case 2;        
+					header("Cache-Control: no-cache, no-store, must-revalidate");
+					header("Content-Type: application/vnd.ms-excel");
+					header("Content-Disposition: attachment; filename= $judul.xls");
+					$this->load->view('anggaran/rka/perkadaII', $data);
+					break;	
+				}
+			}
+
+			function cetak_pend_skpd_bulan($periode='',$ctk='',$anggaran='',$kd_skpd='',$jenis='',$tglttd='',$ttd='',$periode2=''){
+				$lntahunang = $this->session->userdata('pcThang');   
+				
+				$ceklen = strlen($periode);
+				if($ceklen<'3'){
+				  $where = "AND MONTH(tgl_kas)>='".$periode."' and MONTH(tgl_kas)<='".$periode2."'";
+					switch  ($periode){
+					case  1:
+					$judul="BULAN JANUARI";
+					break;
+					case  2:
+					$judul="BULAN FEBRUARI";
+					break;
+					case  3:
+					$judul= "BULAN MARET";
+					break;
+					case  4:
+					$judul="BULAN APRIL";
+					break;
+					case  5:
+					$judul= "BULAN MEI";
+					break;
+					case  6:
+					$judul= "BULAN JUNI";
+					break;
+					case  7:
+					$judul= "BULAN JULI";
+					break;
+					case  8:
+					$judul= "BULAN AGUSTUS";
+					break;
+					case  9:
+					$judul= "BULAN SEPTEMBER";
+					break;
+					case  10:
+					$judul= "BULAN OKTOBER";
+					break;
+					case  11:
+					$judul= "BULAN NOVEMBER";
+					break;
+					case  12:
+					$judul= "BULAN DESEMBER";
+					break;
+					}
+					switch  ($periode2){
+					case  1:
+					$judul2="BULAN JANUARI $lntahunang";
+					break;
+					case  2:
+					$judul2="BULAN FEBRUARI $lntahunang";
+					break;
+					case  3:
+					$judul2= "BULAN MARET $lntahunang";
+					break;
+					case  4:
+					$judul2="BULAN APRIL $lntahunang";
+					break;
+					case  5:
+					$judul2= "BULAN MEI $lntahunang";
+					break;
+					case  6:
+					$judul2= "BULAN JUNI $lntahunang";
+					break;
+					case  7:
+					$judul2= "BULAN JULI $lntahunang";
+					break;
+					case  8:
+					$judul2= "BULAN AGUSTUS $lntahunang";
+					break;
+					case  9:
+					$judul2= "BULAN SEPTEMBER $lntahunang";
+					break;
+					case  10:
+					$judul2= "BULAN OKTOBER $lntahunang";
+					break;
+					case  11:
+					$judul2= "BULAN NOVEMBER $lntahunang";
+					break;
+					case  12:
+					$judul2= "BULAN DESEMBER $lntahunang";
+					break;
+					}
+				}
+		
+		
+			$tanggal = $tglttd == '-' ? '' : 'Pontianak, '.$this->tukd_model->tanggal_format_indonesia($tglttd) ;
+			if($ttd=='-'){
+				$nama='';
+				$pangkat='';
+				$jabatan='';
+				$nip='';
+			}else{
+			$ttd=str_replace("abc"," ",$ttd);
+			$sqlsc="SELECT TOP 1 nama as nm,nip as nip,jabatan as jab,pangkat FROM ms_ttd where kode='BUD' and nip='$ttd'";
+						 $sqlsclient=$this->db->query($sqlsc);
+						 foreach ($sqlsclient->result() as $rowttd)
+						{
+							$nama_ttd = $rowttd->nm;
+							$jabatan = $rowttd->jab;
+							$pangkat = $rowttd->pangkat;
+							$nip = 'NIP. '.$ttd;
+						} 
+						
+			$sqlsc="SELECT sld_awal FROM ms_skpd where kd_skpd='5.02.0.00.0.00.01.0000'";
+						 $sqlsclient=$this->db->query($sqlsc);
+						 foreach ($sqlsclient->result() as $rowttd)
+						{
+							$saldoawal = $rowttd->sld_awal;  
+						} 
+			}
+			
+			$cRet ='';
+			$cRet .="<TABLE style=\"border-collapse:collapse;font-family:Arial\" width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"1\" align=\"center\">
+							<tr>
+							<td rowspan=\"4\" align=\"center\" style=\"border-right:hidden\">
+								<img src=\"".base_url()."/image/logoHP.png\"  width=\"100\" height=\"100\" />
+								</td>
+							<td align=\"center\" style=\"border-left:hidden;border-bottom:hidden\"><strong>BADAN PENGELOLAAN KEUANGAN DAN ASET DAERAH</strong></td></tr>
+							<tr><td align=\"center\" style=\"border-left:hidden;border-bottom:hidden;border-top:hidden\"><b>SUB BIDANG PENGELOLAAN KAS DAERAH KOTA PONTIANAK </b></tr>
+							<tr><td align=\"center\" style=\"border-left:hidden;border-bottom:hidden;border-top:hidden\"><b>LAPORAN SKPD PENERIMAAN </b></tr>
+							<tr><td align=\"center\" style=\"border-left:hidden;border-top:hidden\" ><b>PADA $judul s/d $judul2 </b></tr>
+							</TABLE>
+							<hr  width=\"100%\"> 
+							";
+							
+					
+				$cRet .="<table style=\"border-collapse:collapse;font-family:Arial;font-size:12px\" width=\"100%\" align=\"center\" border=\"0\" cellspacing=\"3\" cellpadding=\"3\">
+						";
+				//Untuk Total Pendapatan 		
+				$sql = "select c.kode1,c.nama,sum(c.nilai) as nilai from (
+						select '1' as kode1,'TOTAL PENDAPATAN + PENERIMAAN PEMBIAYAAN + CP' as nama, SUM(b.rupiah) as nilai
+						FROM trhkasin_ppkd a INNER JOIN trdkasin_ppkd b 
+						on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+						WHERE LEFT(kd_rek5,2) in ('41','42','43','61') $where
+						UNION
+						select '2' as kode1,'TOTAL PENDAPATAN' as nama, SUM(b.rupiah) as nilai
+						FROM trhkasin_ppkd a INNER JOIN trdkasin_ppkd b 
+						on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+						WHERE LEFT(kd_rek5,2) in ('41','42','43') $where				
+						UNION
+						select '1' as kode1, 'TOTAL PENDAPATAN + PENERIMAAN PEMBIAYAAN + CP' as nama,SUM(b.rupiah) as nilai
+						FROM trhkasin_ppkd a INNER JOIN trdkasin_ppkd b 
+						on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+						WHERE LEFT(kd_rek5,1) in ('5','1') $where
+						) c
+						group by c.kode1,c.nama
+						order by c.kode1
+						";
+						
+				/*$sql = "select 'TOTAL PENDAPATAN' as nama, SUM(b.rupiah) as nilai
+						FROM trhkasin_ppkd a INNER JOIN trdkasin_ppkd b 
+						on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+						WHERE LEFT(kd_rek5,1)='4' AND a.kd_skpd !='5.02.0.00.0.00.01.0000' $where
+						UNION ALL
+						select 'TOTAL PENDAPATAN PAJAK DAN RETRIBUSI' as nama, SUM(b.rupiah) as nilai
+						FROM trhkasin_ppkd a INNER JOIN trdkasin_ppkd b 
+						on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+						WHERE LEFT(kd_rek5,3) IN ('411','412') AND a.kd_skpd !='5.02.0.00.0.00.01.0000' $where";                
+				*/
+					
+					$hasil = $this->db->query($sql);
+				foreach ($hasil->result() as $row)
+					{
+					   $nama = $row->nama;
+					   $nilai = $row->nilai;
+					$cRet .="<tr>
+							<td width=\"50%\" align=\"left\"> <b>$nama</b></td>
+							<td width=\"50%\" align=\"right\"> <b>".number_format($nilai, "2", ",", ".")."</b></td>
+						</tr>";
+						}
+						 $cRet .="<tr>
+							<td width=\"50%\" align=\"left\"> <b>SISA KAS TAHUN LALU</b></td>
+							<td width=\"50%\" align=\"right\"> <b>".number_format($saldoawal, "2", ",", ".")."</b></td>
+						</tr>";
+					$cRet .="	</table>";
+					
+					// Untuk Rincian selain PPKD
+					$cRet .="<table style=\"border-collapse:collapse;font-family:Arial;font-size:12px\" width=\"100%\" align=\"center\" border=\"0\" cellspacing=\"3\" cellpadding=\"3\">
+						";
+						
+						$sql = "SELECT a.kode,nama,ISNULL(nilai,0) as nilai FROM (
+								SELECT LEFT(kd_rek6,3) as kode, b.nm_rek3 as nama FROM trdrka a 
+								INNER JOIN ms_rek3 b ON LEFT(a.kd_rek6,3)=kd_rek3
+								WHERE LEFT(kd_rek6,1)='4' AND kd_skpd !='5.02.0.00.0.00.01.0000'
+								GROUP BY LEFT(kd_rek6,3), b.nm_rek3) a
+								LEFT JOIN 
+								(SELECT LEFT(kd_rek5,3) as kode, SUM(rupiah) as nilai FROM trhkasin_ppkd a 
+								INNER JOIN trdkasin_ppkd b on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+								WHERE LEFT(kd_rek5,1)='4' AND a.kd_skpd !='5.02.0.00.0.00.01.0000' $where
+								GROUP BY LEFT(kd_rek5,3))b
+								ON a.kode=b.kode
+		
+								UNION ALL
+		
+								SELECT a.kode,nama,ISNULL(nilai,0) as nilai FROM (
+								SELECT LEFT(kd_rek6,3)+'.'+kd_skpd as kode, nm_skpd as nama FROM trdrka a 
+								WHERE LEFT(kd_rek6,1)='4' AND kd_skpd !='5.02.0.00.0.00.01.0000'
+								GROUP BY LEFT(kd_rek6,3), kd_skpd,nm_skpd) a
+								LEFT JOIN
+								(SELECT LEFT(kd_rek5,3)+'.'+a.kd_skpd as kode, SUM(rupiah) as nilai FROM trhkasin_ppkd a 
+								INNER JOIN trdkasin_ppkd b on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+								WHERE LEFT(kd_rek5,1)='4' AND a.kd_skpd !='5.02.0.00.0.00.01.0000' $where
+								GROUP BY LEFT(kd_rek5,3),a.kd_skpd)b
+								ON a.kode=b.kode
+								UNION ALL
+								SELECT LEFT(a.kode,3)+'.'+SUBSTRING(a.kode,7,10)+'.'+SUBSTRING(a.kode,4,2) as kode,
+								nama,ISNULL(nilai,0) as nilai FROM (
+								SELECT LEFT(kd_rek6,5)+'.'+kd_skpd kode, b.nm_rek4 as nama FROM trdrka a 
+								INNER JOIN ms_rek4 b ON LEFT(a.kd_rek6,5)=kd_rek4
+								WHERE LEFT(kd_rek6,1)='4' AND kd_skpd !='5.02.0.00.0.00.01.0000' 
+								GROUP BY LEFT(kd_rek6,5),kd_skpd, b.nm_rek4)a
+								LEFT JOIN 
+								(SELECT LEFT(kd_rek5,5)+'.'+a.kd_skpd as kode, SUM(rupiah) as nilai FROM trhkasin_ppkd a 
+								INNER JOIN trdkasin_ppkd b on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+								WHERE LEFT(kd_rek5,1)='4' AND a.kd_skpd !='5.02.0.00.0.00.01.0000' $where
+								GROUP BY LEFT(kd_rek5,5),a.kd_skpd)b
+								ON a.kode=b.kode
+								ORDER BY kode";
+					$no=0;
+					$hasil = $this->db->query($sql);
+					foreach ($hasil->result() as $row)
+					{
+					   $kode = $row->kode;
+					   $nama = $row->nama;
+					   $nilai = $row->nilai;
+					   $leng=strlen($kode);
+					   
+						switch ($leng){
+						case 3;
+						$cRet .="<tr>
+							<td valign=\"top\" width=\"3%\" align=\"left\">&nbsp;</td>
+							<td valign=\"top\" width=\"5%\" align=\"left\">&nbsp;</td>
+							<td valign=\"top\" width=\"10%\" align=\"left\">&nbsp;</td>
+							<td valign=\"top\" width=\"40%\" align=\"left\">&nbsp;</td>
+							<td valign=\"top\" width=\"15%\" align=\"right\">&nbsp;</td>
+							<td valign=\"top\" width=\"15%\" align=\"right\">&nbsp;</td>
+							<td valign=\"top\" width=\"15%\" align=\"right\">&nbsp;</td>
+						</tr>";
+						
+							$cRet .="<tr>
+							<td valign=\"top\" width=\"3%\" align=\"left\"> </td>
+							<td valign=\"top\" width=\"5%\" align=\"left\"> <b>".$this->left($kode,3)."</b></td>
+							<td valign=\"top\" width=\"10%\" align=\"left\"> <b></b></td>
+							<td valign=\"top\" width=\"40%\" align=\"left\"> <b>".strtoupper($nama)."</b></td>
+							<td valign=\"top\" width=\"15%\" align=\"right\"> <b></b></td>
+							<td valign=\"top\" width=\"15%\" align=\"right\"> <b></b></td>
+							<td valign=\"top\" width=\"15%\" align=\"right\"> <b>".number_format($nilai, "2", ",", ".")."</b></td>
+						</tr>";
+						break;
+						case 14;
+							$no=$no+1;
+							$cRet .="<tr>
+							<td valign=\"top\" width=\"3%\" align=\"left\">&nbsp;</td>
+							<td valign=\"top\" width=\"5%\" align=\"left\">&nbsp;</td>
+							<td valign=\"top\" width=\"10%\" align=\"left\">&nbsp;</td>
+							<td valign=\"top\" width=\"40%\" align=\"left\">&nbsp;</td>
+							<td valign=\"top\" width=\"15%\" align=\"right\">&nbsp;</td>
+							<td valign=\"top\" width=\"15%\" align=\"right\">&nbsp;</td>
+							<td valign=\"top\" width=\"15%\" align=\"right\">&nbsp;</td>
+						</tr>";
+							$cRet .="<tr>
+							<td valign=\"top\" width=\"3%\" align=\"left\"><b>$no</b></td>
+							<td valign=\"top\" width=\"5%\" align=\"left\"> <b></b></td>
+							<td valign=\"top\" width=\"10%\" align=\"left\"> <b>".substr($kode,4)."</b></td>
+							<td valign=\"top\" width=\"40%\" align=\"left\"> <b>$nama</b></td>
+							<td valign=\"top\" width=\"15%\" align=\"right\"> <b></b></td>
+							<td valign=\"top\" width=\"15%\" align=\"right\"> <b>".number_format($nilai, "2", ",", ".")."</b></td>
+							<td valign=\"top\" width=\"15%\" align=\"right\"> <b></b></td>
+						</tr>";
+						break;
+						default;
+						$cRet .="<tr>
+							<td valign=\"top\" width=\"3%\" align=\"left\"></td>
+							<td valign=\"top\" width=\"5%\" align=\"left\"> ".$this->left($kode,3)."".$this->right($kode,2)." </td>
+							<td valign=\"top\" width=\"10%\" align=\"left\"> <b></b></td>
+							<td valign=\"top\" width=\"40%\" align=\"left\"> $nama</td>
+							<td valign=\"top\" width=\"15%\" align=\"right\"> ".number_format($nilai, "2", ",", ".")."</td>
+							<td valign=\"top\" width=\"15%\" align=\"right\"> </td>
+							<td valign=\"top\" width=\"15%\" align=\"right\"></td>
+						</tr>";
+						break;
+						}
+					
+						}
+						
+					$cRet .="	</table> <br>";
+			
+					//TOTAL UNTUK PPKD
+					$cRet .="<table style=\"border-collapse:collapse;font-family:Arial;font-size:12px\" width=\"100%\" align=\"center\" border=\"0\" cellspacing=\"3\" cellpadding=\"3\">
+						";
+					$sql = "select SUM(b.rupiah) as nilai
+						FROM trhkasin_ppkd a INNER JOIN trdkasin_ppkd b 
+						on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+						WHERE LEFT(kd_rek5,1)='4' AND a.kd_skpd='5.02.0.00.0.00.01.0000' $where ";
+					
+					$hasil = $this->db->query($sql);
+					foreach ($hasil->result() as $row)
+					{
+					   $nilai = $row->nilai;
+					$cRet .="<tr>
+							<td colspan =\"2\" width=\"8%\" align=\"left\"> <b>4.02.00</b></td>
+							<td width=\"42%\" align=\"left\"> <b>PPKD</b></td>
+							<td width=\"50%\" align=\"right\"> <b>".number_format($nilai, "2", ",", ".")."</b></td>
+						</tr>";
+						}
+					$cRet .="	</table>";
+					$cRet .="<table style=\"border-collapse:collapse;font-family:Arial;font-size:12px\" width=\"100%\" align=\"center\" border=\"0\" cellspacing=\"3\" cellpadding=\"3\">
+						";
+					
+					// PPKD
+					$sql = "SELECT a.kode,nama, ISNULL(nilai,0) as nilai FROM 
+							(SELECT LEFT(kd_rek6,2) as kode, nm_rek2 as nama FROM trdrka a
+							INNER JOIN ms_rek2 b ON LEFT(kd_rek6,2)=b.kd_rek2
+							WHERE LEFT(kd_rek6,1) IN ('4','6') AND kd_skpd='5.02.0.00.0.00.01.0000' 
+							GROUP BY LEFT(kd_rek6,2),nm_rek2) a
+							LEFT JOIN 
+							(SELECT LEFT(kd_rek5,2) as kode, SUM(rupiah) as nilai FROM trhkasin_ppkd a 
+							INNER JOIN trdkasin_ppkd b on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+							WHERE LEFT(kd_rek5,1) IN ('4','6') AND a.kd_skpd ='5.02.0.00.0.00.01.0000' $where
+							GROUP BY LEFT(kd_rek5,2))b
+							ON a.kode=b.kode
+		
+							UNION ALL
+		
+							SELECT a.kode,nama, ISNULL(nilai,0) as nilai FROM 
+							(SELECT LEFT(kd_rek6,3) as kode, nm_rek3 as nama FROM trdrka a
+							INNER JOIN ms_rek3 b ON LEFT(kd_rek6,3)=b.kd_rek3
+							WHERE LEFT(kd_rek6,1) IN ('4','6')  AND kd_skpd='5.02.0.00.0.00.01.0000' 
+							GROUP BY LEFT(kd_rek6,3),nm_rek3) a
+							LEFT JOIN 
+							(SELECT LEFT(kd_rek5,3) as kode, SUM(rupiah) as nilai FROM trhkasin_ppkd a 
+							INNER JOIN trdkasin_ppkd b on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+							WHERE LEFT(kd_rek5,1) IN ('4','6')  AND a.kd_skpd ='5.02.0.00.0.00.01.0000' $where
+							GROUP BY LEFT(kd_rek5,3))b 
+							ON a.kode=b.kode
+		
+							
+							UNION ALL
+		
+							SELECT a.kode,nama, ISNULL(nilai,0) as nilai FROM 
+							(SELECT LEFT(kd_rek6,7) as kode, nm_rek6 as nama FROM trdrka a
+							WHERE LEFT(kd_rek6,1) IN ('4','6')  AND kd_skpd='5.02.0.00.0.00.01.0000' 
+							GROUP BY LEFT(kd_rek6,7),nm_rek6) a
+							LEFT JOIN 
+							(SELECT LEFT(kd_rek5,7) as kode, SUM(rupiah) as nilai FROM trhkasin_ppkd a 
+							INNER JOIN trdkasin_ppkd b on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+							WHERE LEFT(kd_rek5,1) IN ('4','6')  AND a.kd_skpd ='5.02.0.00.0.00.01.0000' $where
+							GROUP BY LEFT(kd_rek5,7))b
+							ON a.kode=b.kode
+		
+							ORDER BY a.kode";
+					
+					$hasil = $this->db->query($sql);
+				foreach ($hasil->result() as $row)
+					{
+					   $kode = $row->kode;
+					   $nama = $row->nama;
+					   $nilai = $row->nilai;
+					   $leng=strlen($kode);
+					switch ($leng){
+						case 2;
+						$cRet .="<tr>
+							<td valign=\"top\" width=\"3%\" align=\"left\">&nbsp;</td>
+							<td colspan=\"2\" valign=\"top\" width=\"15%\" align=\"left\">  </td>
+							<td valign=\"top\" width=\"40%\" align=\"left\"> </td>
+							<td valign=\"top\" width=\"15%\" align=\"right\"> </td>
+							<td valign=\"top\" width=\"15%\" align=\"right\"> </td>
+							<td valign=\"top\" width=\"15%\" align=\"right\"></td>
+						</tr>";
+						$cRet .="<tr>
+							<td valign=\"top\" width=\"3%\" align=\"left\">&nbsp;</td>
+							<td colspan=\"2\" valign=\"top\" width=\"15%\" align=\"left\"> <b>$kode</></td>
+							<td valign=\"top\" width=\"40%\" align=\"left\"><b> $nama</td>
+							<td valign=\"top\" width=\"15%\" align=\"right\"> </td>
+							<td valign=\"top\" width=\"15%\" align=\"right\"> </td>
+							<td valign=\"top\" width=\"15%\" align=\"right\"><b>".number_format($nilai, "2", ",", ".")."<b></td>
+						</tr>";
+						break;
+						case 3;
+						$cRet .="<tr>
+							<td valign=\"top\" width=\"3%\" align=\"left\">&nbsp;</td>
+							<td colspan=\"2\" valign=\"top\" width=\"15%\" align=\"left\"> <b>$kode</></td>
+							<td valign=\"top\" width=\"40%\" align=\"left\"><b> $nama</td>
+							<td valign=\"top\" width=\"15%\" align=\"right\"> </td>
+							<td valign=\"top\" width=\"15%\" align=\"right\"><b>".number_format($nilai, "2", ",", ".")."<b> </td>
+							<td valign=\"top\" width=\"15%\" align=\"right\"></td>
+						</tr>";
+						break;
+						default;
+						$cRet .="<tr>
+							<td valign=\"top\" width=\"3%\" align=\"left\">&nbsp;</td>
+							<td colspan=\"2\" valign=\"top\" width=\"15%\" align=\"left\"> $kode </td>
+							<td valign=\"top\" width=\"40%\" align=\"left\"> $nama</td>
+							<td valign=\"top\" width=\"15%\" align=\"right\"> ".number_format($nilai, "2", ",", ".")."</td>
+							<td valign=\"top\" width=\"15%\" align=\"right\"> </td>
+							<td valign=\"top\" width=\"15%\" align=\"right\"></td>
+						</tr>";
+						break;
+						}
+					}
+					$cRet .="	</table><br>";
+					
+					//CONTRA POST
+					$cRet .="<table style=\"border-collapse:collapse;font-family:Arial;font-size:12px\" width=\"100%\" align=\"center\" border=\"0\" cellspacing=\"3\" cellpadding=\"3\">
+						";
+					$sql = "select SUM(b.rupiah) as nilai
+						FROM trhkasin_ppkd a INNER JOIN trdkasin_ppkd b 
+						on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+						WHERE LEFT(kd_rek5,1) in ('5','1') $where";
+					
+					$hasil = $this->db->query($sql);
+					foreach ($hasil->result() as $row)
+					{
+					   $nilai = $row->nilai;
+					$cRet .="<tr>
+							<td colspan =\"2\" width=\"20%\" align=\"left\"> <b></b></td>
+							<td width=\"40%\" align=\"left\"> <b>CONTRA POS</b></td>
+							<td width=\"25%\" align=\"right\"> <b>".number_format($nilai, "2", ",", ".")."</b></td>
+							<td width=\"15%\" align=\"right\"> &nbsp;</td>
+						</tr>";
+						}
+					$cRet .="	</table>";
+					$cRet .="<table style=\"border-collapse:collapse;font-family:Arial;font-size:12px\" width=\"100%\" align=\"center\" border=\"0\" cellspacing=\"3\" cellpadding=\"3\">
+						";
+					
+					
+					$cRet .="<table style=\"border-collapse:collapse;font-family:Arial;font-size:12px\" width=\"100%\" align=\"center\" border=\"0\" cellspacing=\"1\" cellpadding=\"1\">
+						<tr>
+							<td width=\"50%\" align=\"center\">&nbsp;</td>
+							<td width=\"50%\" align=\"center\"></td>
+						</tr>
+						<tr>
+							<td width=\"50%\" align=\"center\">&nbsp;</td>
+							<td width=\"50%\" align=\"center\">$tanggal<br>$jabatan<br>$pangkat<br><br><br><br><br><b><u>$nama_ttd</u></b><br>$nip
+							</td>
+						</tr>
+						</table>";
+					
+					$data['prev']= $cRet;    
+					$judul='Penerimaan_skpd ';
+					switch ($ctk){
+						case 0;
+						echo ("<title>$judul</title>");
+						echo $cRet;
+						break;
+						case 1;
+						$this->tukd_model->_mpdf('',$cRet,10,10,10,'L');
+						break;
+						case 2;        
+						header("Cache-Control: no-cache, no-store, must-revalidate");
+						header("Content-Type: application/vnd.ms-excel");
+						header("Content-Disposition: attachment; filename= $judul.xls");
+						$this->load->view('anggaran/rka/perkadaII', $data);
+						break;	
+					}
+				}
+
+				function cetak_pend_skpd_bulan_rinci($periode='',$ctk='',$anggaran='',$kd_skpd='',$jenis='',$tglttd='',$ttd='',$periode2=''){
+					$lntahunang = $this->session->userdata('pcThang');   
+					
+					$ceklen = strlen($periode);
+					if($ceklen<'3'){
+					  $where = "AND MONTH(tgl_kas)>='".$periode."' and MONTH(tgl_kas)<='".$periode2."'";
+						switch  ($periode){
+						case  1:
+						$judul="BULAN JANUARI";
+						break;
+						case  2:
+						$judul="BULAN FEBRUARI";
+						break;
+						case  3:
+						$judul= "BULAN MARET";
+						break;
+						case  4:
+						$judul="BULAN APRIL";
+						break;
+						case  5:
+						$judul= "BULAN MEI";
+						break;
+						case  6:
+						$judul= "BULAN JUNI";
+						break;
+						case  7:
+						$judul= "BULAN JULI";
+						break;
+						case  8:
+						$judul= "BULAN AGUSTUS";
+						break;
+						case  9:
+						$judul= "BULAN SEPTEMBER";
+						break;
+						case  10:
+						$judul= "BULAN OKTOBER";
+						break;
+						case  11:
+						$judul= "BULAN NOVEMBER";
+						break;
+						case  12:
+						$judul= "BULAN DESEMBER";
+						break;
+						}
+						switch  ($periode2){
+						case  1:
+						$judul2="BULAN JANUARI $lntahunang";
+						break;
+						case  2:
+						$judul2="BULAN FEBRUARI $lntahunang";
+						break;
+						case  3:
+						$judul2= "BULAN MARET $lntahunang";
+						break;
+						case  4:
+						$judul2="BULAN APRIL $lntahunang";
+						break;
+						case  5:
+						$judul2= "BULAN MEI $lntahunang";
+						break;
+						case  6:
+						$judul2= "BULAN JUNI $lntahunang";
+						break;
+						case  7:
+						$judul2= "BULAN JULI $lntahunang";
+						break;
+						case  8:
+						$judul2= "BULAN AGUSTUS $lntahunang";
+						break;
+						case  9:
+						$judul2= "BULAN SEPTEMBER $lntahunang";
+						break;
+						case  10:
+						$judul2= "BULAN OKTOBER $lntahunang";
+						break;
+						case  11:
+						$judul2= "BULAN NOVEMBER $lntahunang";
+						break;
+						case  12:
+						$judul2= "BULAN DESEMBER $lntahunang";
+						break;
+						}
+					}
+			
+			
+				$tanggal = $tglttd == '-' ? '' : 'Pontianak, '.$this->tukd_model->tanggal_format_indonesia($tglttd) ;
+				if($ttd=='-'){
+					$nama='';
+					$pangkat='';
+					$jabatan='';
+					$nip='';
+				}else{
+				$ttd=str_replace("abc"," ",$ttd);
+				$sqlsc="SELECT TOP 1 nama as nm,nip as nip,jabatan as jab,pangkat FROM ms_ttd where kode='BUD' and nip='$ttd'";
+							 $sqlsclient=$this->db->query($sqlsc);
+							 foreach ($sqlsclient->result() as $rowttd)
+							{
+								$nama_ttd = $rowttd->nm;
+								$jabatan = $rowttd->jab;
+								$pangkat = $rowttd->pangkat;
+								$nip = 'NIP. '.$ttd;
+							} 
+							
+				$sqlsc="SELECT sld_awal FROM ms_skpd where kd_skpd='5.02.0.00.0.00.01.0000'";
+							 $sqlsclient=$this->db->query($sqlsc);
+							 foreach ($sqlsclient->result() as $rowttd)
+							{
+								$saldoawal = $rowttd->sld_awal;  
+							} 
+				}
+				
+				$cRet ='';
+				$cRet .="<TABLE style=\"border-collapse:collapse;font-family:Arial\" width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"1\" align=\"center\">
+								<tr>
+								<td rowspan=\"4\" align=\"center\" style=\"border-right:hidden\">
+									<img src=\"".base_url()."/image/logoHP.png\"  width=\"100\" height=\"100\" />
+									</td>
+								<td align=\"center\" style=\"border-left:hidden;border-bottom:hidden\"><strong>BADAN PENGELOLAAN KEUANGAN DAN ASET DAERAH</strong></td></tr>
+								<tr><td align=\"center\" style=\"border-left:hidden;border-bottom:hidden;border-top:hidden\"><b>SUB BIDANG PENGELOLAAN KAS DAERAH KOTA PONTIANAK </b></tr>
+								<tr><td align=\"center\" style=\"border-left:hidden;border-bottom:hidden;border-top:hidden\"><b>LAPORAN SKPD PENERIMAAN </b></tr>
+								<tr><td align=\"center\" style=\"border-left:hidden;border-top:hidden\" ><b>PADA $judul s/d $judul2 </b></tr>
+								</TABLE>
+								<hr  width=\"100%\"> 
+								";
+								
+						
+					$cRet .="<table style=\"border-collapse:collapse;font-family:Arial;font-size:12px\" width=\"100%\" align=\"center\" border=\"0\" cellspacing=\"3\" cellpadding=\"3\">
+							";
+					//Untuk Total Pendapatan 		
+					$sql = "select c.kode1,c.nama,sum(c.nilai) as nilai from (
+							select '1' as kode1,'TOTAL PENDAPATAN + PENERIMAAN PEMBIAYAAN + CP' as nama, SUM(b.rupiah) as nilai
+							FROM trhkasin_ppkd a INNER JOIN trdkasin_ppkd b 
+							on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+							WHERE LEFT(kd_rek5,2) in ('41','42','43','61') $where
+							UNION
+							select '2' as kode1,'TOTAL PENDAPATAN' as nama, SUM(b.rupiah) as nilai
+							FROM trhkasin_ppkd a INNER JOIN trdkasin_ppkd b 
+							on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+							WHERE LEFT(kd_rek5,2) in ('41','42','43') $where				
+							UNION
+							select '1' as kode1, 'TOTAL PENDAPATAN + PENERIMAAN PEMBIAYAAN + CP' as nama,SUM(b.rupiah) as nilai
+							FROM trhkasin_ppkd a INNER JOIN trdkasin_ppkd b 
+							on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+							WHERE LEFT(kd_rek5,1) in ('5','1') $where
+							) c
+							group by c.kode1,c.nama
+							order by c.kode1
+							";
+							
+					/*$sql = "select 'TOTAL PENDAPATAN' as nama, SUM(b.rupiah) as nilai
+							FROM trhkasin_ppkd a INNER JOIN trdkasin_ppkd b 
+							on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+							WHERE LEFT(kd_rek5,1)='4' AND a.kd_skpd !='5.02.0.00.0.00.01.0000' $where
+							UNION ALL
+							select 'TOTAL PENDAPATAN PAJAK DAN RETRIBUSI' as nama, SUM(b.rupiah) as nilai
+							FROM trhkasin_ppkd a INNER JOIN trdkasin_ppkd b 
+							on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+							WHERE LEFT(kd_rek5,3) IN ('411','412') AND a.kd_skpd !='5.02.0.00.0.00.01.0000' $where";                
+					*/
+						
+						$hasil = $this->db->query($sql);
+					foreach ($hasil->result() as $row)
+						{
+						   $nama = $row->nama;
+						   $nilai = $row->nilai;
+						$cRet .="<tr>
+								<td width=\"50%\" align=\"left\"> <b>$nama</b></td>
+								<td width=\"50%\" align=\"right\"> <b>".number_format($nilai, "2", ",", ".")."</b></td>
+							</tr>";
+							}
+							 $cRet .="<tr>
+								<td width=\"50%\" align=\"left\"> <b>SISA KAS TAHUN LALU</b></td>
+								<td width=\"50%\" align=\"right\"> <b>".number_format($saldoawal, "2", ",", ".")."</b></td>
+							</tr>";
+						$cRet .="	</table>";
+						
+						// Untuk Rincian selain PPKD
+						$cRet .="<table style=\"border-collapse:collapse;font-family:Arial;font-size:12px\" width=\"100%\" align=\"center\" border=\"0\" cellspacing=\"3\" cellpadding=\"3\">
+							";
+							
+							$sql = "SELECT a.kode,nama,ISNULL(nilai,0) as nilai,a.kode1 FROM (
+									SELECT LEFT(kd_rek6,3) as kode1,LEFT(kd_rek6,3) as kode, b.nm_rek3 as nama FROM trdrka a 
+									INNER JOIN ms_rek3 b ON LEFT(a.kd_rek6,3)=kd_rek3
+									WHERE LEFT(kd_rek6,1)='4' AND kd_skpd !='5.02.0.00.0.00.01.0000'
+									GROUP BY LEFT(kd_rek6,3), b.nm_rek3) a
+									LEFT JOIN 
+									(SELECT LEFT(kd_rek5,3) as kode, SUM(rupiah) as nilai FROM trhkasin_ppkd a 
+									INNER JOIN trdkasin_ppkd b on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+									WHERE LEFT(kd_rek5,1)='4' AND a.kd_skpd !='5.02.0.00.0.00.01.0000' $where
+									GROUP BY LEFT(kd_rek5,3))b
+									ON a.kode=b.kode
+			
+									UNION ALL
+			
+									SELECT a.kode,nama,ISNULL(nilai,0) as nilai,a.kode1 FROM (
+									SELECT LEFT(kd_rek6,3) kode1,LEFT(kd_rek6,3)+'.'+kd_skpd as kode, nm_skpd as nama FROM trdrka a 
+									WHERE LEFT(kd_rek6,1)='4' AND kd_skpd !='5.02.0.00.0.00.01.0000'
+									GROUP BY LEFT(kd_rek6,3), kd_skpd,nm_skpd) a
+									LEFT JOIN
+									(SELECT LEFT(kd_rek5,3)+'.'+a.kd_skpd as kode, SUM(rupiah) as nilai FROM trhkasin_ppkd a 
+									INNER JOIN trdkasin_ppkd b on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+									WHERE LEFT(kd_rek5,1)='4' AND a.kd_skpd !='5.02.0.00.0.00.01.0000' $where
+									GROUP BY LEFT(kd_rek5,3),a.kd_skpd)b
+									ON a.kode=b.kode
+									
+						UNION ALL
+									
+									SELECT LEFT(a.kode,3)+'.'+SUBSTRING(a.kode,7,10)+'.'+SUBSTRING(a.kode,4,2) as kode,
+									nama,ISNULL(nilai,0) as nilai,a.kode1 FROM (
+									SELECT LEFT(kd_rek6,5) kode1, LEFT(kd_rek6,5)+'.'+kd_skpd kode, b.nm_rek4 as nama FROM trdrka a 
+									INNER JOIN ms_rek4 b ON LEFT(a.kd_rek6,5)=kd_rek4
+									WHERE LEFT(kd_rek6,1)='4' AND kd_skpd !='5.02.0.00.0.00.01.0000' 
+									GROUP BY LEFT(kd_rek6,5),kd_skpd, b.nm_rek4)a
+									LEFT JOIN 
+									(SELECT LEFT(kd_rek5,5)+'.'+a.kd_skpd as kode, SUM(rupiah) as nilai FROM trhkasin_ppkd a 
+									INNER JOIN trdkasin_ppkd b on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+									WHERE LEFT(kd_rek5,1)='4' AND a.kd_skpd !='5.02.0.00.0.00.01.0000' $where
+									GROUP BY LEFT(kd_rek5,5),a.kd_skpd)b
+									ON a.kode=b.kode
+									
+						UNION ALL
+									
+									SELECT LEFT(a.kode,3)+'.'+SUBSTRING(a.kode,9,10)+'.'+SUBSTRING(a.kode,4,4) as kode,
+									nama,ISNULL(nilai,0) as nilai,a.kode1 FROM (
+									SELECT LEFT(a.kd_rek6,7) kode1, LEFT(a.kd_rek6,7)+'.'+kd_skpd kode, b.nm_rek5 as nama FROM trdrka a 
+									INNER JOIN ms_rek5 b ON LEFT(a.kd_rek6,7)=b.kd_rek5
+									WHERE LEFT(a.kd_rek6,1)='4' AND a.kd_skpd !='5.02.0.00.0.00.01.0000' 
+									GROUP BY LEFT(a.kd_rek6,7),a.kd_skpd, b.nm_rek5)a
+									LEFT JOIN 
+									(SELECT LEFT(kd_rek5,7)+'.'+a.kd_skpd as kode, SUM(rupiah) as nilai FROM trhkasin_ppkd a 
+									INNER JOIN trdkasin_ppkd b on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+									WHERE LEFT(kd_rek5,1)='4' AND a.kd_skpd !='5.02.0.00.0.00.01.0000' $where
+									GROUP BY LEFT(kd_rek5,7),a.kd_skpd)b
+									ON a.kode=b.kode
+									
+						UNION ALL
+									
+								SELECT left(b.kd_rek5,3)+'.'+a.kd_skpd+'.'+substring(b.kd_rek5,4,4)+''+right(c.kd_rek5,2) as kode,c.uraian nama,SUM(rupiah) as nilai,b.kd_rek5 kode1 FROM trhkasin_ppkd a 
+									INNER JOIN trdkasin_ppkd b on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+									LEFT JOIN map_rek_penerimaan c on c.kd_rek5=b.kd_rek5 and c.kd_skpd = b.kd_skpd
+									WHERE LEFT(b.kd_rek5,1)='4' AND a.kd_skpd !='5.02.0.00.0.00.01.0000'  $where
+									GROUP BY left(b.kd_rek5,3),substring(b.kd_rek5,4,4),right(c.kd_rek5,2),c.uraian,b.kd_rek5,a.kd_skpd                
+									
+									ORDER BY kode,kode1";
+						$no=0;
+						$hasil = $this->db->query($sql);
+						foreach ($hasil->result() as $row)
+						{
+						   $kode = $row->kode;
+						   $nama = $row->nama;
+						   $nilai = $row->nilai;
+						   $leng=strlen($kode);
+						   
+							switch ($leng){
+							case 3;
+							$cRet .="<tr>
+								<td valign=\"top\" width=\"3%\" align=\"left\">&nbsp;</td>
+								<td valign=\"top\" width=\"5%\" align=\"left\">&nbsp;</td>
+								<td valign=\"top\" width=\"10%\" align=\"left\">&nbsp;</td>
+								<td valign=\"top\" width=\"40%\" align=\"left\">&nbsp;</td>
+								<td valign=\"top\" width=\"15%\" align=\"right\">&nbsp;</td>
+								<td valign=\"top\" width=\"15%\" align=\"right\">&nbsp;</td>
+								<td valign=\"top\" width=\"15%\" align=\"right\">&nbsp;</td>
+							</tr>";
+							
+								$cRet .="<tr>
+								<td valign=\"top\" width=\"3%\" align=\"left\"> </td>
+								<td valign=\"top\" width=\"5%\" align=\"left\"> <b>".$this->left($kode,3)."</b></td>
+								<td valign=\"top\" width=\"10%\" align=\"left\"> <b></b></td>
+								<td valign=\"top\" width=\"40%\" align=\"left\"> <b>".strtoupper($nama)."</b></td>
+								<td valign=\"top\" width=\"15%\" align=\"right\"> <b></b></td>
+								<td valign=\"top\" width=\"15%\" align=\"right\"> <b></b></td>
+								<td valign=\"top\" width=\"15%\" align=\"right\"> <b>".number_format($nilai, "2", ",", ".")."</b></td>
+							</tr>";
+							break;
+							case 14;
+								$no=$no+1;
+								$cRet .="<tr>
+								<td valign=\"top\" width=\"3%\" align=\"left\">&nbsp;</td>
+								<td valign=\"top\" width=\"5%\" align=\"left\">&nbsp;</td>
+								<td valign=\"top\" width=\"10%\" align=\"left\">&nbsp;</td>
+								<td valign=\"top\" width=\"40%\" align=\"left\">&nbsp;</td>
+								<td valign=\"top\" width=\"15%\" align=\"right\">&nbsp;</td>
+								<td valign=\"top\" width=\"15%\" align=\"right\">&nbsp;</td>
+								<td valign=\"top\" width=\"15%\" align=\"right\">&nbsp;</td>
+							</tr>";
+								$cRet .="<tr>
+								<td valign=\"top\" width=\"3%\" align=\"left\"><b>$no</b></td>
+								<td valign=\"top\" width=\"5%\" align=\"left\"> <b></b></td>
+								<td valign=\"top\" width=\"10%\" align=\"left\"> <b>".substr($kode,4)."</b></td>
+								<td valign=\"top\" width=\"40%\" align=\"left\"> <b>$nama</b></td>
+								<td valign=\"top\" width=\"15%\" align=\"right\"> <b></b></td>
+								<td valign=\"top\" width=\"15%\" align=\"right\"> <b>".number_format($nilai, "2", ",", ".")."</b></td>
+								<td valign=\"top\" width=\"15%\" align=\"right\"> <b></b></td>
+							</tr>";
+							break;                	
+							case 17;				
+								$cRet .="<tr>
+								<td valign=\"top\" width=\"3%\" align=\"left\"></td>
+								<td valign=\"top\" width=\"5%\" align=\"left\"><b>".$this->left($kode,3)."".$this->right($kode,2)."</b></td>
+								<td valign=\"top\" width=\"10%\" align=\"left\"> <b></b></td>
+								<td valign=\"top\" width=\"40%\" align=\"left\"><b>$nama</b></td>
+								<td valign=\"top\" width=\"15%\" align=\"right\"><b>".number_format($nilai, "2", ",", ".")."</b></td>
+								<td valign=\"top\" width=\"15%\" align=\"right\"> </td>
+								<td valign=\"top\" width=\"15%\" align=\"right\"></td>
+							</tr>";
+							break;
+							case 19;				
+								$cRet .="<tr>
+								<td valign=\"top\" width=\"3%\" align=\"left\"></td>
+								<td valign=\"top\" width=\"5%\" align=\"left\"> ".$this->left($kode,3)."".$this->right($kode,4)." </td>
+								<td valign=\"top\" width=\"10%\" align=\"left\"> <b></b></td>
+								<td valign=\"top\" width=\"40%\" align=\"left\"> $nama</td>
+								<td valign=\"top\" width=\"15%\" align=\"right\"> ".number_format($nilai, "2", ",", ".")."</td>
+								<td valign=\"top\" width=\"15%\" align=\"right\"> </td>
+								<td valign=\"top\" width=\"15%\" align=\"right\"></td>
+							</tr>";
+							break;
+							default;
+							$cRet .="<tr>
+								<td valign=\"top\" width=\"3%\" align=\"left\"></td>
+								<td valign=\"top\" width=\"5%\" align=\"left\"></td>
+								<td valign=\"top\" width=\"10%\" align=\"left\"> <b></b></td>
+								<td valign=\"top\" width=\"40%\" style=\"border-bottom:1px solid black;\" align=\"left\">&nbsp;&nbsp;- ".$this->right($kode,2).". $nama</td>
+								<td valign=\"top\" width=\"15%\" style=\"border-bottom:1px solid black;\" align=\"left\"> ".number_format($nilai, "2", ",", ".")."</td>
+								<td valign=\"top\" width=\"15%\" align=\"right\"> </td>
+								<td valign=\"top\" width=\"15%\" align=\"right\"></td>
+							</tr>";
+							break;
+							}
+						
+							}
+							
+						$cRet .="	</table> <br>";
+				
+						//TOTAL UNTUK PPKD
+						$cRet .="<table style=\"border-collapse:collapse;font-family:Arial;font-size:12px\" width=\"100%\" align=\"center\" border=\"0\" cellspacing=\"3\" cellpadding=\"3\">
+							";
+						$sql = "select SUM(b.rupiah) as nilai
+							FROM trhkasin_ppkd a INNER JOIN trdkasin_ppkd b 
+							on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+							WHERE LEFT(kd_rek5,1)='4' AND a.kd_skpd='5.02.0.00.0.00.01.0000' $where ";
+						
+						$hasil = $this->db->query($sql);
+						foreach ($hasil->result() as $row)
+						{
+						   $nilai = $row->nilai;
+						$cRet .="<tr>
+								<td colspan =\"2\" width=\"8%\" align=\"left\"> <b>4.02.00</b></td>
+								<td width=\"42%\" align=\"left\"> <b>PPKD</b></td>
+								<td width=\"50%\" align=\"right\"> <b>".number_format($nilai, "2", ",", ".")."</b></td>
+							</tr>";
+							}
+						$cRet .="	</table>";
+						$cRet .="<table style=\"border-collapse:collapse;font-family:Arial;font-size:12px\" width=\"100%\" align=\"center\" border=\"0\" cellspacing=\"3\" cellpadding=\"3\">
+							";
+						
+						// PPKD
+						$sql = "SELECT a.kode,nama, ISNULL(nilai,0) as nilai FROM 
+								(SELECT LEFT(kd_rek6,2) as kode, nm_rek2 as nama FROM trdrka a
+								INNER JOIN ms_rek2 b ON LEFT(kd_rek6,2)=b.kd_rek2
+								WHERE LEFT(kd_rek6,1) IN ('4','6') AND kd_skpd='5.02.0.00.0.00.01.0000' 
+								GROUP BY LEFT(kd_rek6,2),nm_rek2) a
+								LEFT JOIN 
+								(SELECT LEFT(kd_rek5,2) as kode, SUM(rupiah) as nilai FROM trhkasin_ppkd a 
+								INNER JOIN trdkasin_ppkd b on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+								WHERE LEFT(kd_rek5,1) IN ('4','6') AND a.kd_skpd ='5.02.0.00.0.00.01.0000' $where
+								GROUP BY LEFT(kd_rek5,2))b
+								ON a.kode=b.kode
+			
+								UNION ALL
+			
+								SELECT a.kode,nama, ISNULL(nilai,0) as nilai FROM 
+								(SELECT LEFT(kd_rek6,3) as kode, nm_rek3 as nama FROM trdrka a
+								INNER JOIN ms_rek3 b ON LEFT(kd_rek6,3)=b.kd_rek3
+								WHERE LEFT(kd_rek6,1) IN ('4','6')  AND kd_skpd='5.02.0.00.0.00.01.0000' 
+								GROUP BY LEFT(kd_rek6,3),nm_rek3) a
+								LEFT JOIN 
+								(SELECT LEFT(kd_rek5,3) as kode, SUM(rupiah) as nilai FROM trhkasin_ppkd a 
+								INNER JOIN trdkasin_ppkd b on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+								WHERE LEFT(kd_rek5,1) IN ('4','6')  AND a.kd_skpd ='5.02.0.00.0.00.01.0000' $where
+								GROUP BY LEFT(kd_rek5,3))b 
+								ON a.kode=b.kode
+			
+								
+								UNION ALL
+			
+								SELECT a.kode,nama, ISNULL(nilai,0) as nilai FROM 
+								(SELECT LEFT(kd_rek6,7) as kode, nm_rek6 as nama FROM trdrka a
+								WHERE LEFT(kd_rek6,1) IN ('4','6')  AND kd_skpd='5.02.0.00.0.00.01.0000' 
+								GROUP BY LEFT(kd_rek6,7),nm_rek6) a
+								LEFT JOIN 
+								(SELECT LEFT(kd_rek5,7) as kode, SUM(rupiah) as nilai FROM trhkasin_ppkd a 
+								INNER JOIN trdkasin_ppkd b on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+								WHERE LEFT(kd_rek5,1) IN ('4','6')  AND a.kd_skpd ='5.02.0.00.0.00.01.0000' $where
+								GROUP BY LEFT(kd_rek5,7))b
+								ON a.kode=b.kode
+								
+								   UNION ALL
+								
+								SELECT c.kd_rek5 as kode,c.uraian nama,SUM(rupiah) as nilai FROM trhkasin_ppkd a 
+								INNER JOIN trdkasin_ppkd b on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+								LEFT JOIN map_rek_penerimaan c on c.kd_rek5=b.kd_rek5 and c.kd_skpd = b.kd_skpd
+								WHERE LEFT(b.kd_rek5,1) IN ('4','6') AND a.kd_skpd ='5.02.0.00.0.00.01.0000' $where
+								GROUP BY c.kd_rek5,c.uraian,b.kd_rek5,a.kd_skpd                
+									
+								
+								ORDER BY a.kode";
+						
+						$hasil = $this->db->query($sql);
+					foreach ($hasil->result() as $row)
+						{
+						   $kode = $row->kode;
+						   $nama = $row->nama;
+						   $nilai = $row->nilai;
+						   $leng=strlen($kode);
+						switch ($leng){
+							case 2;
+							$cRet .="<tr>
+								<td valign=\"top\" width=\"3%\" align=\"left\">&nbsp;</td>
+								<td colspan=\"2\" valign=\"top\" width=\"15%\" align=\"left\">  </td>
+								<td valign=\"top\" width=\"40%\" align=\"left\"> </td>
+								<td valign=\"top\" width=\"15%\" align=\"right\"> </td>
+								<td valign=\"top\" width=\"15%\" align=\"right\"> </td>
+								<td valign=\"top\" width=\"15%\" align=\"right\"></td>
+							</tr>";
+							$cRet .="<tr>
+								<td valign=\"top\" width=\"3%\" align=\"left\">&nbsp;</td>
+								<td colspan=\"2\" valign=\"top\" width=\"15%\" align=\"left\"> <b>$kode</></td>
+								<td valign=\"top\" width=\"40%\" align=\"left\"><b> $nama</td>
+								<td valign=\"top\" width=\"15%\" align=\"right\"> </td>
+								<td valign=\"top\" width=\"15%\" align=\"right\"> </td>
+								<td valign=\"top\" width=\"15%\" align=\"right\"><b>".number_format($nilai, "2", ",", ".")."<b></td>
+							</tr>";
+							break;
+							case 3;
+							$cRet .="<tr>
+								<td valign=\"top\" width=\"3%\" align=\"left\">&nbsp;</td>
+								<td colspan=\"2\" valign=\"top\" width=\"15%\" align=\"left\"> <b>$kode</></td>
+								<td valign=\"top\" width=\"40%\" align=\"left\"><b> $nama</td>
+								<td valign=\"top\" width=\"15%\" align=\"right\"> </td>
+								<td valign=\"top\" width=\"15%\" align=\"right\"><b>".number_format($nilai, "2", ",", ".")."<b> </td>
+								<td valign=\"top\" width=\"15%\" align=\"right\"></td>
+							</tr>";
+							break;
+							case 9;
+							$cRet .="<tr>
+								<td valign=\"top\" width=\"3%\" align=\"left\">&nbsp;</td>
+								<td colspan=\"2\" valign=\"top\" width=\"15%\" align=\"left\"> </td>
+								<td valign=\"top\" width=\"40%\" style=\"border-bottom:1px solid black;\" align=\"left\">&nbsp;&nbsp;- ".$this->right($kode,2)." $nama</td>
+								<td valign=\"top\" width=\"15%\" style=\"border-bottom:1px solid black;\" align=\"left\"> ".number_format($nilai, "2", ",", ".")."</td>
+								<td valign=\"top\" width=\"15%\" align=\"right\"> </td>
+								<td valign=\"top\" width=\"15%\" align=\"right\"></td>
+							</tr>";
+							break;
+							default;
+							$cRet .="<tr>
+								<td valign=\"top\" width=\"3%\" align=\"left\">&nbsp;</td>
+								<td colspan=\"2\" valign=\"top\" width=\"15%\" align=\"left\"> $kode </td>
+								<td valign=\"top\" width=\"40%\" align=\"left\"> $nama</td>
+								<td valign=\"top\" width=\"15%\" align=\"right\"> ".number_format($nilai, "2", ",", ".")."</td>
+								<td valign=\"top\" width=\"15%\" align=\"right\"> </td>
+								<td valign=\"top\" width=\"15%\" align=\"right\"></td>
+							</tr>";
+							break;
+							}
+						}
+						$cRet .="	</table><br>";
+						
+						//CONTRA POST
+						$cRet .="<table style=\"border-collapse:collapse;font-family:Arial;font-size:12px\" width=\"100%\" align=\"center\" border=\"0\" cellspacing=\"3\" cellpadding=\"3\">
+							";
+						$sql = "select SUM(b.rupiah) as nilai
+							FROM trhkasin_ppkd a INNER JOIN trdkasin_ppkd b 
+							on b.no_kas = a.no_kas and b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd
+							WHERE LEFT(kd_rek5,1) in ('5','1') $where";
+						
+						$hasil = $this->db->query($sql);
+						foreach ($hasil->result() as $row)
+						{
+						   $nilai = $row->nilai;
+						$cRet .="<tr>
+								<td colspan =\"2\" width=\"20%\" align=\"left\"> <b></b></td>
+								<td width=\"40%\" align=\"left\"> <b>CONTRA POS</b></td>
+								<td width=\"25%\" align=\"right\"> <b>".number_format($nilai, "2", ",", ".")."</b></td>
+								<td width=\"15%\" align=\"right\"> &nbsp;</td>
+							</tr>";
+							}
+						$cRet .="	</table>";
+						$cRet .="<table style=\"border-collapse:collapse;font-family:Arial;font-size:12px\" width=\"100%\" align=\"center\" border=\"0\" cellspacing=\"3\" cellpadding=\"3\">
+							";
+						
+						
+						$cRet .="<table style=\"border-collapse:collapse;font-family:Arial;font-size:12px\" width=\"100%\" align=\"center\" border=\"0\" cellspacing=\"1\" cellpadding=\"1\">
+							<tr>
+								<td width=\"50%\" align=\"center\">&nbsp;</td>
+								<td width=\"50%\" align=\"center\"></td>
+							</tr>
+							<tr>
+								<td width=\"50%\" align=\"center\">&nbsp;</td>
+								<td width=\"50%\" align=\"center\">$tanggal<br>$jabatan<br>$pangkat<br><br><br><br><br><b><u>$nama_ttd</u></b><br>$nip
+								</td>
+							</tr>
+							</table>";
+						
+						$data['prev']= $cRet;    
+						$judul='Penerimaan_skpd ';
+						switch ($ctk){
+							case 0;
+							echo ("<title>$judul</title>");
+							echo $cRet;
+							break;
+							case 1;
+							$this->tukd_model->_mpdf('',$cRet,10,10,10,'L');
+							break;
+							case 2;        
+							header("Cache-Control: no-cache, no-store, must-revalidate");
+							header("Content-Type: application/vnd.ms-excel");
+							header("Content-Disposition: attachment; filename= $judul.xls");
+							$this->load->view('anggaran/rka/perkadaII', $data);
+							break;	
+						}
+					}
+
 }
