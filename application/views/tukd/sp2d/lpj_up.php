@@ -246,6 +246,9 @@
         }
             ]],
             onSelect:function(rowIndex,rowData){
+                                     
+            },
+            onDblClickRow:function(rowIndex,rowData){
               nomer     = rowData.no_lpj;         
               kode      = rowData.kd_skpd;
               nmskpd    = rowData.nm_skpd;
@@ -259,9 +262,7 @@
               get(nomer,kode,tgllpj,cket,status_lpj,tgl_sp2d,sp2d,nmskpd);
               detail_trans_3();
               load_sum_lpj(); 
-              lcstatus = 'edit';                                       
-            },
-            onDblClickRow:function(rowIndex,rowData){
+              lcstatus = 'edit';  
                 section1(st);
             }
         });
