@@ -18,7 +18,7 @@
     var nip='';
 	var kdskpd='';
 	var kdrek5='';
-    
+    var chek = 0;
      $(document).ready(function() {
             $("#accordion").accordion();            
             $( "#dialog-modal" ).dialog({
@@ -32,18 +32,20 @@
     
 	$(function(){
 		$('#id_pengirim').combogrid({
-			   panelWidth:700,  
+			   panelWidth:480,  
 			   idField:'kd_pengirim',  
 			   textField:'kd_pengirim',  
 			   mode:'remote',
 			   url:'<?php echo base_url(); ?>index.php/tukd/load_pengirim',             
-			   columns:[[  
-				   {field:'kd_pengirim',title:'Kode Pengirim',width:140},  
-				   {field:'nm_pengirim',title:'Nama Pengirim',width:700}
+			   columns:[[  				   
+				   {field:'kd_skpd',title:'SKPD',width:70},
+                   {field:'nm_pengirim',title:'Nama Pengirim',width:380}
+				   
 			   ]],  
 			   onSelect:function(rowIndex,rowData){
 				   kd_pengirim = rowData.kd_pengirim;
-				   $("#nm_pengirim").attr("value",rowData.nm_pengirim);                                      
+				   $("#nm_pengirim").attr("value",rowData.nm_pengirim);   
+					cskpd(rowData.kd_skpd);
 			   }
 			}); 
 	});
@@ -66,14 +68,14 @@
     
 		$(function(){  
             $('#tgl_ttd').datebox({  
-				required:true,
-				formatter :function(date){
-					var y = date.getFullYear();
-					var m = date.getMonth()+1;
-					var d = date.getDate();
-					return y+'-'+m+'-'+d;
-				}
-			});
+            required:true,
+            formatter :function(date){
+            	var y = date.getFullYear();
+            	var m = date.getMonth()+1;
+            	var d = date.getDate();
+            	return y+'-'+m+'-'+d;
+            }
+        });
 			
 			$('#tgl_ttd1').datebox({  
 				required:true,
@@ -83,7 +85,17 @@
 					var d = date.getDate();
 					return y+'-'+m+'-'+d;
 				}
-			});          
+			});
+            
+            $('#tgl_ttd2').datebox({  
+				required:true,
+				formatter :function(date){
+					var y = date.getFullYear();
+					var m = date.getMonth()+1;
+					var d = date.getDate();
+					return y+'-'+m+'-'+d;
+				}
+			});            
          });
 		  
     function validate1(){
@@ -104,6 +116,27 @@
 		}                 
     }
     
+	function cskpd(skpd){
+         $(function(){
+	$('#srek').combogrid({  	   
+		panelWidth:630,  
+		idField:'kd_rek5',  
+		textField:'kd_rek5',  
+		mode:'remote',        
+		url:"<?php echo base_url(); ?>index.php/tukd/rek5_skpd/"+skpd,  
+		columns:[[  
+			{field:'kd_rek5',title:'Kode Rekening',width:100},  
+			{field:'nm_rek5',title:'Nama Rekening',width:500}    
+		]],
+		onSelect:function(rowIndex,rowData){
+			kdrek5 = rowData.kd_rek5;
+			$("#nmrek5").attr("value",rowData.nm_rek5);			
+		}  
+		}); 
+	});
+
+    }
+	
     function get_skpd()
         {
         
@@ -124,7 +157,8 @@
     
 		
         function cetak(ctk)
-        {
+        {	
+									
 			var cetk       = pilih;
 			var no_halaman = document.getElementById('no_halaman').value;
 			var pengirim   = $('#id_pengirim').combogrid('getValue'); 
@@ -135,19 +169,129 @@
 			var blnakhir  = document.getElementById('bulan2').value; 
 			var ctglttd    = $('#tgl_ttd').datebox('getValue');
 			var ctglttd1   = $('#tgl_ttd1').datebox('getValue');
-			
-			var url    = "<?php echo site_url(); ?>/tukd/ctk_daftar_penerimaan";  
+			var ctglttd2   = $('#tgl_ttd2').datebox('getValue');
+            
+			if($('#q_kasda2').attr('checked')){	
+				//alert("Cetakkan 1");
+			var url    = "<?php echo site_url(); ?>tukd/ctk_daftar_penerimaan";  
 	
 			if(cetk=='3'){
-				window.open(url+'/'+pengirim+'/'+ctk+'/'+ttd+'/'+blnawal+'/'+blnakhir+'/'+no_halaman+'/'+spasi+'/'+cetk+'/'+'-'+'/'+'-', '_blank');
+				window.open(url+'/'+pengirim+'/'+ctk+'/'+ttd+'/'+blnawal+'/'+blnakhir+'/'+no_halaman+'/'+spasi+'/'+cetk+'/'+'-'+'/'+'-'+'/'+ctglttd2, '_blank');
 				window.focus();
 			}else{
-				window.open(url+'/'+pengirim+'/'+ctk+'/'+ttd+'/'+'-'+'/'+'-'+'/'+no_halaman+'/'+spasi+'/'+cetk+'/'+ctglttd+'/'+ctglttd1, '_blank');
+				window.open(url+'/'+pengirim+'/'+ctk+'/'+ttd+'/'+'-'+'/'+'-'+'/'+no_halaman+'/'+spasi+'/'+cetk+'/'+ctglttd+'/'+ctglttd1+'/'+ctglttd2, '_blank');
 				window.focus();	
+			}
+			}else if($('#q_kasda').attr('checked')){		
+				//alert("Cetakkan 2");
+				var url    = "<?php echo site_url(); ?>tukd/ctk_daftar_penerimaan2";  
+	
+			if(cetk=='3'){
+				window.open(url+'/'+'-'+'/'+ctk+'/'+ttd+'/'+blnawal+'/'+blnakhir+'/'+no_halaman+'/'+spasi+'/'+cetk+'/'+'-'+'/'+'-'+'/'+ctglttd2, '_blank');
+				window.focus();
+			}else{
+				window.open(url+'/'+'-'+'/'+ctk+'/'+ttd+'/'+'-'+'/'+'-'+'/'+no_halaman+'/'+spasi+'/'+cetk+'/'+ctglttd+'/'+ctglttd1+'/'+ctglttd2, '_blank');
+				window.focus();	
+			}
 			}
         }
         
-
+        
+        function cetak_rincian(ctk)
+        {	
+									
+			var cetk       = pilih;
+			var no_halaman = document.getElementById('no_halaman').value;
+			var pengirim   = $('#id_pengirim').combogrid('getValue'); 
+			var spasi  = document.getElementById('spasi').value; 
+			var  ttd = $('#ttd').combogrid('getValue');
+		         ttd = ttd.split(" ").join("123456789");
+			var blnawal   = document.getElementById('bulan').value; 
+			var blnakhir  = document.getElementById('bulan2').value; 
+			var ctglttd    = $('#tgl_ttd').datebox('getValue');
+			var ctglttd1   = $('#tgl_ttd1').datebox('getValue');
+            var ctglttd2   = $('#tgl_ttd2').datebox('getValue');
+			
+			if($('#q_kasda2').attr('checked')){	
+				//alert("Cetakkan 1");
+			var url    = "<?php echo site_url(); ?>tukd/ctk_daftar_penerimaan_2";  
+	
+			if(cetk=='3'){
+				window.open(url+'/'+pengirim+'/'+ctk+'/'+ttd+'/'+blnawal+'/'+blnakhir+'/'+no_halaman+'/'+spasi+'/'+cetk+'/'+'-'+'/'+'-'+'/'+ctglttd2, '_blank');
+				window.focus();
+			}else{
+				window.open(url+'/'+pengirim+'/'+ctk+'/'+ttd+'/'+'-'+'/'+'-'+'/'+no_halaman+'/'+spasi+'/'+cetk+'/'+ctglttd+'/'+ctglttd1+'/'+ctglttd2, '_blank');
+				window.focus();	
+			}
+			}else if($('#q_kasda').attr('checked')){		
+				//alert("Cetakkan 2");
+				var url    = "<?php echo site_url(); ?>tukd/ctk_daftar_penerimaan_2";  
+	
+			if(cetk=='3'){
+				window.open(url+'/'+'-'+'/'+ctk+'/'+ttd+'/'+blnawal+'/'+blnakhir+'/'+no_halaman+'/'+spasi+'/'+cetk+'/'+'-'+'/'+'-'+'/'+ctglttd2, '_blank');
+				window.focus();
+			}else{
+				window.open(url+'/'+'-'+'/'+ctk+'/'+ttd+'/'+'-'+'/'+'-'+'/'+no_halaman+'/'+spasi+'/'+cetk+'/'+ctglttd+'/'+ctglttd1+'/'+ctglttd2, '_blank');
+				window.focus();	
+			}
+			}
+        }
+        
+		function cetakrek(ctk)
+        {	
+									
+			var cetk       = pilih;
+			var no_halaman = document.getElementById('no_halaman').value;
+			var pengirim   = $('#id_pengirim').combogrid('getValue'); 
+			var spasi  = document.getElementById('spasi').value; 
+			var  ttd = $('#ttd').combogrid('getValue');
+		         ttd = ttd.split(" ").join("123456789");
+			var blnawal   = document.getElementById('bulan').value; 
+			var blnakhir  = document.getElementById('bulan2').value; 
+			var ctglttd    = $('#tgl_ttd').datebox('getValue');
+			var ctglttd1   = $('#tgl_ttd1').datebox('getValue');
+			var ctglttd2   = $('#tgl_ttd2').datebox('getValue');
+            var ctglttd2 = ctglttd2.replace(' ','');
+            var kd_rek = $('#srek').combogrid('getValue');
+            
+			if($('#q_kasda2').attr('checked')){	
+				//alert("Cetakkan 1");
+			var url    = "<?php echo site_url(); ?>tukd/ctk_daftar_penerimaan_rek";  
+	
+			if(cetk=='3'){
+				window.open(url+'/'+pengirim+'/'+ctk+'/'+ttd+'/'+blnawal+'/'+blnakhir+'/'+no_halaman+'/'+spasi+'/'+cetk+'/'+'-'+'/'+'-'+'/'+ctglttd2+'/'+kd_rek, '_blank');
+				window.focus();
+			}else{
+				window.open(url+'/'+pengirim+'/'+ctk+'/'+ttd+'/'+'-'+'/'+'-'+'/'+no_halaman+'/'+spasi+'/'+cetk+'/'+ctglttd+'/'+ctglttd1+'/'+ctglttd2+'/'+kd_rek, '_blank');
+				window.focus();	
+			}
+			}else if($('#q_kasda').attr('checked')){		
+				//alert("Cetakkan 2");
+				var url    = "<?php echo site_url(); ?>tukd/ctk_daftar_penerimaan2";  
+	
+			if(cetk=='3'){
+				window.open(url+'/'+'-'+'/'+ctk+'/'+ttd+'/'+blnawal+'/'+blnakhir+'/'+no_halaman+'/'+spasi+'/'+cetk+'/'+'-'+'/'+'-'+'/'+ctglttd2+'/'+kd_rek, '_blank');
+				window.focus();
+			}else{
+				window.open(url+'/'+'-'+'/'+ctk+'/'+ttd+'/'+'-'+'/'+'-'+'/'+no_halaman+'/'+spasi+'/'+cetk+'/'+ctglttd+'/'+ctglttd1+'/'+ctglttd2+'/'+kd_rek, '_blank');
+				window.focus();	
+			}
+			}
+        }
+		
+		function runEffect() {        
+			$("#id_pengirim").combogrid('disable');
+			$('#q_kasda2')._propAttr('checked',false);
+			$("#nm_pengirim").attr("value","");
+			$('#id_pengirim').combogrid('setValue',""); 
+			
+		};  
+		
+		function runEffect2() {        
+			$("#id_pengirim").combogrid('enable');
+			$('#q_kasda')._propAttr('checked',false);
+		};  
+		
     </script>
 
     <STYLE TYPE="text/css"> 
@@ -167,14 +311,24 @@
 <div id="accordion">
     
     <p align="right">         
-        <table border="0" id="sp2d" title="Cetak Buku Kas Pembantu Pengeluaran" style="width:922px;height:200px;" >
+        <table border="0" id="sp2d" title="Cetak Daftar Penerimaan" style="width:922px;height:200px;" >
+		<tr>
+			<td colspan="4">
+					<div id="div_bend">
+							<table style="width:100%;" border="0">
+								<td width="30%"><input id="q_kasda" name="q_kasda" type="checkbox" value="1" onclick="javascript:runEffect();"/> Keseluruhan KASDA</td>
+								<td width="30%"><input id="q_kasda2" name="q_kasda2" type="checkbox" value="2" onclick="javascript:runEffect2();"/> Pengirim STS</td> 
+							</table>
+					</div>
+			</td> 
+		</tr>
 		<tr>
 			<td colspan="4">
 					<div id="div_bend">
 							<table style="width:100%;" border="0">
 								<td width="20%">Nama Pengirim</td>
 								<td><input type="text" id="id_pengirim" name="id_pengirim" style="width: 200px;" /> &nbsp;&nbsp;
-									<input type="nama" id="nm_pengirim" name="nm_pengirim" readonly="true" style="width: 200px;border:0" /> 
+									<input type="nama" id="nm_pengirim" name="nm_pengirim" readonly="true" style="width: 450px;border:0" /> 
 								</td> 
 							</table>
 					</div>
@@ -242,7 +396,19 @@
 						</tr>
 		</table>
 		</td>
-		</tr>	
+		</tr>
+        <tr>
+                <td colspan="3">
+                <div id="div_bend">
+                        <table style="width:100%;" border="0">
+                            <td width="20%">TANGGAL TTD</td>
+                            <td width="1%">:</td>
+                            <td><input type="text" id="tgl_ttd2" style="width: 100px;" /> 
+                            </td> 
+                        </table>
+                </div>
+                </td> 
+            </tr>	
 		<tr>
 			<td colspan="4">
 					<div id="div_bend">
@@ -281,7 +447,27 @@
 			<a class="easyui-linkbutton" iconCls="icon-pdf" plain="true" onclick="javascript:cetak(1);">Cetak Pdf</a>
 			</td>
 		</tr>
-		
+        
+        <tr >
+			<td colspan="2" align="center">
+			<a class="easyui-linkbutton" iconCls="icon-print" plain="true" onclick="javascript:cetak_rincian(0);">Cetak Rincian</a>
+			<a class="easyui-linkbutton" iconCls="icon-pdf" plain="true" onclick="javascript:cetak_rincian(1);">Cetak Rincian Pdf</a>
+			</td>
+		</tr>
+        <tr >
+			<td colspan="2" align="center">
+			<br />
+			</td>
+		</tr>
+        
+        <tr >
+			<td colspan="2" align="center">
+            REKENING : <input id="srek" name="srek" style="width: 100px;" />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input id="nmrek5" name="nmrek5" style="width: 450px; border:0;" />
+            <br />
+			<a class="easyui-linkbutton" iconCls="icon-print" plain="true" onclick="javascript:cetakrek(0);">Cetak Rek</a>
+			<a class="easyui-linkbutton" iconCls="icon-pdf" plain="true" onclick="javascript:cetakrek(1);">Cetak Rek Pdf</a>
+			</td>
+		</tr>     		
         </table>                      
     </p> 
     

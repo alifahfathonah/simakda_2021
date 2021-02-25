@@ -36979,7 +36979,7 @@ function cetak_bku(){
     
 
     function rek5_skpd($lcskpd='') {
-        $sql = " SELECT a.kd_rek5 as kd_rek5,b.nm_rek5 as nm_rek5 FROM trdrka a inner join ms_rek5 b on a.kd_rek5=b.kd_rek5 where (left(a.kd_rek5,1)='4' or left(a.kd_rek5,2)='61') and rtrim(a.kd_skpd)='$lcskpd' order by a.kd_rek5 ";
+        $sql = " SELECT a.kd_rek6 as kd_rek5,b.nm_rek5 as nm_rek5 FROM trdrka a inner join ms_rek5 b on a.kd_rek6=b.kd_rek5 where (left(a.kd_rek6,1)='4' or left(a.kd_rek6,2)='61') and rtrim(a.kd_skpd)='$lcskpd' order by a.kd_rek6 ";
         $query1 = $this->db->query($sql);  
         $result = array();
         $ii = 0;
@@ -50258,4 +50258,882 @@ ORDER BY z.tgl,z.kasda,z.urut";
                 $this->load->view('anggaran/rka/perkadaII', $datax);
             }
       }
+
+      function ctk_daftar_penerimaan2(){
+		$kd_kirim     = $this->uri->segment(3);
+		$lcttd        = str_replace('123456789',' ',$this->uri->segment(5));
+		$thn_ang      = $this->session->userdata('pcThang');
+		$prv          = $this->db->query("SELECT provinsi,daerah from sclient where kd_skpd='5.02.0.00.0.00.01.0000'");
+		$prvn         = $prv->row();          
+		$prov         = $prvn->provinsi;         
+		$daerah       = $prvn->daerah;
+		$tgltt          = $this->uri->segment(13);
+		$tglttd   = $this->tanggal_format_indonesia_kasda2($tgltt);
+		
+		$cetk         = $this->uri->segment(10);
+		
+		if($cetk=='2'){
+			$tgl          = $this->uri->segment(11);
+			$nm_tglawal   = $this->tanggal_format_indonesia_kasda2($tgl);
+			
+			$tgl2         = $this->uri->segment(12);
+			$nm_tglakhir  = $this->tanggal_format_indonesia_kasda2($tgl2);
+		}else{
+			$blnawal      = $this->uri->segment(6);
+			$nm_bulanawal = $this->getBulan_kasda($blnawal);
+			
+			$blnakhir     = $this->uri->segment(7);
+			$nm_bulakhir  = $this->getBulan_kasda($blnakhir);
+		}
+		$no_halaman   = $this->uri->segment(8);
+		$spasi        = $this->uri->segment(9);
+		
+		$sqlttd1="SELECT TOP 1 nama as nm,nip as nip,jabatan as jab,pangkat FROM ms_ttd where kode='BUD' and nip='$lcttd'";
+		$sqlttd=$this->db->query($sqlttd1);
+		 foreach ($sqlttd->result() as $rowttd)
+			{
+				$nip=$rowttd->nip;                    
+				$nama= $rowttd->nm;
+				$jabatan  = $rowttd->jab;
+				$pangkat=$rowttd->pangkat;
+			}				
+		
+		if($cetk=='3'){
+			$judul_bulan = "BULAN : $nm_bulanawal S/D $nm_bulakhir";
+		}else{
+			$judul_bulan = "TANGGAL : $nm_tglawal S/D $nm_tglakhir";
+		}
+		
+        
+        
+		$judul="DAFTAR PENERIMAAN<br>(KASDA)<br>$judul_bulan";
+                                               
+                    
+		$cRet = '';
+		
+			$cRet .="<table style=\"border-collapse:collapse;\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\">
+				<tr>
+					<td align=\"center\" colspan=\"16\" style=\"font-size:14px;border: solid 1px white;\"><b>$prov<br>$judul $thn_ang</b></td>
+				</tr>
+				<tr>
+					<td align=\"left\" colspan=\"12\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 1px black;\">&nbsp;</td>
+					<td align=\"left\" colspan=\"4\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 1px black;\"></td>
+				</tr>
+				</table>
+				<table style=\"border-collapse:collapse; border-color: black;font-size:13px\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"$spasi\" >
+				<thead> 
+				<tr>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold;\">No. Kasda</td>  
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold;\">No. Sts</td>  
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"15%\" style=\"font-weight:bold\">Tanggal</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"25%\" style=\"font-weight:bold\">Penerimaan (Rp)</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"40%\" style=\"font-weight:bold\">Keterangan</td>
+				</tr>
+				<tr>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">1</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">2</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">3</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">4</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">5</td>
+				</tr>
+				</thead>"; 
+		
+		if($cetk=='3'){
+		//per periode
+		$sql = "SELECT a.no_kas,a.no_sts, a.kd_skpd, a.tgl_sts, a.keterangan, sum(b.rupiah) as total
+                  FROM trdkasin_ppkd b left join trhkasin_ppkd a on b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd and b.no_kas = a.no_kas               
+                WHERE (month(a.tgl_kas)>='$blnawal' and month(a.tgl_kas)<='$blnakhir') 
+                GROUP BY  a.no_kas,a.no_sts, a.kd_skpd, a.tgl_sts, a.keterangan
+                ORDER BY a.no_kas,a.tgl_sts,a.no_sts  ";
+		}else{
+		//per per tanggal
+		$sql = "SELECT a.no_kas,a.no_sts, a.kd_skpd, a.tgl_sts, a.keterangan,sum(b.rupiah) as total 
+                 FROM trdkasin_ppkd b left join trhkasin_ppkd a on b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd and b.no_kas = a.no_kas              
+                WHERE (a.tgl_kas >= '$tgl' and a.tgl_kas <= '$tgl2') 
+                 GROUP BY  a.no_kas,a.no_sts, a.kd_skpd, a.tgl_sts, a.keterangan
+                ORDER BY a.no_kas,a.tgl_sts,a.no_sts
+                ";	
+		}
+		$hasil = $this->db->query($sql);
+		
+		$jmlh_periode_ini = 0;
+		$jmlh_periode_ini2 = 0;
+		
+		foreach ($hasil->result() as $row){
+			$no_kas		  = $row->no_kas;
+			$no_sts		  = $row->no_sts;
+			$kd_skpd	  = $row->kd_skpd;
+			$tgl_sts	  = $row->tgl_sts;
+			$keterangan	  = $row->keterangan;
+			//$sumber	      = $row->sumber;
+			//$nm_pengirim  = $row->nm_pengirim;
+			$nilai	      = $row->total;
+			
+			if($nilai=='' || empty($nilai)){
+				$nilaix = 0;
+			}else{
+				$nilaix = $nilai;
+			}
+			$nilai1x = number_format($nilaix,"2",",",".");
+			
+			$jmlh_periode_ini  = $jmlh_periode_ini+$nilaix;
+			$jmlh_periode_ini2 = number_format($jmlh_periode_ini,"2",",",".");
+			
+				$cRet .="<tr>
+							<td align=\"center\">$no_kas</td>
+							<td align=\"center\">$no_sts</td>
+							<td align=\"center\">$tgl_sts</td>
+							<td align=\"right\">$nilai1x</td>
+							<td align=\"left\">$keterangan</td>
+						</tr>";
+			
+		}
+		if($cetk=='3'){ 
+			//total sebelum
+			$sql2 = "SELECT sum(b.rupiah) as nilai
+                  FROM trdkasin_ppkd b left join trhkasin_ppkd a on b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd and b.no_kas = a.no_kas               
+						where month(a.tgl_kas)<'$blnawal'";
+		}else{
+			//total sebelum
+			$sql2 = "SELECT sum(b.rupiah) as nilai
+                  FROM trdkasin_ppkd b left join trhkasin_ppkd a on b.no_sts = a.no_sts and b.kd_skpd = a.kd_skpd and b.no_kas = a.no_kas
+                    	where a.tgl_kas<'$tgl' ";
+		}
+		$hasil2=$this->db->query($sql2);
+		
+		foreach ($hasil2->result() as $row){
+			$nilai2    = $row->nilai;
+			
+			if($nilai2=='' || empty($nilai2)){
+				$nilai2x = 0;
+			}else{
+				$nilai2x = $nilai2;
+			}
+			
+            
+            $csqlkasin1= "SELECT sld_awal as nilai from ms_skpd where kd_skpd='5.02.0.00.0.00.01.0000'";
+                $hasil3 = $this->db->query($csqlkasin1);
+                $trhkasinpkd = $hasil3->row();          
+                $lckasinpkd = $trhkasinpkd->nilai;
+                $nilai2xc = $lckasinpkd + $nilai2x;
+                
+			$nilai_sbl = number_format($nilai2xc,"2",",",".");
+		}
+
+		//total seluruh
+		$total_periode = $jmlh_periode_ini+$nilai2xc;
+		if($total_periode=='' || empty($total_periode)){
+				$total_periode2 = 0;
+			}else{
+				$total_periode2 = $total_periode;
+			}
+		
+		$total_periode2x = number_format($total_periode2,"2",",",".");
+		
+		$cRet .= '
+		<tr>
+			<TD align="left" colspan="3">Jumlah Periode Ini </TD>
+			<TD align="right"><b>'.$jmlh_periode_ini2.'</TD>
+			<TD align="right" ></TD>
+		</tr>
+		
+		<tr>
+			
+			<TD style="border-top:hidden" align="left" colspan="3">Jumlah s/d Periode Lalu </TD>
+			<TD style="border-top:hidden;" align="right" ><b>'.$nilai_sbl.'</TD>
+			<TD style="border-top:hidden;" align="right" ></TD>
+		</tr>
+		
+		<tr>
+			<TD style="border-top:hidden;" align="left" colspan="3">Jumlah s/d Periode Ini</TD>
+			<TD style="border-top:hidden;" align="right"><b>'.$total_periode2x.'</TD>
+			<TD style="border-top:hidden;" align="right"></TD>
+		</tr>';
+		
+		 $cRet .='</table>';
+		
+		$cRet .="<table style=\"font-size:12px;border-collapse:collapse;\" width=\"100%\" align=\"center\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\">
+                    <tr>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+					</tr>
+					<tr>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+					    <td align=\"center\" width=\"50%\">Pontianak, $tglttd $thn_ang</td>
+					</tr>
+                    <tr>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+					    <td align=\"center\" width=\"50%\">$jabatan</td>
+					</tr>
+                    <tr>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+					    <td align=\"center\" width=\"50%\">$pangkat</td>
+					</tr>
+                    <tr>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+					</tr>
+					<tr>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+					</tr>                              
+                    <tr>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+					</tr>                                       
+                    <tr>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+						<td align=\"center\" width=\"50%\"><u>$nama</u></td>
+					</tr>
+					<tr>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+						<td align=\"center\" width=\"50%\">NIP. $nip</td>
+					</tr>
+                    
+                  </table>";
+		
+		$print = $this->uri->segment(4);
+		
+		if($print==0){
+			 $data['prev']= $cRet;    
+			 echo ("<title>DAFTAR PENERIMAAN</title>");
+			 echo $cRet;
+		}else{
+			$this->_mpdf3('',$cRet,0,5,5,'0',$no_halaman,'');
+		}
+		
+	}
+
+
+    function ctk_daftar_penerimaan_2(){
+		$kd_kirim     = $this->uri->segment(3);
+		$lcttd        = str_replace('123456789',' ',$this->uri->segment(5));
+		$thn_ang      = $this->session->userdata('pcThang');
+		$prv          = $this->db->query("SELECT provinsi,daerah from sclient where kd_skpd='5.02.0.00.0.00.01.0000'");
+		$prvn         = $prv->row();          
+		$prov         = $prvn->provinsi;         
+		$daerah       = $prvn->daerah;
+		$cetk         = $this->uri->segment(10);
+		$tgltt          = $this->uri->segment(13);
+		$tglttd   = $this->tanggal_format_indonesia_kasda2($tgltt);
+            
+		if($cetk=='2'){
+			$tgl          = $this->uri->segment(11);
+			$nm_tglawal   = $this->tanggal_format_indonesia_kasda2($tgl);
+			
+			$tgl2         = $this->uri->segment(12);
+			$nm_tglakhir  = $this->tanggal_format_indonesia_kasda2($tgl2);
+		}else{
+			$blnawal      = $this->uri->segment(6);
+			$nm_bulanawal = $this->getBulan_kasda($blnawal);
+			
+			$blnakhir     = $this->uri->segment(7);
+			$nm_bulakhir  = $this->getBulan_kasda($blnakhir);
+		}
+		$no_halaman   = $this->uri->segment(8);
+		$spasi        = $this->uri->segment(9);
+		
+		$sqlttd1="SELECT TOP 1 nama as nm,nip as nip,jabatan as jab,pangkat FROM ms_ttd where kode='BUD' and nip='$lcttd'";
+		$sqlttd=$this->db->query($sqlttd1);
+		 foreach ($sqlttd->result() as $rowttd)
+			{
+				$nip=$rowttd->nip;                    
+				$nama= $rowttd->nm;
+				$jabatan  = $rowttd->jab;
+				$pangkat=$rowttd->pangkat;
+			}
+		
+        if($kd_kirim!="-"){
+          $pengirim      = $this->db->query("SELECT TOP 1 nm_pengirim,kd_skpd from ms_pengirim where kd_pengirim='$kd_kirim'");
+		  $nama_pengirim = $pengirim->row();          
+		  $h_pengirim   = $nama_pengirim->nm_pengirim;
+		  $h_skpd       = $nama_pengirim->kd_skpd;
+          
+          $pengirim2      = $this->db->query("SELECT TOP 1 nm_skpd from ms_skpd where kd_skpd='$h_skpd'");
+		  $nama_pengirim2 = $pengirim2->row();          
+		  $h_nmskpd   = $nama_pengirim2->nm_skpd;
+        }else{
+  	      $h_pengirim   = "";
+		  $h_skpd       = "";    
+          $nama_pengirim2 = "";          
+		  $h_nmskpd   = "";
+        }        		
+				
+		if($cetk=='3'){
+			$judul_bulan = "BULAN : $nm_bulanawal S/D $nm_bulakhir";
+		}else{
+			$judul_bulan = "TANGGAL : $nm_tglawal S/D $nm_tglakhir";
+		}
+		
+		$judul="DAFTAR PENERIMAAN<br> $h_nmskpd <br>$judul_bulan";
+                                               
+                    
+		$cRet = '';
+		
+			$cRet .="<table style=\"border-collapse:collapse;\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\">
+				<tr>
+					<td align=\"center\" colspan=\"16\" style=\"font-size:14px;border: solid 1px white;\"><b>$prov<br>$judul $thn_ang</b></td>
+				</tr>
+				<tr>
+					<td align=\"left\" colspan=\"12\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 1px black;\">&nbsp;</td>
+					<td align=\"left\" colspan=\"4\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 1px black;\"></td>
+				</tr>
+				</table>
+				<table style=\"border-collapse:collapse; border-color: black;font-size:13px\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"$spasi\" >
+				<thead> 
+				<tr>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"6%\" style=\"font-weight:bold;\">No.</td>  
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold;\">No. Kasda</td>  
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">Tanggal Kasda</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"45%\" style=\"font-weight:bold\">Keterangan</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"18%\" style=\"font-weight:bold\">Penerimaan (Rp)</td>
+				</tr>
+				<tr>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">1</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">2</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">3</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">4</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">5</td>
+				</tr>
+				</thead>"; 
+		$uurut=0;
+        
+        if($kd_kirim!="-"){
+           
+           if($h_skpd=='5.02.0.00.0.00.01.0000'){
+        if($cetk=='3'){
+		//per periode
+		$sql = "select z.kk,z.kode,z.no_kas,z.no_sts,z.kd_skpd,z.tgl_kas,z.kd_rek,z.keterangan,z.total,z.total2,z.sumber,z.nm_pengirim from(
+SELECT '1' as kk,a.no_kas as kode,a.no_kas,a.no_sts, a.kd_skpd, a.tgl_kas, '' as kd_rek,a.keterangan, a.total, a.total as total2, a.sumber, b.nm_pengirim 
+                  FROM trhkasin_ppkd a left join ms_pengirim b on a.sumber=b.kd_pengirim
+                WHERE a.kd_skpd='$h_skpd' AND month(a.tgl_kas)>='$blnawal' and month(a.tgl_kas)<='$blnakhir'
+UNION ALL
+SELECT '2' as kk,a.no_kas as kode,'' as no_kas,'' as no_sts, '' as kd_skpd, a.tgl_kas,c.kd_rek6 as kd_rek, '-- '+d.uraian as keterangan, c.rupiah as total, 0 as total2, a.sumber, b.nm_pengirim 
+                  FROM trhkasin_ppkd a 
+								left join ms_pengirim b on a.sumber=b.kd_pengirim
+								left join trdkasin_ppkd c on c.no_kas = a.no_kas and c.no_sts = a.no_sts and c.kd_skpd = a.kd_skpd
+								left join map_rek_penerimaan d on d.kd_rek6 = c.kd_rek6 and c.kd_skpd=d.kd_skpd
+                WHERE a.kd_skpd='$h_skpd' AND month(a.tgl_kas)>='$blnawal' and month(a.tgl_kas)<='$blnakhir' 
+) z order by z.kode,z.tgl_kas,z.kd_rek 
+ ";
+		}else{
+		//per per tanggal
+		$sql = "select z.kk,z.kode,z.no_kas,z.no_sts,z.kd_skpd,z.tgl_kas,z.kd_rek,z.keterangan,z.total,z.total2,z.sumber,z.nm_pengirim from(
+SELECT '1' as kk,a.no_kas as kode,a.no_kas,a.no_sts, a.kd_skpd, a.tgl_kas, '' as kd_rek,a.keterangan, a.total, a.total as total2, a.sumber, b.nm_pengirim 
+                  FROM trhkasin_ppkd a left join ms_pengirim b on a.sumber=b.kd_pengirim
+                WHERE a.kd_skpd='$h_skpd' AND a.tgl_kas>='$tgl' and a.tgl_kas<='$tgl2'
+UNION ALL
+SELECT '2' as kk,a.no_kas as kode,a.no_kas as no_kas,a.no_sts, a.kd_skpd, a.tgl_kas,c.kd_rek6 as kd_rek, '-- '+d.uraian as keterangan, c.rupiah as total, 0 as total2, a.sumber, b.nm_pengirim 
+                  FROM trhkasin_ppkd a 
+								left join ms_pengirim b on a.sumber=b.kd_pengirim
+								left join trdkasin_ppkd c on c.no_kas = a.no_kas and c.no_sts = a.no_sts and c.kd_skpd = a.kd_skpd
+								left join map_rek_penerimaan d on d.kd_rek6 = c.kd_rek6 and c.kd_skpd=d.kd_skpd
+                WHERE a.kd_skpd='$h_skpd' AND a.tgl_kas>='$tgl' and a.tgl_kas<='$tgl2' 
+) z order by z.kode,z.tgl_kas,z.kd_rek ";	
+		}    
+           }else{
+        
+        if($cetk=='3'){
+		//per periode
+		$sql = "select z.kk,z.kode,z.no_kas,z.no_sts,z.kd_skpd,z.tgl_kas,z.kd_rek,z.keterangan,z.total,z.total2,z.sumber,z.nm_pengirim from(
+SELECT '1' as kk,a.no_kas as kode,a.no_kas,a.no_sts, a.kd_skpd, a.tgl_kas, '' as kd_rek,a.keterangan, a.total, a.total as total2, a.sumber, b.nm_pengirim 
+                  FROM trhkasin_ppkd a left join ms_pengirim b on a.sumber=b.kd_pengirim
+                WHERE a.kd_skpd='$h_skpd' AND month(a.tgl_kas)>='$blnawal' and month(a.tgl_kas)<='$blnakhir'
+UNION ALL
+SELECT '2' as kk,a.no_kas as kode,'' as no_kas,'' as no_sts, '' as kd_skpd, a.tgl_kas,d.kd_rek5 as kd_rek, '-- '+d.nm_rek5 as keterangan, c.rupiah as total, 0 as total2, a.sumber, b.nm_pengirim 
+                  FROM trhkasin_ppkd a 
+								left join ms_pengirim b on a.sumber=b.kd_pengirim
+								left join trdkasin_ppkd c on c.no_kas = a.no_kas and c.no_sts = a.no_sts and c.kd_skpd = a.kd_skpd
+								left join ms_rek5 d on d.kd_rek5 = c.kd_rek5
+                WHERE a.kd_skpd='$h_skpd' AND month(a.tgl_kas)>='$blnawal' and month(a.tgl_kas)<='$blnakhir' 
+) z order by z.kode,z.tgl_kas,z.kd_rek 
+ ";
+		}else{
+		//per per tanggal
+		$sql = "select z.kk,z.kode,z.no_kas,z.no_sts,z.kd_skpd,z.tgl_kas,z.kd_rek,z.keterangan,z.total,z.total2,z.sumber,z.nm_pengirim from(
+SELECT '1' as kk,a.no_kas as kode,a.no_kas,a.no_sts, a.kd_skpd, a.tgl_kas, '' as kd_rek,a.keterangan, a.total, a.total as total2, a.sumber, b.nm_pengirim 
+                  FROM trhkasin_ppkd a left join ms_pengirim b on a.sumber=b.kd_pengirim
+                WHERE a.kd_skpd='$h_skpd' AND a.tgl_kas>='$tgl' and a.tgl_kas<='$tgl2'
+UNION ALL
+SELECT '2' as kk,a.no_kas as kode,a.no_kas as no_kas,a.no_sts, a.kd_skpd, a.tgl_kas,d.kd_rek5 as kd_rek, '-- '+d.nm_rek5 as keterangan, c.rupiah as total, 0 as total2, a.sumber, b.nm_pengirim 
+                  FROM trhkasin_ppkd a 
+								left join ms_pengirim b on a.sumber=b.kd_pengirim
+								left join trdkasin_ppkd c on c.no_kas = a.no_kas and c.no_sts = a.no_sts and c.kd_skpd = a.kd_skpd
+								left join ms_rek5 d on d.kd_rek5 = c.kd_rek5
+                WHERE a.kd_skpd='$h_skpd' AND a.tgl_kas>='$tgl' and a.tgl_kas<='$tgl2' 
+) z order by z.kode,z.tgl_kas,z.kd_rek ";	
+		}
+  
+  } 
+        
+        }else{
+            
+            if($cetk=='3'){
+		//per periode
+		$sql = "select z.kk,z.kode,z.no_kas,z.no_sts,z.kd_skpd,z.tgl_kas,z.kd_rek,z.keterangan,z.total,z.total2,z.sumber,z.nm_pengirim from(
+SELECT '1' as kk,a.no_kas as kode,a.no_kas,a.no_sts, a.kd_skpd, a.tgl_kas, '' as kd_rek,a.keterangan, a.total, a.total as total2, a.sumber, b.nm_pengirim 
+                  FROM trhkasin_ppkd a left join ms_pengirim b on a.sumber=b.kd_pengirim
+                WHERE month(a.tgl_kas)>='$blnawal' and month(a.tgl_kas)<='$blnakhir'
+UNION ALL
+SELECT '2' as kk,a.no_kas as kode,'' as no_kas,'' as no_sts, '' as kd_skpd, a.tgl_kas,d.kd_rek5 as kd_rek, '-- '+d.nm_rek5 as keterangan, c.rupiah as total, 0 as total2, a.sumber, b.nm_pengirim 
+                  FROM trhkasin_ppkd a 
+								left join ms_pengirim b on a.sumber=b.kd_pengirim
+								left join trdkasin_ppkd c on c.no_kas = a.no_kas and c.no_sts = a.no_sts and c.kd_skpd = a.kd_skpd
+								left join ms_rek5 d on d.kd_rek5 = c.kd_rek5
+                WHERE month(a.tgl_kas)>='$blnawal' and month(a.tgl_kas)<='$blnakhir' 
+) z order by z.kode,z.tgl_kas,z.kd_rek 
+ ";
+		}else{
+		//per per tanggal
+		$sql = "select z.kk,z.kode,z.no_kas,z.no_sts,z.kd_skpd,z.tgl_kas,z.kd_rek,z.keterangan,z.total,z.total2,z.sumber,z.nm_pengirim from(
+SELECT '1' as kk,a.no_kas as kode,a.no_kas,a.no_sts, a.kd_skpd, a.tgl_kas, '' as kd_rek,a.keterangan, a.total, a.total as total2, a.sumber, b.nm_pengirim 
+                  FROM trhkasin_ppkd a left join ms_pengirim b on a.sumber=b.kd_pengirim
+                WHERE a.tgl_kas>='$tgl' and a.tgl_kas<='$tgl2'
+UNION ALL
+SELECT '2' as kk,a.no_kas as kode,a.no_kas as no_kas,a.no_sts, a.kd_skpd, a.tgl_kas,d.kd_rek5 as kd_rek, '-- '+d.nm_rek5 as keterangan, c.rupiah as total, 0 as total2, a.sumber, b.nm_pengirim 
+                  FROM trhkasin_ppkd a 
+								left join ms_pengirim b on a.sumber=b.kd_pengirim
+								left join trdkasin_ppkd c on c.no_kas = a.no_kas and c.no_sts = a.no_sts and c.kd_skpd = a.kd_skpd
+								left join ms_rek5 d on d.kd_rek5 = c.kd_rek5
+                WHERE a.tgl_kas>='$tgl' and a.tgl_kas<='$tgl2' 
+) z order by z.kode,z.tgl_kas,z.kd_rek ";	
+		}
+        }
+        
+		$hasil = $this->db->query($sql);
+		
+		$jmlh_periode_ini = 0;
+		$jmlh_periode_ini2 = 0;
+		
+		foreach ($hasil->result() as $row){		    
+			$no_kas		  = $row->no_kas;
+			$no_sts		  = $row->no_sts;
+			$kd_skpd	  = $row->kd_skpd;
+			$tgl_sts	  = $row->tgl_kas;
+            $kd_rek       = $row->kd_rek;  
+			$keterangan	  = $row->keterangan;
+			$sumber	      = $row->sumber;
+			$nm_pengirim  = $row->nm_pengirim;
+			$nilai	      = $row->total;
+            $nilai2       = $row->total2;
+            $kk 	      = $row->kk;
+			
+			if($nilai=='' || empty($nilai)){
+				$nilaix = 0;
+			}else{
+				$nilaix = $nilai;
+			}
+            
+            if($nilai2=='' || empty($nilai2)){
+				$nilai2x = 0;
+			}else{
+				$nilai2x = $nilai2;
+			}
+            
+			$nilai1x1 = number_format($nilaix,"2",",",".");
+            $nilai1x2 = number_format($nilai2x,"2",",",".");
+            			
+			$jmlh_periode_ini  = $jmlh_periode_ini+$nilai2x;
+			$jmlh_periode_ini2 = number_format($jmlh_periode_ini,"2",",",".");
+			     
+                if($kk=='2'){
+                    	$cRet .="<tr>
+							<td align=\"center\"></td>
+							<td align=\"center\"></td>
+							<td align=\"center\"></td>
+							<td align=\"left\">$kd_rek $keterangan</td>
+							<td align=\"right\">$nilai1x1</td>
+						</tr>";
+               
+               }else{
+                    $uurut        = $uurut + 1;
+                   	$cRet .="<tr>
+							<td align=\"center\"><b>$uurut</b></td>
+							<td align=\"center\"><b>$no_kas</b></td>
+							<td align=\"center\"><b>$tgl_sts</b></td>
+							<td align=\"left\"><b>$keterangan</b></td>
+							<td align=\"right\"><b>$nilai1x2</b></td>
+						</tr>";                     
+                } 
+			
+			
+		}
+        
+         if($kd_kirim!="-"){
+        
+		if($cetk=='3'){ 
+			//total sebelum
+			$sql2 = "select sum(a.total) as nilai 
+						from trhkasin_ppkd a
+						where a.kd_skpd='$h_skpd' AND month(a.tgl_kas)<'$blnawal'";
+		}else{
+			//total sebelum
+			$sql2 = "select sum(a.total) as nilai 
+						from trhkasin_ppkd a
+						where a.kd_skpd='$h_skpd' AND a.tgl_kas<'$tgl' ";
+		}
+        $lckasinpkd = 0;
+        }else{
+		 if($cetk=='3'){ 
+			//total sebelum
+			$sql2 = "select sum(a.total) as nilai 
+						from trhkasin_ppkd a
+						where month(a.tgl_kas)<'$blnawal'";
+		}else{
+			//total sebelum
+			$sql2 = "select sum(a.total) as nilai 
+						from trhkasin_ppkd a
+						where a.tgl_kas<'$tgl' ";
+		} 
+        
+        $csqlkasin1= "SELECT sld_awal as nilai from ms_skpd where kd_skpd='5.02.0.00.0.00.01.0000'";
+                $hasil3 = $this->db->query($csqlkasin1);
+                $trhkasinpkd = $hasil3->row();          
+                $lckasinpkd = $trhkasinpkd->nilai;
+        
+		}
+		$hasil2=$this->db->query($sql2);
+		
+		foreach ($hasil2->result() as $row){
+			$nilai2    = $row->nilai;
+			
+			if($nilai2=='' || empty($nilai2)){
+				$nilai2x = 0;
+			}else{
+				$nilai2x = $nilai2;
+			}
+			
+            
+            
+            $nilai2xc = $nilai2x + $lckasinpkd;
+            
+			$nilai_sbl = number_format($nilai2xc,"2",",",".");
+		}
+
+		//total seluruh
+		$total_periode = $jmlh_periode_ini+$nilai2xc;
+		if($total_periode=='' || empty($total_periode)){
+				$total_periode2 = 0;
+			}else{
+				$total_periode2 = $total_periode;
+			}
+		
+		$total_periode2x = number_format($total_periode2,"2",",",".");
+		
+		$cRet .= '
+		<tr>
+			<TD align="right" colspan="4">Jumlah Periode Ini </TD>
+			<TD align="right"><b>'.$jmlh_periode_ini2.'</TD>			
+		</tr>
+		
+		<tr>
+			
+		
+			<TD style="border-top:hidden;" align="right" colspan="4">Jumlah s/d Periode Lalu</TD>
+			<TD style="border-top:hidden;" align="right" ><b>'.$nilai_sbl.'</b></TD>
+		</tr>
+		
+		<tr>
+			<TD style="border-top:hidden; border-bottom:solid 1px black;" align="right" colspan="4">Jumlah s/d Periode Ini</TD>
+			<TD style="border-top:hidden; border-bottom:solid 1px black;" align="right"><b>'.$total_periode2x.'</TD>
+		</tr>';
+		
+		 $cRet .='</table>';
+		
+		$cRet .="<table style=\"font-size:12px;border-collapse:collapse;\" width=\"100%\" align=\"center\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\">
+                    <tr>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+					</tr>
+                    <tr>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+					    <td align=\"center\" width=\"50%\">Pontianak, $tglttd $thn_ang</td>
+					</tr>
+					<tr>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+					    <td align=\"center\" width=\"50%\">$jabatan</td>
+					</tr>					<tr>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+					    <td align=\"center\" width=\"50%\">$pangkat</td>
+					</tr>
+                    <tr>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+					</tr>
+					<tr>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+					</tr>                              
+                    <tr>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+					</tr>                                       
+                    <tr>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+						<td align=\"center\" width=\"50%\"><u>$nama</u></td>
+					</tr>
+					<tr>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+						<td align=\"center\" width=\"50%\">NIP. $nip</td>
+					</tr>
+                    
+                  </table>";
+		
+		$print = $this->uri->segment(4);
+		
+		if($print==0){
+			 $data['prev']= $cRet;    
+			 echo ("<title>DAFTAR PENERIMAAN</title>");
+			 echo $cRet;
+		}else{
+			$this->_mpdf3('',$cRet,0,5,5,'0',$no_halaman,'');
+		}
+		
+	}
+
+    function ctk_daftar_penerimaan_rek(){
+		$kd_kirim     = $this->uri->segment(3);
+		$lcttd        = str_replace('123456789',' ',$this->uri->segment(5));
+		$thn_ang      = $this->session->userdata('pcThang');
+		$prv          = $this->db->query("SELECT provinsi,daerah from sclient where kd_skpd='5.02.0.00.0.00.01.0000'");
+		$prvn         = $prv->row();          
+		$prov         = $prvn->provinsi;         
+		$daerah       = $prvn->daerah;
+		$cetk         = $this->uri->segment(10);
+		$tgltt          = $this->uri->segment(13);
+		$tglttd   = $this->tanggal_format_indonesia_kasda2($tgltt);
+        $kdrek        = $this->uri->segment(14);    
+            
+		if($cetk=='2'){
+			$tgl          = $this->uri->segment(11);
+			$nm_tglawal   = $this->tanggal_format_indonesia_kasda2($tgl);
+			
+			$tgl2         = $this->uri->segment(12);
+			$nm_tglakhir  = $this->tanggal_format_indonesia_kasda2($tgl2);
+		}else{
+			$blnawal      = $this->uri->segment(6);
+			$nm_bulanawal = $this->getBulan_kasda($blnawal);
+			
+			$blnakhir     = $this->uri->segment(7);
+			$nm_bulakhir  = $this->getBulan_kasda($blnakhir);
+		}
+		$no_halaman   = $this->uri->segment(8);
+		$spasi        = $this->uri->segment(9);
+		
+		$sqlttd1="SELECT TOP 1 nama as nm,nip as nip,jabatan as jab,pangkat FROM ms_ttd where kode='BUD' and nip='$lcttd'";
+		$sqlttd=$this->db->query($sqlttd1);
+		 foreach ($sqlttd->result() as $rowttd)
+			{
+				$nip=$rowttd->nip;                    
+				$nama= $rowttd->nm;
+				$jabatan  = $rowttd->jab;
+				$pangkat=$rowttd->pangkat;
+			}
+		
+		$pengirim      = $this->db->query("SELECT TOP 1 nm_pengirim,kd_skpd from ms_pengirim where kd_pengirim='$kd_kirim'");
+		$nama_pengirim = $pengirim->row();          
+		$h_pengirim   = $nama_pengirim->nm_pengirim;
+		$h_skpd       = $nama_pengirim->kd_skpd;
+		
+		$pengirim2      = $this->db->query("SELECT TOP 1 nm_skpd from ms_skpd where kd_skpd='$h_skpd'");
+		$nama_pengirim2 = $pengirim2->row();          
+		$h_nmskpd   = $nama_pengirim2->nm_skpd;
+		
+ 	    $sql_p      = $this->db->query("select kd_rek5,nm_rek5 from ms_rek5 where kd_rek5='$kdrek'");
+		$sql_pp = $sql_p->row();  
+		$sql_kdrek   = (count($sql_pp)>0)?$sql_pp->kd_rek5:'';
+        $sql_nmrek   = (count($sql_pp)>0)?$sql_pp->nm_rek5:'';
+        
+		if($cetk=='3'){
+			$judul_bulan = "BULAN : $nm_bulanawal S/D $nm_bulakhir";
+		}else{
+			$judul_bulan = "TANGGAL : $nm_tglawal S/D $nm_tglakhir";
+		}
+		
+		$judul="REKAP DAFTAR PENERIMAAN<br> $h_nmskpd <br>$judul_bulan";                                               
+                    
+		$cRet = '';
+		
+			$cRet .="<table style=\"border-collapse:collapse;\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\">
+				<tr>
+					<td align=\"center\" colspan=\"16\" style=\"font-size:14px;border: solid 1px white;\"><b>$prov<br>$judul $thn_ang<br/>$sql_kdrek - ".strtoupper($sql_nmrek)."</b></td>
+				</tr>
+				<tr>
+					<td align=\"left\" colspan=\"12\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 1px black;\">&nbsp;</td>
+					<td align=\"left\" colspan=\"4\" style=\"font-size:12px;border: solid 1px white;border-bottom:solid 1px black;\"></td>
+				</tr>
+				</table>
+				<table style=\"border-collapse:collapse; border-color: black;font-size:13px\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"$spasi\" >
+				<thead> 
+				<tr>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold;\">No. Kasda</td>  
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold;\">No. STS</td>  
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"15%\" style=\"font-weight:bold\">Tanggal STS</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"20%\" style=\"font-weight:bold\">Penerimaan (Rp)</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" width=\"40%\" style=\"font-weight:bold\">Keterangan</td>
+				</tr>
+				<tr>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">1</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">2</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">3</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">4</td>
+					<td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">5</td>
+				</tr>
+				</thead>"; 
+		
+		if($cetk=='3'){
+		//per periode
+		$sql = "SELECT a.no_kas,a.no_sts, a.kd_skpd, a.tgl_sts, a.keterangan, a.total, a.sumber, b.nm_pengirim 
+                  FROM trhkasin_ppkd a left join ms_pengirim b on a.sumber=b.kd_pengirim left join trdkasin_ppkd c on a.no_sts=c.no_sts and a.no_kas=c.no_kas and a.kd_skpd=c.kd_skpd
+                WHERE a.kd_skpd='$h_skpd' AND (month(a.tgl_kas)>='$blnawal' and month(a.tgl_kas)<='$blnakhir') AND c.kd_rek5='$sql_kdrek'  
+                ORDER BY a.tgl_sts,a.no_sts  ";
+		}else{
+		//per per tanggal
+		$sql = "SELECT a.no_kas,a.no_sts, a.kd_skpd, a.tgl_sts, a.keterangan, a.total, a.sumber, b.nm_pengirim 
+                  FROM trhkasin_ppkd a left join ms_pengirim b on a.sumber=b.kd_pengirim left join trdkasin_ppkd c on a.no_sts=c.no_sts and a.no_kas=c.no_kas and a.kd_skpd=c.kd_skpd
+                WHERE a.kd_skpd='$h_skpd' AND (a.tgl_kas >= '$tgl' and a.tgl_kas <= '$tgl2') AND c.kd_rek5='$sql_kdrek'
+                ORDER BY a.tgl_kas,a.no_kas  ";	
+		}
+		$hasil = $this->db->query($sql);
+		
+		$jmlh_periode_ini = 0;
+		$jmlh_periode_ini2 = 0;
+		
+		foreach ($hasil->result() as $row){
+			$no_kas		  = $row->no_kas;
+			$no_sts		  = $row->no_sts;
+			$kd_skpd	  = $row->kd_skpd;
+			$tgl_sts	  = $row->tgl_sts;
+			$keterangan	  = $row->keterangan;
+			$sumber	      = $row->sumber;
+			$nm_pengirim  = $row->nm_pengirim;
+			$nilai	      = $row->total;
+			
+			if($nilai=='' || empty($nilai)){
+				$nilaix = 0;
+			}else{
+				$nilaix = $nilai;
+			}
+			$nilai1x = number_format($nilaix,"2",",",".");
+			
+			$jmlh_periode_ini  = $jmlh_periode_ini+$nilaix;
+			$jmlh_periode_ini2 = number_format($jmlh_periode_ini,"2",",",".");
+			
+				$cRet .="<tr>
+							<td align=\"center\">$no_kas</td>
+							<td align=\"center\">$no_sts</td>
+							<td align=\"left\">$tgl_sts</td>
+							<td align=\"right\">$nilai1x</td>
+							<td align=\"left\">$keterangan</td>
+						</tr>";
+			
+		}
+		if($cetk=='3'){ 
+			//total sebelum
+			$sql2 = "select sum(a.total) as nilai 
+						from trhkasin_ppkd a left join trdkasin_ppkd c on a.no_sts=c.no_sts and a.no_kas=c.no_kas and a.kd_skpd=c.kd_skpd 
+						where a.kd_skpd='$h_skpd' AND month(a.tgl_kas)<'$blnawal' AND c.kd_rek5='$sql_kdrek'";
+		}else{
+			//total sebelum
+			$sql2 = "select sum(a.total) as nilai 
+						from trhkasin_ppkd a left join trdkasin_ppkd c on a.no_sts=c.no_sts and a.no_kas=c.no_kas and a.kd_skpd=c.kd_skpd
+						where a.kd_skpd='$h_skpd' AND a.tgl_kas<'$tgl' AND c.kd_rek5='$sql_kdrek'";
+		}
+		$hasil2=$this->db->query($sql2);
+		
+		foreach ($hasil2->result() as $row){
+			$nilai2    = $row->nilai;
+			
+			if($nilai2=='' || empty($nilai2)){
+				$nilai2x = 0;
+			}else{
+				$nilai2x = $nilai2;
+			}
+			
+			$nilai_sbl = number_format($nilai2x,"2",",",".");
+		}
+
+		//total seluruh
+		$total_periode = $jmlh_periode_ini+$nilai2x;
+		if($total_periode=='' || empty($total_periode)){
+				$total_periode2 = 0;
+			}else{
+				$total_periode2 = $total_periode;
+			}
+		
+		$total_periode2x = number_format($total_periode2,"2",",",".");
+		
+		$cRet .= '
+		<tr>
+			<TD align="right" colspan="3">Jumlah Periode Ini </TD>
+			<TD align="right"><b>'.$jmlh_periode_ini2.'</TD>
+			<TD align="right" ></TD>
+		</tr>
+		
+		<tr>
+			
+			<TD style="border-top:hidden" align="right" colspan="3">Jumlah s/d Periode Lalu </TD>
+			<TD style="border-top:hidden;" align="right" ><b>'.$nilai_sbl.'</TD>
+			<TD style="border-top:hidden;" align="right" ></TD>
+		</tr>
+		
+		<tr>
+			<TD style="border-top:hidden;" align="right" colspan="3">Jumlah s/d Periode Ini</TD>
+			<TD style="border-top:hidden;" align="right"><b>'.$total_periode2x.'</TD>
+			<TD style="border-top:hidden;" align="right"></TD>
+		</tr>';
+		
+		 $cRet .='</table>';
+		
+		$cRet .="<table style=\"font-size:12px;border-collapse:collapse;\" width=\"100%\" align=\"center\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\">
+                    <tr>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+					</tr>
+                    <tr>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+					    <td align=\"center\" width=\"50%\">Pontianak, $tglttd $thn_ang </td>
+					</tr>
+                    <tr>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+					    <td align=\"center\" width=\"50%\">$jabatan</td>
+					</tr>
+                    <tr>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+					    <td align=\"center\" width=\"50%\">$pangkat</td>
+					</tr>
+                    <tr>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+					</tr>
+					<tr>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+					</tr>                              
+                    <tr>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+					</tr>                                       
+                    <tr>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+						<td align=\"center\" width=\"50%\"><u>$nama</u></td>
+					</tr>
+					<tr>
+						<td align=\"center\" width=\"50%\">&nbsp;</td>
+						<td align=\"center\" width=\"50%\">NIP. $nip</td>
+					</tr>
+                    
+                  </table>";
+		
+		$print = $this->uri->segment(4);
+		
+		if($print==0){
+			 $data['prev']= $cRet;    
+			 echo ("<title>DAFTAR PENERIMAAN</title>");
+			 echo $cRet;
+		}else{
+			$this->_mpdf3('',$cRet,0,5,5,'0',$no_halaman,'');
+		}
+		
+	}
 }   
