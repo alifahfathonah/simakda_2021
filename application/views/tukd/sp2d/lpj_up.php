@@ -1148,7 +1148,7 @@
             var no_sp2d =no_sp2d.split("/").join("abcdefghij");
       var no_lpj = $('#cspp').combogrid('getValue');   
             var no_lpj = no_lpj.split("/").join("abcdefghij");        
-      var skpd   = kode; 
+      var skpd   = document.getElementById('kdskpd').value;  
       var ctglttd = $('#tgl_ttd').datebox('getValue');
       var ttd1   = $("#ttd1").combogrid('getValue');
       var ttd2   = $("#ttd2").combogrid('getValue'); 
