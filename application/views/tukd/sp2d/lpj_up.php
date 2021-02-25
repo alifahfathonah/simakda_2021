@@ -251,6 +251,8 @@
             onDblClickRow:function(rowIndex,rowData){
               nomer     = rowData.no_lpj;         
               kode      = rowData.kd_skpd;
+              $("#kdspd").attr("value","");
+              $("#kdspd").attr("value",rowData.kd_skpd);
               nmskpd    = rowData.nm_skpd;
               tgllpj  = rowData.tgl_lpj;
               cket    = rowData.ket;
@@ -350,7 +352,8 @@
         } 
     
     
-       function get(nomer,kode,tgllpj,cket,status_lpj,tgl_sp2d,sp2d,nmskpd){
+       function get(nomer,xxxx,tgllpj,cket,status_lpj,tgl_sp2d,sp2d,nmskpd){
+        kode=kode;
         $("#no_lpj").attr("value",nomer);
         $("#no_simpan").attr("value",nomer);
     $("#dn").combogrid("setValue",kode);
@@ -759,203 +762,7 @@
     }
    }
     
-    
-  /*  
-    
-    if ( lcstatus=='tambah' ) {
-
-    $.ajax({url: '<?php echo base_url(); ?>index.php/tukd/cek_lpj',   
-            type: "POST",
-            dataType:'json',                             
-      data:({nlpj:nlpj}), 
-                   
-         success:function(data)        
-         {
-              
-    if (data.jml >0) {
-        
-    
-     alert('Data Dengan No LPJ '+nlpj +' Sudah Ada Ganti Dengan Yang Lain...!!!');
-    
-    exit();
-    
-    }
-    else
-    {
-    
-    $(document).ready(function(){
-            $.ajax({
-                type: "POST",       
-                dataType : 'json',         
-                url      : "<?php  echo base_url(); ?>index.php/tukd/simpan_hlpj_tu",
-        data     : ({nlpj:nlpj,tgllpj:b,ket:nket,tgl_sp2d:tgl_sp2d,sp2d:sp2d}),
-                success:function(data){
-                    status = data.pesan;                                                               
-                }
-            });
-        });
-
-//==========DN
-    
-$('#dg1').datagrid('selectAll');
-        var rows = $('#dg1').datagrid('getSelections');
-        
-        for(var i=0;i<rows.length;i++){            
-            
-            cidx      = rows[i].idx;
-            cnobukti1 = rows[i].no_bukti;
-            ckdgiat   = rows[i].kdkegiatan;
-            cnmgiat   = rows[i].nmkegiatan;
-            ckdrek    = rows[i].kdrek5;
-            cnmrek    = rows[i].nmrek5;
-            cnilai    = angka(rows[i].nilai1);
-                       
-            no        = i + 1 ;      
-            
-            $(document).ready(function(){      
-            $.ajax({
-            type     : 'POST',
-            url      : "<?php  echo base_url(); ?>index.php/tukd/simpan_lpj",
-            data     : ({nlpj:nlpj,no_bukti1:cnobukti1,tgllpj:b,ket:nket,cnkdgiat:ckdgiat,cnkdrek:ckdrek,cnnmrek:cnmrek,cnnilai:cnilai}),
-            dataType : "json",
-      
-                   success  : function(data){
-                         status = data;
-
-
-                    }
-
-        });
-        });
-        }
-
-                       if (status=='0'){
-                            alert('Gagal Simpan..!!');
-                            exit();
-                        } else {
-                                //  detsimpan() ;
-                                  alert('Data Tersimpan...!!!');
-                  $("#no_simpan").attr("value",nlpj);
-                                  lcstatus = 'edit';
-                                  exit();
-                               }
-               
-            
-        $('#dg1').edatagrid('unselectAll');
-    
-//=========DNA
-
-    
-    }
-}
-});
-
-
- } else {
- 
- 
- //==========DN
- 
- 
-         var tny = confirm('Yakin Ingin Update Data LPJ No :  '+no_simpan+'  ..?');
-        
-        if ( tny == true ) {
-       var nlpj      = document.getElementById('no_lpj').value;
-       var no_simpan  = document.getElementById('no_simpan').value;
-      var b         = $('#dd').datebox('getValue'); 
-      var sp2d      = $('#sp2d').combogrid('getValue'); 
-      var tgl_sp2d  = document.getElementById('tgl_sp2d').value;
-      var nket      = document.getElementById('keterangan').value;
-    var d1      = (b.split("-").join("/"));
-    var d2      = (tgl_sp2d.split("-").join("/"));
-    var d1      = new Date(d1);
-    var d2      = new Date(d2);
-    var timeDiff  = (d1.getTime() - d2.getTime());
-    var diffDays  = (timeDiff / (1000 * 3600 * 24));
-    var tahun_input = b.substring(0, 4);
-    if (tahun_input != tahun_anggaran){
-      alert('Tahun tidak sama dengan tahun Anggaran');
-      exit();
-    }
-    
-    if (diffDays>30){
-      alert("Tanggal LPJ Melebihi Batas Satu Bulan");
-      exit();
-    }
-    if (diffDays<0){
-      alert("Tanggal LPJ Harus Lebih besar dari tanggal Pencairan SP2D");
-      exit();
-    }
-    if (nlpj == ''){
-      alert("No LPJ harus terisi");
-      exit();
-    }
-    $(document).ready(function(){
-            $.ajax({
-                type: "POST",       
-                dataType : 'json',         
-                url      : "<?php  echo base_url(); ?>index.php/tukd/update_hlpj_tu",
-        data     : ({nlpj:nlpj,tgllpj:b,ket:nket,tgl_sp2d:tgl_sp2d,sp2d:sp2d,no_simpan:no_simpan}),
-                success:function(data){
-                    status = data.pesan;                                                               
-                }
-            });
-        });
-    
-    
-    
-$('#dg1').datagrid('selectAll');
-        var rows = $('#dg1').datagrid('getSelections');
-        
-        for(var i=0;i<rows.length;i++){            
-            
-            cidx      = rows[i].idx;
-            cnobukti1 = rows[i].no_bukti;
-            ckdgiat   = rows[i].kdkegiatan;
-            cnmgiat   = rows[i].nmkegiatan;
-            ckdrek    = rows[i].kdrek5;
-            cnmrek    = rows[i].nmrek5;
-            cnilai    = angka(rows[i].nilai1);
-                       
-            no        = i + 1 ;      
-            
-            $(document).ready(function(){      
-            $.ajax({
-            type     : 'POST',
-            url      : "<?php  echo base_url(); ?>index.php/tukd/update_lpj",
-            data     : ({nlpj:nlpj,no_bukti1:cnobukti1,tgllpj:b,ket:nket,cnkdgiat:ckdgiat,cnkdrek:ckdrek,cnnmrek:cnmrek,cnnilai:cnilai}),
-            dataType : "json",
-      
-                   success  : function(data){
-                         status = data;
-
-
-                    }
-
-        });
-        });
-        }
-    
-
-                       if (status=='0'){
-                            alert('Gagal Update..!!');
-                            exit();
-                        } else {
-                                  alert('Data Update...!!!');
-                                  lcstatus = 'edit';
-                                  exit();
-                               }
-               
-            
-        $('#dg1').edatagrid('unselectAll');
-    
-//=========DNA
-
-
-}
-       }
-    }
- */   
+  
     
     function dsimpan(){
         var a = document.getElementById('no_spp').value;
@@ -1369,7 +1176,7 @@ $('#dg1').datagrid('selectAll');
             var no_sp2d =no_sp2d.split("/").join("abcdefghij");
       var no_lpj = $('#cspp').combogrid('getValue');   
             var no_lpj = no_lpj.split("/").join("abcdefghij");  
-      var skpd   = kode; 
+      var skpd   = document.getElementById('kdskpd').value; 
       var ctglttd = $('#tgl_ttd').datebox('getValue');
       var ttd1   = $("#ttd1").combogrid('getValue');
       var ttd2   = $("#ttd2").combogrid('getValue'); 
@@ -1480,7 +1287,7 @@ $('#dg1').datagrid('selectAll');
    <p>
 
 
- 
+ <input type="text" name="kdskpd" id="kdskpd" hidden>
  
  <fieldset style="width:850px;height:650px;border-color:white;border-style:hidden;border-spacing:0;padding:0;">            
 
