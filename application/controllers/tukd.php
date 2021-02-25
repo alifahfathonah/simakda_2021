@@ -49860,4 +49860,402 @@ ORDER BY z.tgl,z.kasda,z.urut";
          //$this->tukd_model->_mpdf('', $cRet, 10, 10, 10, 'L');
      
     }
+
+    function ctk_daftar_pengeluaran_peri($jns='', $print='', $ttd1='', $tgl=''){
+        $idskpd = $this->session->userdata('kdskpd');
+        $lcttd      = str_replace('123456789',' ',$this->uri->segment(5));
+        $thn_ang    = $this->session->userdata('pcThang');
+        $prv        = $this->db->query("SELECT provinsi,daerah from sclient where kd_skpd='$idskpd'");
+        $prvn       = $prv->row();          
+        $prov       = $prvn->provinsi;         
+        $daerah     = $prvn->daerah;
+        $jns_beban  = $this->uri->segment(3);
+        $no_halaman = $this->uri->segment(8);
+        $jns_cetak  = $this->uri->segment(7);
+        $tgl_cetak  = $this->uri->segment(6);
+        $tgl_cetak1 = $this->tanggal_format_indonesia($tgl_cetak);
+        $spasi      = $this->uri->segment(9);
+        $tgl_per1   = $this->uri->segment(10);
+        $tgl_per2   = $this->uri->segment(11);
+        $skpd       = str_replace('-','.',$this->uri->segment(12));
+        
+        $sqlttd1="SELECT TOP 1 nama as nm,nip as nip,jabatan as jab,pangkat FROM ms_ttd where kode='BUD' and nip='$lcttd'";
+        $sqlttd=$this->db->query($sqlttd1);
+         foreach ($sqlttd->result() as $rowttd)
+          {
+            $nip=$rowttd->nip;                    
+            $nama= $rowttd->nm;
+            $jabatan  = $rowttd->jab;
+            $pangkat=$rowttd->pangkat;
+          }
+        
+        
+        if($jns_beban=='0'){
+          //GJ
+          $where = "AND a.jns_spp='4'";
+          $judul="DAFTAR PENGELUARAN GAJI"; 
+        }else if($jns_beban=='1'){
+          //LS
+          $where = "AND (a.jns_spp='6')";
+          $judul="DAFTAR PENGELUARAN LS";
+        }else if($jns_beban=='2'){
+          //UP
+          $where = "AND a.jns_spp='1'";
+          $judul="DAFTAR PENGELUARAN UP";
+        }else if($jns_beban=='3'){
+          //TU
+          $where = "AND a.jns_spp='3'";
+          $judul="DAFTAR PENGELUARAN TU";
+        }else if($jns_beban=='4'){
+          //GU
+          $where = "AND a.jns_spp='2'";
+          $judul="DAFTAR PENGELUARAN GU";
+        }else if($jns_beban=='6'){
+          //GAJI
+          $where = "AND a.jns_spp in ('4','5') AND d.kd_rek6 IN ('5110101','5110102','5110103','5110103','5110104','5110105','5110106','5110107','5110108') ";
+          $judul="DAFTAR PENGELUARAN BELANJA TIDAK LANGSUNG (GAJI)";
+        }else if($jns_beban=='7'){
+          //NON GAJI
+          $where = "AND a.jns_spp in ('4','5') AND d.kd_rek6 NOT IN ('5110101','5110102','5110103','5110103','5110104','5110105','5110106','5110107','5110108')";
+          $judul="DAFTAR PENGELUARAN BELANJA TIDAK LANGSUNG (NON GAJI)";
+        }else{
+          //KESELURUHAN
+          $where = "";
+          $judul="DAFTAR PENGELUARAN KESELURUHAN";
+        }     
+         
+         if($jns_cetak=='0'){
+          $where2 = "";
+         }else if($jns_cetak=='1'){
+          $where2 = "AND LEFT(a.kd_skpd,7)=LEFT('$skpd',7)";
+          $pglskpd = $skpd.".0000";
+          $nmmskpd    = $this->db->query("SELECT nm_skpd from ms_skpd where kd_skpd='$pglskpd'")->row('nm_skpd');
+                
+        
+         }else{
+           $where2 = "AND a.kd_skpd='$skpd'";
+         }
+        
+        $cRet = '';
+        
+          $cRet .="<table style=\"border-collapse:collapse;\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\">
+            <tr>
+              <td align=\"center\" colspan=\7\" style=\"font-size:14px;border: solid 1px white;\"><b>$prov<br>$judul<br></b></td>            
+            </tr>";
+         
+         if($jns_cetak=="1"){   
+          $cRet .="<tr>
+              <td align=\"center\" colspan=\7\" style=\"font-size:14px;border: solid 1px white;\"><b>".strtoupper($nmmskpd)."<br></b></td>            
+            </tr>
+            ";
+          }  
+              
+           $cRet .="
+           <tr>
+              <td align=\"center\" colspan=\7\" style=\"font-size:14px;border: solid 1px white;\"><b>".strtoupper($this->tanggal_format_indonesia($tgl_per1))." s/d ".strtoupper($this->tanggal_format_indonesia($tgl_per2))."<br>TAHUN ANGGARAN  $thn_ang</b></td>            
+            </tr>
+           </table>
+            <table style=\"border-collapse:collapse; border-color: black;font-size:12px\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"$spasi\" >
+            <thead>";
+           
+           
+           if($jns_beban<>"9"){  
+            $cRet .="<tr>
+              <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"7%\" style=\"font-weight:bold;\">TANGGAL</td>  
+              <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"10%\" style=\"font-weight:bold\">NOMOR KAS</td>
+              <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"15%\" style=\"font-weight:bold\">NOMOR DAN TANGGAL SP2D</td>
+              <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"33%\" style=\"font-weight:bold\">URAIAN</td>
+              <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"20%\" style=\"font-weight:bold\">KODE REKENING</td>
+              <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"15%\" style=\"font-weight:bold\">PENGELUARAN</td>
+            </tr>
+            <tr>
+              <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">1</td>
+              <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">2</td>
+              <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">3</td>
+              <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">4</td>
+              <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">5</td>
+              <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">6</td>          
+            </tr>";
+            }else{
+            $cRet .="<tr>
+              <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"7%\" style=\"font-weight:bold;\">TANGGAL</td>  
+              <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"7%\" style=\"font-weight:bold\">NOMOR KAS</td>
+              <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"7%\" style=\"font-weight:bold\">JENIS</td>
+              <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"15%\" style=\"font-weight:bold\">NOMOR DAN TANGGAL SP2D</td>
+              <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"30%\" style=\"font-weight:bold\">URAIAN</td>
+              <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"19%\" style=\"font-weight:bold\">KODE REKENING</td>
+              <td align=\"center\" bgcolor=\"#CCCCCC\" width=\"15%\" style=\"font-weight:bold\">PENGELUARAN</td>
+            </tr>
+            <tr>
+              <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">1</td>
+              <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">2</td>
+              <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">3</td>
+              <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">4</td>
+              <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">5</td>
+              <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">6</td>
+              <td align=\"center\" bgcolor=\"#CCCCCC\" style=\"border-top:solid 1px black\">7</td>
+            </tr>";    
+            }
+            
+            $cRet .="</thead>";
+    
+              //isi
+                $sql="select * from(
+                    select 1 urut, 
+                           a.no_kas_bud as urut2, 
+                         a.no_kas_bud, 
+                         a.tgl_kas_bud, 
+                         a.no_sp2d, 
+                         a.tgl_sp2d,
+                         a.kd_skpd,
+                         a.keperluan,
+                         a.nmrekan,
+                         c.pimpinan,
+                         a.nm_skpd,
+                         '' kd_kegiatan,
+                         '' kd_rek5, 
+                         '' nm_rek5, 
+                         sum(d.nilai) as nilai,
+                         0 no_bukti 
+                    from trhsp2d a INNER JOIN trhspm b on a.no_spm=b.no_spm and a.kd_skpd=b.kd_skpd 
+                             INNER JOIN trhspp c on b.no_spp=c.no_spp and b.kd_skpd=c.kd_skpd 
+                             INNER JOIN trdspp d on c.no_spp=d.no_spp and c.kd_skpd=d.kd_skpd 
+                    where a.status_bud='1' and (a.sp2d_batal IS NULL  OR a.sp2d_batal !=1) 
+                    and (a.tgl_kas_bud>='$tgl_per1' and a.tgl_kas_bud<='$tgl_per2') $where $where2
+                    group by a.tgl_kas_bud, a.no_kas_bud, a.no_sp2d, a.tgl_sp2d, a.keperluan, a.nmrekan, c.pimpinan, a.kd_skpd, a.nm_skpd
+                    UNION ALL
+                    select 2 urut,
+                         '' no_kas_bud,
+                        a.no_kas_bud as urut2,
+                        '' tgl_kas_bud,
+                        '' no_sp2d, 
+                        '' tgl_sp2d, 
+                        a.kd_skpd,
+                        '' keperluan,
+                        '' nmrekan,
+                        '' pimpinan,
+                        '' nm_skpd,
+                        d.kd_kegiatan, 
+                        d.kd_rek6 as kd_rek5,
+                        d.nm_rek6 as nm_rek5,
+                        d.nilai,
+                        d.no_bukti  
+                    from trhsp2d a INNER JOIN trhspm b on a.no_spm=b.no_spm and a.kd_skpd=b.kd_skpd 
+                             INNER JOIN trhspp c on b.no_spp=c.no_spp and b.kd_skpd=c.kd_skpd 
+                             INNER JOIN trdspp d on c.no_spp=d.no_spp and c.kd_skpd=d.kd_skpd 
+                    where a.status_bud='1' and (a.sp2d_batal IS NULL  OR a.sp2d_batal !=1) and 
+                    (a.tgl_kas_bud>='$tgl_per1' and a.tgl_kas_bud<='$tgl_per2') $where $where2
+                    GROUP BY a.no_kas_bud, a.kd_skpd, a.keperluan, d.kd_kegiatan, d.kd_rek6, d.nm_rek6,d.nilai,d.no_bukti) a
+                    order by no_kas_bud,urut, kd_kegiatan, kd_rek5";
+                    
+              $hasil = $this->db->query($sql);
+              
+              $jum_pengeluaran=0;
+              $jumlah_pengeluaran=0;
+              $jmlh_pengeluaran=0;
+              $nilai=0;$nilai_t=0;
+              $jumlah_pengeluaran_t=0;  
+              foreach ($hasil->result() as $rowttd)
+              {
+                $urut=$rowttd->urut;
+                $urut2=$rowttd->urut2;
+                $no_kas_bud=$rowttd->no_kas_bud;
+                $tgl_kas_bud=$rowttd->tgl_kas_bud;
+                $no_sp2d=$rowttd->no_sp2d;
+                $tgl_sp2d=$rowttd->tgl_sp2d;
+                $kd_skpd=$rowttd->kd_skpd;
+                $keperluan=$rowttd->keperluan;
+                $nmrekan=$rowttd->nmrekan;
+                $pimpinan=$rowttd->pimpinan;
+                $nm_skpd=$rowttd->nm_skpd;
+                $kd_kegiatan=$rowttd->kd_kegiatan;
+                $kd_rek5=$this->dotrek($rowttd->kd_rek5);
+                $nm_rek5=$rowttd->nm_rek5;
+                $no_bukti=$rowttd->no_bukti;
+                
+                if($urut==2){
+                $nilai=$rowttd->nilai;
+                }
+                
+                if($urut==1){
+                $nilai_t=$rowttd->nilai;
+                $jum_pengeluaran=$jum_pengeluaran+$nilai_t;
+                }          
+                          
+                $jumlah_pengeluaran=number_format($nilai,"2",",",".");
+                $jumlah_pengeluaran_t=number_format($nilai_t,"2",",",".");
+                
+                if($kd_kegiatan==''){
+                  $kode="";
+                }else{
+                  $kode="$kd_kegiatan.$kd_rek5";
+                }
+              
+              
+              if($jns_beban<>"9"){
+                
+                if($urut=='1'){
+                
+                  $sqlnam="SELECT TOP 1 * FROM ms_ttd WHERE kd_skpd = '$kd_skpd' AND kode='BK' ";
+                     $sqlnam=$this->db->query($sqlnam);
+                     foreach ($sqlnam->result() as $rownam)
+                    {
+                      $nama_ben=$rownam->nama;                    
+                      $jabat_ben=$rownam->jabatan;                    
+                    }
+                    
+                  $nama_ben = empty($nama_ben) ? 'Belum Ada data Bendahara' :$nama_ben;
+                  $jabat_ben = empty($jabat_ben) ? ' ' :$jabat_ben;
+                        
+                  $cRet .="<tr>
+                        <td align=\"center\">$tgl_kas_bud</td>
+                        <td align=\"center\">$no_kas_bud</td>
+                        <td align=\"center\">$no_sp2d <br>$tgl_sp2d</td>
+                        <td>$nama_ben, &nbsp; $nm_skpd</td>
+                        <td></td>
+                        <td align=\"right\"><u> $jumlah_pengeluaran_t </u></td>
+                      </tr>";
+                }else{
+                          
+                  $cRet .="<tr>
+                        <td style=\"border-top:hidden;\"></td>
+                        <td style=\"border-top:hidden;\"></td>
+                        <td style=\"border-top:hidden;\"></td>
+                        <td align=\"left\" style=\"border-top:hidden;\">$nm_rek5</td>
+                        <td align=\"center\" style=\"border-top:hidden;\">$kode</td>
+                        <td align=\"right\" style=\"border-top:hidden;\">$jumlah_pengeluaran</td>
+                      </tr>";
+                }          
+              
+              }else{
+                if($urut=='1'){
+                
+                $jnsspp_sp2d  = $this->db->query("SELECT jns_spp from trhsp2d where no_sp2d='$no_sp2d' and tgl_sp2d='$tgl_sp2d' and kd_skpd='$kd_skpd'");
+                $jnsspp_sp2d2 = $jnsspp_sp2d->row();          
+                $no_jnspp     = $jnsspp_sp2d2->jns_spp;         
+        
+                if($no_jnspp=='1'){
+                    $no_jnspp2 = 'UP';
+                }else if($no_jnspp=='2'){
+                    $no_jnspp2 = 'GU';
+                }else if($no_jnspp=='3'){
+                    $no_jnspp2 = 'TU';
+                }else if($no_jnspp=='4'){
+                    $no_jnspp2 = 'GAJI';
+                }else if($no_jnspp=='5'){
+                    $no_jnspp2 = 'LS';
+                }else if($no_jnspp=='6'){
+                    $no_jnspp2 = 'LS';
+                }
+                             
+                    $sqlnam="SELECT TOP 1 * FROM ms_ttd WHERE kd_skpd = '$kd_skpd' AND kode='BK' ";
+                     $sqlnam=$this->db->query($sqlnam);
+                     foreach ($sqlnam->result() as $rownam)
+                    {
+                      $nama_ben=$rownam->nama;                    
+                      $jabat_ben=$rownam->jabatan;                    
+                    }
+                    
+                  $nama_ben = empty($nama_ben) ? 'Belum Ada data Bendahara' :$nama_ben;
+                  $jabat_ben = empty($jabat_ben) ? ' ' :$jabat_ben;
+                
+                  $cRet .="<tr>
+                        <td align=\"center\">$tgl_kas_bud</td>
+                        <td align=\"center\">$no_kas_bud</td>                    
+                        <td align=\"center\">$no_jnspp2</td>
+                        <td align=\"center\">$no_sp2d <br>$tgl_sp2d</td>
+                        <td>$nama_ben, &nbsp; $nm_skpd</td>
+                        <td></td>
+                        <td align=\"right\"><u> $jumlah_pengeluaran_t </u></td>
+                      </tr>";
+                }else{
+                          
+                  $cRet .="<tr>
+                        <td style=\"border-top:hidden;\"></td>
+                        <td style=\"border-top:hidden;\"></td>
+                        <td style=\"border-top:hidden;\"></td>
+                        <td style=\"border-top:hidden;\"></td>
+                        <td align=\"left\" style=\"border-top:hidden;\">$nm_rek5</td>
+                        <td align=\"center\" style=\"border-top:hidden;\">$kode</td>                    
+                        <td align=\"right\" style=\"border-top:hidden;\">$jumlah_pengeluaran</td>
+                      </tr>";
+                    }                        
+              }          
+              
+              }
+              $jmlh_pengeluaran=number_format($jum_pengeluaran,"2",",",".");
+              if($jns_beban<>"9"){
+              $cRet .="<tr>
+                    <td colspan=\"5\" align=\"right\"><b>Jumlah</b></td>
+                    <td align=\"right\"><b>$jmlh_pengeluaran</b></td>
+                  </tr>";
+              }else{          
+              $cRet .="<tr>
+                    <td colspan=\"6\" align=\"right\"><b>Jumlah</b></td>                
+                    <td align=\"right\"><b>$jmlh_pengeluaran</b></td>
+                  </tr>";          
+              }          
+              
+        $cRet .= '</table>';
+      
+        $cRet .="<table style=\"font-size:12px;border-collapse:collapse;\" width=\"100%\" align=\"center\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\">
+                        <tr>
+                <td align=\"center\" width=\"50%\">&nbsp;</td>
+                <td align=\"center\" width=\"50%\">&nbsp;</td>
+              </tr>
+              <tr>
+                <td align=\"center\" width=\"50%\">&nbsp;</td>
+                <td align=\"center\" width=\"50%\">Pontianak, $tgl_cetak1</td>
+              </tr>
+              <tr>
+                <td align=\"center\" width=\"50%\">&nbsp;</td>
+                  <td align=\"center\" width=\"50%\">$jabatan</td>
+              </tr>
+                        <tr>
+                <td align=\"center\" width=\"50%\">&nbsp;</td>
+                  <td align=\"center\" width=\"50%\">$pangkat</td>
+              </tr>
+                        <tr>
+                <td align=\"center\" width=\"50%\">&nbsp;</td>
+                <td align=\"center\" width=\"50%\">&nbsp;</td>
+              </tr>
+              <tr>
+                <td align=\"center\" width=\"50%\">&nbsp;</td>
+                <td align=\"center\" width=\"50%\">&nbsp;</td>
+              </tr>                              
+                        <tr>
+                <td align=\"center\" width=\"50%\">&nbsp;</td>
+                <td align=\"center\" width=\"50%\">&nbsp;</td>
+              </tr>                                       
+                        <tr>
+                <td align=\"center\" width=\"50%\">&nbsp;</td>
+                <td align=\"center\" width=\"50%\"><u>$nama</u></td>
+              </tr>
+              <tr>
+                <td align=\"center\" width=\"50%\">&nbsp;</td>
+                <td align=\"center\" width=\"50%\">NIP. $nip</td>
+              </tr>
+                        
+                      </table>";
+        
+        
+        $print = $this->uri->segment(4);
+        
+        if($print==0){
+           $data['prev']= $cRet;    
+           echo ("<title></title>");
+           echo $cRet;
+        }else if($print==1){
+                
+                $this->_mpdf2('',$cRet,10,10,10,'1',$no_halaman,'');
+                
+            }else{
+                $datax['prev']= $cRet;
+                header("Cache-Control: no-cache, no-store, must-revalidate");
+                header("Content-Type: application/vnd.ms-excel");
+                header("Content-Disposition: attachment; filename= pengeluaran.xls");
+                
+                $this->load->view('anggaran/rka/perkadaII', $datax);
+            }
+      }
 }   
