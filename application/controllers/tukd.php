@@ -43199,12 +43199,13 @@ c.nm_sub_kegiatan,LEFT(c.kd_sub_kegiatan,7) ";
     function load_giat_lpj(){
 
         $nomor = $this->input->post('lpj');
+        $kode = $this->input->post('kode');
         $query1 = $this->db->query("
         SELECT a.kd_sub_kegiatan, c.nm_sub_kegiatan
         from trlpj a 
         INNER JOIN trhlpj b ON a.no_lpj=b.no_lpj AND a.kd_skpd=b.kd_skpd
         LEFT JOIN trskpd c ON a.kd_sub_kegiatan=c.kd_sub_kegiatan AND a.kd_skpd=c.kd_skpd
-        WHERE a.no_lpj = '$nomor'
+        WHERE a.no_lpj = '$nomor' and a.kd_skpd='$kode'
         GROUP BY a.kd_sub_kegiatan,c.nm_sub_kegiatan
         ORDER BY a.kd_sub_kegiatan");  
         $result = array();

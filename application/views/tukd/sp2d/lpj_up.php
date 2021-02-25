@@ -1,7 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 
-<head>
+<head> 
 
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <link rel="stylesheet" type="text/css" href="<?php echo base_url(); ?>easyui/themes/default/easyui.css">
@@ -253,6 +253,8 @@
               kode      = rowData.kd_skpd;
               $("#kdspd").attr("value","");
               $("#kdspd").attr("value",rowData.kd_skpd);
+              $("#nolpj").attr("value","");
+              $("#nolpj").attr("value",rowData.no_lpj);
               nmskpd    = rowData.nm_skpd;
               tgllpj  = rowData.tgl_lpj;
               cket    = rowData.ket;
@@ -420,21 +422,22 @@
         $("#dialog-modal").dialog('open');
         $("#cspp").combogrid("setValue",nom);
     $("#nosp2d").combogrid("setValue",no_sp2d); */
-    var nom=document.getElementById("no_simpan").value;
+      var nom=document.getElementById("no_simpan").value;
         $("#dialog-modal").dialog('open');
         $("#cspp").combogrid("setValue",nom);
-    pilih_giat(nom);
+      pilih_giat(nom);
 
     } 
     
     function pilih_giat(nomer){
+      kode=kode;
     $('#giat_print').combogrid({  
                 panelWidth:600,  
                 idField:'kd_kegiatan',  
                 textField:'kd_kegiatan',  
                 mode:'remote',
                 url:'<?php echo base_url(); ?>index.php/tukd/load_giat_lpj', 
-        queryParams:({ lpj:nomer }),
+        queryParams:({ lpj:nomer, kode:kode }),
                 columns:[[  
                     {field:'kd_kegiatan',title:'NIP',width:200},
                     {field:'nm_kegiatan',title:'Nama',width:400}
@@ -520,7 +523,10 @@
     var no_lpj = $('#cspp').combogrid('getValue');   
     var no_lpj = no_lpj.split("/").join("abcdefghij");        
     var no_lpj = no_lpj.split(" ").join("123456789");       
-    var skpd   = kode; 
+    //  var skpd   = document.getElementById('kdskpd').value; 
+      var nolpj   = document.getElementById('nolpj').value;
+      var no_lpj = nolpj.split("/").join("abcdefghij"); 
+     var skpd= $('#dn').combogrid('getValue');  
     var ttd1   = $("#ttd1").combogrid('getValue');
     //var ttd2   = $("#ttd2").combogrid('getValue'); 
     var jns   = document.getElementById('jenis').value;
@@ -1145,10 +1151,10 @@
   function cetaktu1(cetak)
         {
       var no_sp2d  = $('#nosp2d').combogrid('getValue');   
-            var no_sp2d =no_sp2d.split("/").join("abcdefghij");
-      var no_lpj = $('#cspp').combogrid('getValue');   
-            var no_lpj = no_lpj.split("/").join("abcdefghij");        
-      var skpd   = document.getElementById('kdskpd').value;  
+            var no_sp2d =no_sp2d.split("/").join("abcdefghij");     
+      var skpd   = document.getElementById('kdskpd').value; 
+      var nolpj   = document.getElementById('nolpj').value; 
+      var no_lpj = nolpj.split("/").join("abcdefghij");  
       var ctglttd = $('#tgl_ttd').datebox('getValue');
       var ttd1   = $("#ttd1").combogrid('getValue');
       var ttd2   = $("#ttd2").combogrid('getValue'); 
@@ -1174,9 +1180,8 @@
     function cetaktu2(cetak){
       var no_sp2d  = $('#nosp2d').combogrid('getValue');   
             var no_sp2d =no_sp2d.split("/").join("abcdefghij");
-      var no_lpj = $('#cspp').combogrid('getValue');   
-            var no_lpj = no_lpj.split("/").join("abcdefghij");  
       var skpd   = document.getElementById('kdskpd').value; 
+      var nolpj   = document.getElementById('nolpj').value; 
       var ctglttd = $('#tgl_ttd').datebox('getValue');
       var ttd1   = $("#ttd1").combogrid('getValue');
       var ttd2   = $("#ttd2").combogrid('getValue'); 
@@ -1288,6 +1293,7 @@
 
 
  <input type="text" name="kdskpd" id="kdskpd" hidden>
+ <input type="text" name="nolpj" id="nolpj" hidden>
  
  <fieldset style="width:850px;height:650px;border-color:white;border-style:hidden;border-spacing:0;padding:0;">            
 
