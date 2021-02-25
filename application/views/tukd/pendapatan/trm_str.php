@@ -196,7 +196,7 @@
             }
             //lc = '?&ttd='+ttd+'&ttd2='+ttd2;
             
-			var url    = "<?php echo site_url(); ?>/tukd/ctk_trm_str";  
+			var url    = "<?php echo site_url(); ?>tukd/ctk_trm_str";  
 			window.open(url+'/'+dcetak+'/'+dcetak2+'/'+skpd+'/'+jns, '_blank');
 			window.focus();
         }

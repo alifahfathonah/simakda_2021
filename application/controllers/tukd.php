@@ -47055,165 +47055,146 @@ function _mpdf_margin($judul='',$isi='',$lMargin=10,$rMargin=10,$font='',$orient
     }
     
     function ctk_trm_str($dcetak='',$dcetak2='',$skpd='',$jns=''){
-            $lcskpd2 = $skpd;
-            
-            $csql11 = " select nm_skpd from ms_skpd where left(kd_skpd,len('$skpd')) = '$skpd'"; 
-            $rs1 = $this->db->query($csql11);
-            $trh1 = $rs1->row();
-            $lcskpd = strtoupper ($trh1->nm_skpd);
-            
-         
+        $lcskpd2 = $skpd;
+     
+     $csql11 = " select nm_skpd from ms_skpd where left(kd_skpd,len('$skpd')) = '$skpd'"; 
+     $rs1 = $this->db->query($csql11);
+     $trh1 = $rs1->row();
+     $lcskpd = strtoupper ($trh1->nm_skpd);
+     
+  
 
 
-         $prv = $this->db->query("SELECT provinsi,daerah from sclient WHERE kd_skpd='$lcskpd2' ");
-            $prvn = $prv->row();          
-            $prov = $prvn->provinsi;         
-            $daerah = $prvn->daerah;
-            
-            $cRet='';
+    $prv = $this->db->query("SELECT provinsi,daerah from sclient WHERE kd_skpd='$lcskpd2' ");
+     $prvn = $prv->row();          
+     $prov = $prvn->provinsi;         
+     $daerah = $prvn->daerah;
+     
+     $cRet='';
 
-            $cRet .="<table style=\"border-collapse:collapse;\" width=\"100%\" align=\"center\" border=\"0\" cellspacing=\"0\" cellpadding=\"4\">
-             <tr>
-                <td align=\"center\" colspan=\"11\" style=\"font-size:14px;border: solid 1px white;\"><b>$lcskpd<br>BUKU PENERIMAAN DAN PENYETORAN <br> BENDAHARA PENERIMAAN</b></td>
-            </tr>
-           
-            <tr>
-                <td align=\"left\" colspan=\"3\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
-                <td align=\"left\" colspan=\"6\" style=\"font-size:12px;border: solid 1px white;\"></td>
-            </tr>
-            <tr>
-                <td align=\"left\" colspan=\"3\" style=\"border: solid 1px white;\">SKPD</td>
-                <td align=\"left\" colspan=\"6\" style=\"border: solid 1px white;\">:&nbsp;$lcskpd</td>
-            </tr>
-            
-            <tr>
-                <td align=\"left\" colspan=\"3\" style=\"border: solid 1px white;border-bottom:solid 1px white;\">PERIODE</td>
-                <td align=\"left\" colspan=\"8\" style=\"border: solid 1px white;border-bottom:solid 1px white;\">:&nbsp;".$this->tukd_model->tanggal_format_indonesia($dcetak)." S.D ".$this->tukd_model->tanggal_format_indonesia($dcetak2)."</td>
-            </tr>
-            </table>";
-            
-            $cRet .= "<table style=\"border-collapse:collapse;\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"0\" cellpadding=\"0\">
-            <thead>
-            <tr>
-                <td bgcolor=\"#CCCCCC\" align=\"center\" rowspan=\"2\">NO</td>
-                <td bgcolor=\"#CCCCCC\" align=\"center\" colspan=\"6\">Penerimaan</td>
-                <td bgcolor=\"#CCCCCC\" align=\"center\" colspan=\"3\">Penyetoran</td>
-                <td bgcolor=\"#CCCCCC\" align=\"center\" rowspan=\"2\">Ket.</td>
-            </tr>
-            <tr>
-                <td bgcolor=\"#CCCCCC\" align=\"center\">Tgl</td>
-                <td bgcolor=\"#CCCCCC\" align=\"center\">No Bukti</td>
-                <td bgcolor=\"#CCCCCC\" align=\"center\">Cara Pembayaran</td>
-                <td bgcolor=\"#CCCCCC\" align=\"center\">Kode Rekening</td>
-                <td bgcolor=\"#CCCCCC\" align=\"center\">Uraian</td>
-                <td bgcolor=\"#CCCCCC\" align=\"center\">Jumlah</td>
-                <td bgcolor=\"#CCCCCC\" align=\"center\">Tgl</td>
-                <td bgcolor=\"#CCCCCC\" align=\"center\">No STS</td>
-                <td bgcolor=\"#CCCCCC\" align=\"center\">Jumlah</td>
-            </tr>
-            <tr>
-                <td bgcolor=\"#CCCCCC\" align=\"center\" width=\"5%\">1</td>
-                <td bgcolor=\"#CCCCCC\" align=\"center\" width=\"15%\">2</td>
-                <td bgcolor=\"#CCCCCC\" align=\"center\" width=\"10%\">3</td>
-                <td bgcolor=\"#CCCCCC\" align=\"center\" width=\"5%\">4</td>
-                <td bgcolor=\"#CCCCCC\" align=\"center\" width=\"5%\">5</td>
-                <td bgcolor=\"#CCCCCC\" align=\"center\" width=\"20%\">6</td>
-                <td bgcolor=\"#CCCCCC\" align=\"center\" width=\"10%\">7</td>
-                <td bgcolor=\"#CCCCCC\" align=\"center\" width=\"15%\">8</td>
-                <td bgcolor=\"#CCCCCC\" align=\"center\" width=\"10%\">9</td>
-                <td bgcolor=\"#CCCCCC\" align=\"center\" width=\"10%\">10</td>
-                <td bgcolor=\"#CCCCCC\" align=\"center\" width=\"5%\">11</td>
-            </tr>
-            </thead>
-           ";
-                    
-              $sql1="SELECT a.tgl_terima tgl, a.no_terima no, 
-                    case when a.tgl_terima >= '$dcetak' and a.tgl_terima <= '$dcetak2' then cast (a.tgl_terima as varchar(25)) else '' end tgl_terima,
-                    case when a.tgl_terima >= '$dcetak' and a.tgl_terima <= '$dcetak2' then a.no_terima else '' end no_terima,
-                    a.kd_rek5,b.nm_rek5,
-                    case when a.tgl_terima >= '$dcetak' and a.tgl_terima <= '$dcetak2' then a.nilai else 0 end nilai,
-                    case when c.tgl_sts >= '$dcetak' and c.tgl_sts <= '$dcetak2' then cast (c.tgl_sts as varchar(25)) else '' end tgl_sts,
-                    case when c.tgl_sts >= '$dcetak' and c.tgl_sts <= '$dcetak2' then c.no_sts else '' end no_sts,
-                    case when c.tgl_sts >= '$dcetak' and c.tgl_sts <= '$dcetak2' then c.rupiah else 0 end total, 
-                    a.keterangan, c.status FROM tr_terima a INNER JOIN ms_rek5 b 
-                    ON a.kd_rek5=b.kd_rek5 
-                    LEFT JOIN (SELECT x.tgl_sts,x.no_sts,x.kd_skpd,y.no_terima,SUM(y.rupiah) as rupiah, x.status FROM trhkasin_pkd x INNER JOIN trdkasin_pkd y ON x.no_sts=y.no_sts AND x.kd_skpd=y.kd_skpd AND x.kd_kegiatan=y.kd_kegiatan
-                    GROUP BY x.tgl_sts,x.no_sts,x.kd_skpd,y.no_terima, x.status) c 
-                    ON a.no_terima=c.no_terima AND a.kd_skpd=c.kd_skpd
-                    where ((a.tgl_terima >= '$dcetak' and a.tgl_terima <= '$dcetak2') or (c.tgl_sts >= '$dcetak' and c.tgl_sts <= '$dcetak2')) 
-                    and left(a.kd_skpd,len('$skpd')) = '$skpd'
-                    union all
-                    select x.tgl_kas tgl, x.no_sts no, '' tgl_terima, '' no_terima, kd_rek5, (select nm_rek5 from ms_rek5 where kd_rek5=y.kd_rek5) nm_rek5, 
-                    0 nilai, cast (x.tgl_sts as varchar(25)) tgl_sts, x.no_sts, y.rupiah total, x.keterangan,   x.status
-                    FROM trhkasin_pkd x INNER JOIN trdkasin_pkd y ON x.no_sts=y.no_sts AND x.kd_skpd=y.kd_skpd AND x.kd_kegiatan=y.kd_kegiatan
-                    where x.tgl_sts >= '$dcetak' and x.tgl_sts <= '$dcetak2' and left(x.kd_skpd,len('$skpd')) = '$skpd' and jns_trans='2'
-                    union all
-                    select x.tgl_kas tgl, x.no_sts no, x.tgl_kas tgl_terima, x.no_sts no_terima, kd_rek5, (select nm_rek5 from ms_rek5 where kd_rek5=y.kd_rek5) nm_rek5,    
-                    y.rupiah*-1 nilai, cast (x.tgl_sts as varchar(25)) tgl_sts, x.no_sts, y.rupiah*-1 total, x.keterangan, x.status
-                    FROM trhkasin_pkd x INNER JOIN trdkasin_pkd y ON x.no_sts=y.no_sts AND x.kd_skpd=y.kd_skpd AND x.kd_kegiatan=y.kd_kegiatan
-                    where x.tgl_sts >= '$dcetak' and x.tgl_sts <= '$dcetak2' and left(x.kd_skpd,len('$skpd')) = '$skpd' and jns_trans='3'
-                    order by tgl, no";
-                 
-                 $query = $this->db->query($sql1);
-                 //$query = $this->skpd_model->getAllc();
-                $lcno = 0;
-                $lnnilai = 0;                                 
-                $lntotal = 0;                                 
-                foreach ($query->result() as $row)
-                {   
-                    $lcno = $lcno + 1;
-                    $lnnilai = $lnnilai + $row->nilai;
-                    $lntotal = $lntotal + $row->total;
-                    $tgl=$row->tgl_terima;
-                    $bukti=$row->no_terima;
-                    $rek=$row->kd_rek5;                    
-                    $uraian=$row->nm_rek5;
-                    $nilai=number_format($row->nilai,"2",",",".");
-                    $tgl_sts=$row->tgl_sts;
-                    $ket=$row->keterangan;
-                    if($tgl_sts==''){
-                        $tgl_sts='';
-                    } else{
-                        $tgl_sts=$this->tukd_model->tanggal_ind($tgl_sts);
-                    }
-                    $nosts=$row->no_sts;
-                    $total=number_format($row->total,"2",",","."); 
-                    
-                     $cRet    .= " <tr><td align=\"center\" width=\"5%\">$lcno</td>
-                                        <td align=\"center\" width=\"15%\">".$this->tukd_model->tanggal_ind($tgl)."</td>
-                                        <td align=\"center\" width=\"10%\">$bukti</td>
-                                        <td align=\"center\" width=\"5%\">Tunai</td>
-                                        <td align=\"center\" width=\"5%\">$rek</td>
-                                        <td align=\"left\" width=\"20%\">$uraian</td>
-                                        <td align=\"right\" width=\"10%\">$nilai</td>
-                                        <td align=\"center\" width=\"15%\">$tgl_sts</td>
-                                        <td align=\"center\" width=\"10%\">$nosts</td>
-                                        <td align=\"right\" width=\"10%\">$total</td>
-                                        <td align=\"left\" width=\"10%\">$ket</td>
-                                     </tr>
-                                     ";
-                }
-            
-            $cRet    .= " <tr><td colspan=\"6\" align=\"center\"><b>Jumlah</b></td>
-                                <td align=\"right\" width=\"10%\"><b>".number_format($lnnilai,"2",",",".")."</b></td>
-                                <td align=\"center\" width=\"15%\"></td>
-                                <td align=\"center\" width=\"10%\"></td>
-                                <td align=\"right\" width=\"10%\"><b>".number_format($lntotal,"2",",",".")."</b></td>
-                                <td align=\"left\" width=\"10%\"></td>
-                             </tr>
-                             </table>";
-                             
-            
+     $cRet .="<table style=\"border-collapse:collapse;\" width=\"100%\" align=\"center\" border=\"0\" cellspacing=\"0\" cellpadding=\"4\">
+      <tr>
+         <td align=\"center\" colspan=\"11\" style=\"font-size:14px;border: solid 1px white;\"><b>$lcskpd<br>BUKU PENERIMAAN DAN PENYETORAN <br> BENDAHARA PENERIMAAN</b></td>
+     </tr>
+    
+     <tr>
+         <td align=\"left\" colspan=\"3\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
+         <td align=\"left\" colspan=\"6\" style=\"font-size:12px;border: solid 1px white;\"></td>
+     </tr>
+     <tr>
+         <td align=\"left\" colspan=\"3\" style=\"border: solid 1px white;\">SKPD</td>
+         <td align=\"left\" colspan=\"6\" style=\"border: solid 1px white;\">:&nbsp;$lcskpd</td>
+     </tr>
+     
+     <tr>
+         <td align=\"left\" colspan=\"3\" style=\"border: solid 1px white;border-bottom:solid 1px white;\">PERIODE</td>
+         <td align=\"left\" colspan=\"8\" style=\"border: solid 1px white;border-bottom:solid 1px white;\">:&nbsp;".$this->tukd_model->tanggal_format_indonesia($dcetak)." S.D ".$this->tukd_model->tanggal_format_indonesia($dcetak2)."</td>
+     </tr>
+     </table>";
+     
+     $cRet .= "<table style=\"border-collapse:collapse;\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"0\" cellpadding=\"0\">
+     <thead>
+     <tr>
+         <td bgcolor=\"#CCCCCC\" align=\"center\" rowspan=\"2\">NO</td>
+         <td bgcolor=\"#CCCCCC\" align=\"center\" colspan=\"6\">Penerimaan</td>
+         <td bgcolor=\"#CCCCCC\" align=\"center\" colspan=\"3\">Penyetoran</td>
+         <td bgcolor=\"#CCCCCC\" align=\"center\" rowspan=\"2\">Ket.</td>
+     </tr>
+     <tr>
+         <td bgcolor=\"#CCCCCC\" align=\"center\">Tgl</td>
+         <td bgcolor=\"#CCCCCC\" align=\"center\">No Bukti</td>
+         <td bgcolor=\"#CCCCCC\" align=\"center\">Cara Pembayaran</td>
+         <td bgcolor=\"#CCCCCC\" align=\"center\">Kode Rekening</td>
+         <td bgcolor=\"#CCCCCC\" align=\"center\">Uraian</td>
+         <td bgcolor=\"#CCCCCC\" align=\"center\">Jumlah</td>
+         <td bgcolor=\"#CCCCCC\" align=\"center\">Tgl</td>
+         <td bgcolor=\"#CCCCCC\" align=\"center\">No STS</td>
+         <td bgcolor=\"#CCCCCC\" align=\"center\">Jumlah</td>
+     </tr>
+     <tr>
+         <td bgcolor=\"#CCCCCC\" align=\"center\" width=\"5%\">1</td>
+         <td bgcolor=\"#CCCCCC\" align=\"center\" width=\"15%\">2</td>
+         <td bgcolor=\"#CCCCCC\" align=\"center\" width=\"10%\">3</td>
+         <td bgcolor=\"#CCCCCC\" align=\"center\" width=\"5%\">4</td>
+         <td bgcolor=\"#CCCCCC\" align=\"center\" width=\"5%\">5</td>
+         <td bgcolor=\"#CCCCCC\" align=\"center\" width=\"20%\">6</td>
+         <td bgcolor=\"#CCCCCC\" align=\"center\" width=\"10%\">7</td>
+         <td bgcolor=\"#CCCCCC\" align=\"center\" width=\"15%\">8</td>
+         <td bgcolor=\"#CCCCCC\" align=\"center\" width=\"10%\">9</td>
+         <td bgcolor=\"#CCCCCC\" align=\"center\" width=\"10%\">10</td>
+         <td bgcolor=\"#CCCCCC\" align=\"center\" width=\"5%\">11</td>
+     </tr>
+     </thead>
+    ";
+             
+       $sql1="SELECT a.tgl_terima,a.no_terima,a.kd_rek5,b.nm_rek5,a.nilai,c.tgl_sts,c.no_sts,c.rupiah as total, a.keterangan FROM tr_terima a INNER JOIN ms_rek5 b 
+             ON a.kd_rek5=b.kd_rek5 
+             LEFT JOIN (SELECT x.tgl_sts,x.no_sts,x.kd_skpd,y.no_terima,SUM(y.rupiah) as rupiah FROM trhkasin_pkd x INNER JOIN trdkasin_pkd y ON x.no_sts=y.no_sts AND x.kd_skpd=y.kd_skpd
+             GROUP BY x.tgl_sts,x.no_sts,x.kd_skpd,y.no_terima) c 
+             ON a.no_terima=c.no_terima AND a.kd_skpd=c.kd_skpd
+             where a.tgl_terima >= '$dcetak' and a.tgl_terima <= '$dcetak2' and left(a.kd_skpd,len('$skpd')) = '$skpd'
+             order by a.tgl_terima, a.no_terima";
+          
+          $query = $this->db->query($sql1);
+          //$query = $this->skpd_model->getAllc();
+         $lcno = 0;
+         $lnnilai = 0;                                 
+         $lntotal = 0;                                 
+         foreach ($query->result() as $row)
+         {   
+             $lcno = $lcno + 1;
+             $lnnilai = $lnnilai + $row->nilai;
+             $lntotal = $lntotal + $row->total;
+             $tgl=$row->tgl_terima;
+             $bukti=$row->no_terima;
+             $rek=$row->kd_rek5;                    
+             $uraian=$row->nm_rek5;
+             $nilai=number_format($row->nilai,"2",",",".");
+             $tgl_sts=$row->tgl_sts;
+             $ket=$row->keterangan;
+             if($tgl_sts==''){
+                 $tgl_sts='';
+             } else{
+                 $tgl_sts=$this->tukd_model->tanggal_ind($tgl_sts);
+             }
+             $nosts=$row->no_sts;
+             $total=number_format($row->total,"2",",","."); 
+             
+              $cRet    .= " <tr><td align=\"center\" width=\"5%\">$lcno</td>
+                                 <td align=\"center\" width=\"15%\">".$this->tukd_model->tanggal_ind($tgl)."</td>
+                                 <td align=\"center\" width=\"10%\">$bukti</td>
+                                 <td align=\"center\" width=\"5%\">Tunai</td>
+                                 <td align=\"center\" width=\"5%\">$rek</td>
+                                 <td align=\"left\" width=\"20%\">$uraian</td>
+                                 <td align=\"right\" width=\"10%\">$nilai</td>
+                                 <td align=\"center\" width=\"15%\">$tgl_sts</td>
+                                 <td align=\"center\" width=\"10%\">$nosts</td>
+                                 <td align=\"right\" width=\"10%\">$total</td>
+                                 <td align=\"left\" width=\"10%\">$ket</td>
+                              </tr>
+                              ";
+         }
+     
+     $cRet    .= " <tr><td colspan=\"6\" align=\"center\"><b>Jumlah</b></td>
+                         <td align=\"right\" width=\"10%\"><b>".number_format($lnnilai,"2",",",".")."</b></td>
+                         <td align=\"center\" width=\"15%\"></td>
+                         <td align=\"center\" width=\"10%\"></td>
+                         <td align=\"right\" width=\"10%\"><b>".number_format($lntotal,"2",",",".")."</b></td>
+                         <td align=\"left\" width=\"10%\"></td>
+                      </tr>
+                      </table>";
+                      
+     
 
-            $data['prev']= '';
-            if ($jns==1){
-            $this->_mpdf('',$cRet,10,10,10,'1',1,''); 
-            } else{
-                echo ("<title>Buku Penerimaan Penyetoran</title>");
-                echo $cRet;
-                }
+     $data['prev']= '';
+     if ($jns==1){
+     $this->_mpdf('',$cRet,10,10,10,'1',1,''); 
+     } else{
+         echo ("<title>Buku Penerimaan Penyetoran</title>");
+         echo $cRet;
+         }
 
-    }
+}
     
     //pengesahan_spp_tu
     function pengesahan_spp_tu() {
