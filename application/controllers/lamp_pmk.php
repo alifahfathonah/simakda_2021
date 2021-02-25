@@ -5691,4 +5691,11 @@ class Lamp_pmk extends CI_Controller
 						}
 					}
 
+	function rekap_pengeluaran()
+	{
+		$data['page_title']= 'REKAP PENGELUARAN';
+		$this->template->set('title', 'REKAP PENGELUARAN');   
+		$this->template->load('template','tukd/sp2d/daftar_pengeluaran_rekap_kasda',$data) ; 
+	}
+
 }
