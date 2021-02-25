@@ -97,6 +97,11 @@ function  tanggal_format_indonesia($tgl){
 	
 
 function cetak_lra_pemkot_33_ro($bulan='',$ctk='',$anggaran='',$jenis='',$kd_skpd='',$ttd='',$tanggal_ttd='',$ttdperda='',$label=''){
+  if($tanggal_ttd==1){
+    $tanggal_ttd='';
+  }else{
+    $tanggal_ttd= $this->tanggal_format_indonesia($tanggal_ttd);
+  }
         $lntahunang = $this->session->userdata('pcThang');
         $ttd1 = str_replace('n',' ',$ttdperda);
                
@@ -6385,7 +6390,7 @@ function cetak_lra_pemkot_33_ro($bulan='',$ctk='',$anggaran='',$jenis='',$kd_skp
                 ";
                              
         $query4 = $this->db->query($sql4);
-                
+        $nil62=0; $nil61=0; $angnil62=0; $angnil61=0;
                 foreach ($query4->result() as $row4)
                 {
           $no   = $row4->kode;
@@ -8017,9 +8022,9 @@ function cetak_lra_pemkot_33_ro($bulan='',$ctk='',$anggaran='',$jenis='',$kd_skp
         $data['prev']= $cRet;
      $cRet         .= "</table>";
      
-             if($ttd=="1"){
+              if($ttd=="1"){
                 
-                $sqlsc="SELECT tgl_rka,provinsi,kab_kota,daerah,thn_ang FROM sclient where kd_skpd='4.02.01.00'";
+                $sqlsc="SELECT tgl_rka,provinsi,kab_kota,daerah,thn_ang FROM sclient where kd_skpd='5.02.0.00.0.00.01.0000'";
                  $sqlsclient=$this->db->query($sqlsc);
                  foreach ($sqlsclient->result() as $rowsc)
                 {
@@ -8027,9 +8032,12 @@ function cetak_lra_pemkot_33_ro($bulan='',$ctk='',$anggaran='',$jenis='',$kd_skp
                     $daerah  = $rowsc->daerah;
                    
                 }    
-         }
+              }else{
+                $kab     = '';
+                    $daerah  = '';
+              }
        
-     if($ttd=="1"){                                
+              if($ttd=="1"){                                
                 
                 $sqlttd1="SELECT nama as nm,nip as nip, jabatan as jab,pangkat FROM ms_ttd where nip='$ttd1' and (kode ='agr' or kode='wk')";
                 
@@ -8041,6 +8049,11 @@ function cetak_lra_pemkot_33_ro($bulan='',$ctk='',$anggaran='',$jenis='',$kd_skp
                     $jabatan  = $rowttd->jab;
                     $pangkat  = $rowttd->pangkat;
                 }                                
+              }else{
+                $nip='';
+                $nama='';
+                $jabatan  ='';
+                $pangkat  ='';
               }
               
                   if($ttd1!='1'){
@@ -8063,7 +8076,7 @@ function cetak_lra_pemkot_33_ro($bulan='',$ctk='',$anggaran='',$jenis='',$kd_skp
             <TD width="400%" align="center" ><b>&nbsp;</TD>
           </TR>
                     <TR>
-            <TD width="400%" align="center" >'.$daerah.', '.$this->tanggal_format_indonesia($tanggal_ttd).'</TD>
+            <TD width="400%" align="center" >'.$daerah.', '.$tanggal_ttd.'</TD>
           </TR>
           
                     <TR>
