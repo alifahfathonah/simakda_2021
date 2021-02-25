@@ -4246,7 +4246,371 @@ Bulan</td>
         }           
     } 
 
+    function preview_belanja_pergeseran($tgl_ttd,$ttd1,$ttd2,$id,$cetak,$doc,$status1,$status2){
+        
+        $tanggal_ttd = $this->support->tanggal_format_indonesia($tgl_ttd);
+        $sqldns="SELECT a.kd_urusan as kd_u,'' as header, LEFT(a.kd_skpd,20) as kd_org,b.nm_bidang_urusan as nm_u, a.kd_skpd as kd_sk,a.nm_skpd as nm_sk  FROM ms_skpd a INNER JOIN ms_bidang_urusan b ON a.kd_urusan=b.kd_bidang_urusan WHERE kd_skpd='$id'";
+                 $sqlskpd=$this->db->query($sqldns);
+                 foreach ($sqlskpd->result() as $rowdns)
+                {
+                    $kd_urusan= $rowdns->kd_u;                    
+                    $nm_urusan= $rowdns->nm_u;
+                    $kd_skpd  = $rowdns->kd_sk;
+                    $nm_skpd  = $rowdns->nm_sk;
+                    $header   = $rowdns->header;
+                    $kd_org   = $rowdns->kd_org;
+                }
+        $sqlsc="SELECT tgl_rka,provinsi,kab_kota,daerah,thn_ang FROM sclient where kd_skpd='$id'";
+                 $sqlsclient=$this->db->query($sqlsc);
+                 foreach ($sqlsclient->result() as $rowsc)
+                {
+                   
+                    $tgl     = $rowsc->tgl_rka;
+                    $kab     = $rowsc->kab_kota;
+                    $daerah  = $rowsc->daerah;
+                    $thn     = $rowsc->thn_ang;
+                }
 
+            $dokumen="DOKUMEN PELAKSANAAN ANGGARAN";
+            $nama_tabel="Pergeseran";
+
+            if($status1=='nilai'){
+                $status_anggaran1="";
+                $status_angkas1="";
+            }else if($status1=='nilai_sempurna'){
+                $status_anggaran1="2";
+                $status_angkas1="_sempurna";
+            }else {
+                $status_anggaran1="3";
+                $status_angkas1="_ubah";
+            }
+
+            if($status2=='nilai'){
+                $status_anggaran2="";
+                $status_angkas2="";
+            }else if($status2=='nilai_sempurna'){
+                $status_anggaran2="2";
+                $status_angkas2="_sempurna";
+            }else {
+                $status_anggaran2="3";
+                $status_angkas2="_ubah";
+                $nama_tabel="Perubahan";
+                $dokumen="DOKUMEN PELAKSANAAN PERUBAHAN ANGGARAN";
+            }
+
+        if($doc=='RKA'){
+            $dokumen="RENCANA KERJA DAN ANGGARAN";
+            $tabeldpa="";
+        }else{
+            
+            $nodpa=$this->db->query("SELECT * from trhrka where kd_skpd='$id'")->row()->no_dpa;
+            $tabeldpa="<tr>
+                        <td width='20%' align='left' style='border-right:none'> No $doc</td>
+                        <td width='80%' align='left' style='border-left:none'>: $nodpa</td>
+                    </tr>";
+        }
+
+        $ctk ="<table style='border-collapse:collapse;font-size:12px' width='100%' align='center' border='1' cellspacing='0' cellpadding='5px'>
+                <tr>
+                    <td width='80%' align='center'><b> $dokumen <br> SATUAN KERJA PERANGKAT DAERAH</td>
+                    <td rowspan='2' width='20%' align='center'><b>$doc - BELANJA SKPD</td>
+                </tr>
+                <tr>
+                    <td width='80%' align='center'><b> Kota $daerah <br> Tahun Anggaran $thn</td>
+                </tr>
+              </table>";
+
+        $ctk .="<table style='border-collapse:collapse;font-size:12px' width='100%' align='center' border='1' cellspacing='2' cellpadding='2'>
+                $tabeldpa
+                <tr>
+                    <td width='20%' align='left' style='border-right:none'> Organisasi</td>
+                    <td width='80%' align='left' style='border-left:none'>: $kd_skpd - $nm_skpd</td>
+                </tr>
+                <tr>
+                    <td width='100%' colspan='2' bgcolor='#cccccc' align='left'>&nbsp;</td>
+                </tr>
+                <tr>
+                    <td colspan='2' align='center'><b>Rekapitulasi Anggaran Belanja Berdasarkan Program dan Kegiatan</td>
+                </tr>
+              </table>";
+
+        $ctk .="<table style='border-collapse:collapse;font-size:10px' width='100%' align='center' border='1' cellspacing='0' cellpadding='4'>
+                <thead>
+                <tr>
+                    <td align='center' colspan='5'><b>Kode</td>
+                    <td align='center' rowspan='3'><b>Uraian</td>
+                    <td align='center' rowspan='3'><b>Sumber Dana</td>
+                    <td align='center' rowspan='3'><b>Lokasi</td>
+                    <td align='center' colspan='7'><b>Sebelum $nama_tabel</td>
+                    <td align='center' colspan='7'><b>Setelah $nama_tabel</td>                 
+                </tr>
+                <tr>
+                    <td align='center' rowspan='2'><b>Urusan</td>
+                    <td align='center' rowspan='2'><b>Sub Urusan</td>
+                    <td align='center' rowspan='2'><b>Program</td>
+                    <td align='center' rowspan='2'><b>Kegiatan</td>
+                    <td align='center' rowspan='2'><b>Sub Kegiatan</td>
+                    <td align='center' rowspan='2'><b>T-1</td>
+                    <td align='center' colspan='5'><b>T</td>
+                    <td align='center' rowspan='2'><b>T+1</td>
+                    <td align='center' rowspan='2'><b>T-1</td>
+                    <td align='center' colspan='5'><b>T</td>
+                    <td align='center' rowspan='2'><b>T+1</td>
+                </tr>
+                <tr>
+                    <td align='center'><b>Blj. Operasi</td>
+                    <td align='center'><b>Blj. Modal</td>
+                    <td align='center'><b>Blj. Tak Terduga</td>
+                    <td align='center'><b>Blj. Transfer</td>
+                    <td align='center'><b>Jumlah</td>
+                    <td align='center'><b>Blj. Operasi</td>
+                    <td align='center'><b>Blj. Modal</td>
+                    <td align='center'><b>Blj. Tak Terduga</td>
+                    <td align='center'><b>Blj. Transfer</td>
+                    <td align='center'><b>Jumlah</td>
+                </tr>
+                <tr bgcolor='#cccccc'>
+                    <td align='center'><b>1</td>
+                    <td align='center'><b>2</td>
+                    <td align='center'><b>3</td>
+                    <td align='center'><b>4</td>
+                    <td align='center'><b>5</td>
+                    <td align='center'><b>6</td>
+                    <td align='center'><b>7</td>
+                    <td align='center'><b>8</td>
+                    <td align='center'><b>9</td>
+                    <td align='center'><b>10</td>
+                    <td align='center'><b>11</td>
+                    <td align='center'><b>12</td>
+                    <td align='center'><b>13</td>
+                    <td align='center'><b>14</td>
+                    <td align='center'><b>15</td>
+                    <td align='center'><b>16</td>
+                    <td align='center'><b>17</td>
+                    <td align='center'><b>18</td>
+                    <td align='center'><b>19</td>
+                    <td align='center'><b>20</td>
+                    <td align='center'><b>21</td>
+                    <td align='center'><b>22</td>
+                </tr>
+                </thead>
+                <tr>
+                    <td colspan='22' bgcolor='#cccccc'>&nbsp;</td>
+                </tr>";
+            $tot51=0;               $tot51_2=0;
+            $tot52=0;               $tot52_2=0;
+            $tot53=0;               $tot53_2=0;
+            $tot54=0;               $tot54_2=0;
+            $total=0;               $total_2=0;
+
+
+
+        $sumber="";
+        $sql=$this->db->query("SELECT urusan, bid_urusan, program, kegiatan, subgiat, nama, sumber, lokasi, sum(operasi$status_anggaran1) operasi, sum(modal$status_anggaran1) modal, sum(duga$status_anggaran1) duga, sum(trans$status_anggaran1) trans, sum(operasi$status_anggaran2) operasi2, sum(modal$status_anggaran2) modal2, sum(duga$status_anggaran2) duga2, sum(trans$status_anggaran2) trans2 from v_cetak_belanja where left(kd_skpd,17)=left('$id',17)
+GROUP BY left(kd_skpd,17),urusan, bid_urusan, program, kegiatan, subgiat, nama, sumber, lokasi, urut
+ ORDER BY urut
+           ");
+        foreach($sql->result() as $a){
+            $urusan =$a->urusan;
+            $bid_urusan =$a->bid_urusan;
+            $program =$a->program;
+            $giat =$a->kegiatan;
+            $subgiat =$a->subgiat;
+            $nama =$a->nama;
+            $sumber =$a->sumber;
+            $lokasi =$a->lokasi;
+            $operasi =$a->operasi;
+            $modal =$a->modal;
+            $terduga =$a->duga;
+            $transfer =$a->trans;
+            $operasi2 =$a->operasi2;
+            $modal2 =$a->modal2;
+            $terduga2 =$a->duga2;
+            $transfer2 =$a->trans2;
+            $Jumlah=$operasi+$modal+$terduga+$transfer;
+            $Jumlah2=$operasi2+$modal2+$terduga2+$transfer2;
+            if($subgiat!=''){
+                $tot51=0+$tot51+$operasi;
+                $tot52=0+$tot52+$modal;
+                $tot53=0+$tot53+$terduga;
+                $tot54=0+$tot54+$transfer;
+                $total=0+$total+$Jumlah;  
+
+                $tot51_2=0+$tot51_2+$operasi2;
+                $tot52_2=0+$tot52_2+$modal2;
+                $tot53_2=0+$tot53_2+$terduga2;
+                $tot54_2=0+$tot54_2+$transfer2;
+                $total_2=0+$total_2+$Jumlah2;                
+            }
+
+
+        $ctk .="<tr>
+                    <td align='center'>$urusan</td>
+                    <td align='center'>$bid_urusan</td>
+                    <td align='center'>$program</td>
+                    <td align='center'>$giat</td>
+                    <td align='center'>$subgiat</td>
+                    <td align='left'>$nama</td>
+                    <td align='left'>$sumber</td>
+                    <td align='left'>$lokasi</td>
+                    <td align='left'></td>
+                    <td align='right'>&nbsp;".number_format($operasi,2,',','.')."</td>
+                    <td align='right'>&nbsp;".number_format($modal,2,',','.')."</td>
+                    <td align='right'>&nbsp;".number_format($terduga,2,',','.')."</td>
+                    <td align='right'>&nbsp;".number_format($transfer,2,',','.')."</td>
+                    <td align='right'>&nbsp;".number_format($Jumlah,2,',','.')."</td>
+                    <td align='left'></td>
+                    <td align='left'></td>
+                    <td align='right'>&nbsp;".number_format($operasi2,2,',','.')."</td>
+                    <td align='right'>&nbsp;".number_format($modal2,2,',','.')."</td>
+                    <td align='right'>&nbsp;".number_format($terduga2,2,',','.')."</td>
+                    <td align='right'>&nbsp;".number_format($transfer2,2,',','.')."</td>
+                    <td align='right'>&nbsp;".number_format($Jumlah2,2,',','.')."</td>
+                    <td align='left'></td>
+                </tr>";
+        }
+        $ctk .="<tr>
+                    <td align='right' colspan='8'> &nbsp; TOTAL &nbsp;</td>
+                    <td align='left'></td>
+                    <td align='right'>".number_format($tot51,2,',','.')."</td>
+                    <td align='right'>".number_format($tot52,2,',','.')."</td>
+                    <td align='right'>".number_format($tot53,2,',','.')."</td>
+                    <td align='right'>".number_format($tot54,2,',','.')."</td>
+                    <td align='right'>".number_format($total,2,',','.')."</td>
+                    <td align='left'></td>
+                    <td align='left'></td>
+                    <td align='right'>".number_format($tot51_2,2,',','.')."</td>
+                    <td align='right'>".number_format($tot52_2,2,',','.')."</td>
+                    <td align='right'>".number_format($tot53_2,2,',','.')."</td>
+                    <td align='right'>".number_format($tot54_2,2,',','.')."</td>
+                    <td align='right'>".number_format($total_2,2,',','.')."</td>
+                    <td align='left'></td>
+                </tr>";
+            $ctk .=  "</table>";
+       
+if($ttd1!='tanpa'){
+            $sqlttd1="SELECT nama as nm,nip as nip,jabatan as jab, pangkat as pangkat FROM ms_ttd WHERE  id_ttd='$ttd1' ";
+            $sqlttd=$this->db->query($sqlttd1);
+            foreach ($sqlttd->result() as $rowttd){
+                        $nip=$rowttd->nip;  
+                        $pangkat=$rowttd->pangkat;  
+                        $nama= $rowttd->nm;
+                        $jabatan  = $rowttd->jab;
+            }
+                    
+            $tambahan="<td rowspan='14' align='center' width='40%'>                                <br>$daerah, $tanggal_ttd <br>
+                                $jabatan 
+                                <br><br>
+                                <br><br>
+                                <br><br>
+                                <b>$nama</b><br>
+                                <u>$nip</u></td>";
+              
+        }else{
+            $tambahan="";
+        }
+                $angkas5=$this->db->query("SELECT  kd_skpd, 
+                                                isnull(sum(case WHEN bulan=1 then nilai else 0 end ),0) as jan,
+                                                isnull(sum(case WHEN bulan=2 then nilai else 0 end ),0) as feb,
+                                                isnull(sum(case WHEN bulan=3 then nilai else 0 end ),0) as mar,
+                                                isnull(sum(case WHEN bulan=4 then nilai else 0 end ),0) as apr,
+                                                isnull(sum(case WHEN bulan=5 then nilai else 0 end ),0) as mei,
+                                                isnull(sum(case WHEN bulan=6 then nilai else 0 end ),0) as jun,
+                                                isnull(sum(case WHEN bulan=7 then nilai else 0 end ),0) as jul,
+                                                isnull(sum(case WHEN bulan=8 then nilai else 0 end ),0) as ags,
+                                                isnull(sum(case WHEN bulan=9 then nilai else 0 end ),0) as sept,
+                                                isnull(sum(case WHEN bulan=10 then nilai else 0 end ),0) as okt,
+                                                isnull(sum(case WHEN bulan=11 then nilai else 0 end ),0) as nov,
+                                                isnull(sum(case WHEN bulan=12 then nilai else 0 end ),0) as des from (
+                                                select bulan, left(kd_skpd,17)+'.0000' kd_skpd , sum(nilai$status_angkas2) nilai from trdskpd_ro WHERE left(kd_rek6,1)='5' GROUP BY bulan, left(kd_skpd,17)
+                                                ) okey where kd_skpd='$id' GROUP BY kd_skpd ")->row();
+
+                $ctk .="<table border='1' width='100%' cellpadding='5' cellspacing='5' style='border-collapse: collapse; font-size:12px'>
+                            <tr>
+                                <td colspan='2' align='center' width='60%'>Rencana Penarikan Dana per Bulan</td>
+                                $tambahan
+                            </tr>
+                            <tr>
+                                <td width='30%'>Januari</td>
+                                <td width='30%' align='right'>".number_format($angkas5->jan,'2',',','.')."</td>                                
+                            </tr>
+                            <tr>
+                                <td width='30%'>Februari</td>
+                                <td width='30%' align='right'>".number_format($angkas5->feb,'2',',','.')."</td>                                 
+                            </tr>
+                            <tr>
+                                <td width='30%'>Maret</td>
+                                <td width='30%' align='right'>".number_format($angkas5->mar,'2',',','.')."</td>                              
+                            </tr>
+                            <tr>
+                                <td width='30%'>April</td>
+                                <td width='30%' align='right'>".number_format($angkas5->apr,'2',',','.')."</td>                                
+                            </tr>
+                            <tr>
+                                <td width='30%'>Mei</td>
+                                <td width='30%' align='right'>".number_format($angkas5->mei,'2',',','.')."</td>                            
+                            </tr>
+                            <tr>
+                                <td width='30%'>Juni</td>
+                                <td width='30%' align='right'>".number_format($angkas5->jun,'2',',','.')."</td>                                 
+                            </tr>
+                            <tr>
+                                <td width='30%'>Juli</td>
+                                <td width='30%' align='right'>".number_format($angkas5->jul,'2',',','.')."</td>                                 
+                            </tr>
+                            <tr>
+                                <td width='30%'>Agustus</td>
+                                <td width='30%' align='right'>".number_format($angkas5->ags,'2',',','.')."</td>                                 
+                            </tr>
+                            <tr>
+                                <td width='30%'>September</td>
+                                <td width='30%' align='right'>".number_format($angkas5->sept,'2',',','.')."</td>                                  
+                            </tr>
+                            <tr>
+                                <td width='30%'>Oktober</td>
+                                <td width='30%' align='right'>".number_format($angkas5->okt,'2',',','.')."</td>                                  
+                            </tr>
+                            <tr>
+                                <td width='30%'>November</td>
+                                <td width='30%' align='right'>".number_format($angkas5->nov,'2',',','.')."</td>                                 
+                            </tr>
+                            <tr>
+                                <td width='30%'>Desember</td>
+                                <td width='30%' align='right'>".number_format($angkas5->des,'2',',','.')."</td>                                 
+                            </tr>
+                            <tr>
+                                <td width='30%' align='right'>Jumlah</td>
+                                <td width='30%' align='right'>".number_format($angkas5->des+$angkas5->nov+$angkas5->jan+$angkas5->feb+$angkas5->mar+$angkas5->apr+$angkas5->mei+$angkas5->jun+$angkas5->jul+$angkas5->ags+$angkas5->sept+$angkas5->okt,'2',',','.')."</td>                               
+                            </tr>
+
+                        </table>";
+
+
+
+
+
+        switch($cetak) { 
+        case 1;
+             $this->master_pdf->_mpdf('',$ctk,10,10,10,'1');
+        break;
+        case 2;        
+            header("Cache-Control: no-cache, no-store, must-revalidate");
+            header("Content-Type: application/vnd.ms-excel");
+            header("Content-Disposition: attachment; filename= $judul.xls");
+            //$this->load->view('anggaran/rka/perkadaII', $data);
+        break;
+        case 3;     
+            header("Cache-Control: no-cache, no-store, must-revalidate");
+            header("Content-Type: application/vnd.ms-word");
+            header("Content-Disposition: attachment; filename= $judul.doc");
+            $this->load->view('anggaran/rka/perkadaII', $data);
+        break;
+        case 0;
+        echo ("<title>RKA SKPD</title>");
+        echo($ctk);
+        break;
+        }     
+    }
 
 
 }

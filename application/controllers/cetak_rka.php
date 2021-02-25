@@ -66,7 +66,21 @@ public $ppkd1_lama = "4.02.02.02";
         $this->template->set('title', 'Cetak '.$jenis.' Belanja SKPD Penyusunan');   
         $this->template->load('template','anggaran/rka/penyusunan/rka22_penyusunan',$data) ; 
     }
-    
+
+    function rka_belanja_geser($jenis=''){
+        $data['jenis']=$jenis;
+        $data['page_title']= 'CETAK';
+        $this->template->set('title', 'Cetak '.$jenis.' Belanja SKPD Penyusunan');   
+        $this->template->load('template','anggaran/rka/pergeseran/dpa_skpd_belanja',$data) ; 
+    }
+
+    function rka_belanja_ubah($jenis=''){
+        $data['jenis']=$jenis;
+        $data['page_title']= 'CETAK';
+        $this->template->set('title', 'Cetak '.$jenis.' Belanja SKPD Penyusunan');   
+        $this->template->load('template','anggaran/rka/perubahan/dpa_skpd_belanja',$data) ; 
+    }
+
     function cetak_rka_pembiayaan($jenis=''){
         $data['jenis']=$jenis;
         $data['page_title']= 'CETAK '.$jenis.' 31';
@@ -199,6 +213,18 @@ public $ppkd1_lama = "4.02.02.02";
         $cetak   = $this->uri->segment(6);
         $doc     = $this->uri->segment(7);
         echo $this->cetak_rka_model->preview_belanja_penyusunan($tgl_ttd,$ttd1,$ttd2,$id,$cetak,$doc);
+    }
+
+    function preview_belanja_pergeseran(){
+        $tgl_ttd = $this->uri->segment(2);
+        $ttd1    = $this->uri->segment(3);
+        $ttd2    = $this->uri->segment(4);
+        $id      = $this->uri->segment(5);
+        $cetak   = $this->uri->segment(6);
+        $doc     = $this->uri->segment(7);
+        $status1     = $this->uri->segment(8);
+        $status2     = $this->uri->segment(9);
+        echo $this->cetak_rka_model->preview_belanja_pergeseran($tgl_ttd,$ttd1,$ttd2,$id,$cetak,$doc,$status1,$status2);
     }
 
     function preview_rka_pembiayaan_penetapan(){
