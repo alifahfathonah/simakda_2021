@@ -2880,7 +2880,7 @@ ORDER BY z.kd_skpd,z.no_sp2d,z.urut,z.kode_belanja,z.kd_rek6");
 					<tr>
 						<td valign='top' align='center' width='50%'>Disetujui 	
 						<br>$jabatan</td>
-						<td valign='top' align='center' width='50%'>Pontianak, ".$this->support->tanggal_format_indonesia(getdate('d-m-Y'))."  
+						<td valign='top' align='center' width='50%'>Pontianak,  
 						<br>Telah diverifikasi
 						<br>Petugas</td>
 					</tr>
