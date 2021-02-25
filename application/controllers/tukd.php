@@ -10959,378 +10959,424 @@ GROUP BY z.kd_skpd, z.kd_kegiatan, z.kd_rek5,z.nm_rek5
     
     function cetak_spjterimappkd(){
         $thn_ang = $this->session->userdata('pcThang');
-         $lcskpd = $_REQUEST['kd_skpd'];
-         $lcskpd2 = $lcskpd;
-         $pilih = $_REQUEST['cpilih'];
-         $jnsctk = $_REQUEST['jnsctk'];
-         
-         if($jnsctk=='1'){
-                $lcskpd = substr($lcskpd, 0, 7);
-         }
-
-         if ($pilih==1){
-            $lctgl1 = $_REQUEST['tgl1'];
-            $lctgl2 = $_REQUEST['tgl2'];   
-            $lcperiode = $this->tukd_model->tanggal_format_indonesia($lctgl1)."  S.D. ".$this->tukd_model->tanggal_format_indonesia($lctgl2);
-            $lcperiode1 = "Tanggal ".$this->tukd_model->tanggal_format_indonesia($lctgl1);
-            $lcperiode2 = "Tanggal ".$this->tukd_model->tanggal_format_indonesia($lctgl2);
-            
-            $sqlang="select case when statu=1 and status_sempurna=1 and status_ubah=1 and month('$lctgl2')>=month(tgl_dpa_ubah) then 'nilai_ubah' 
-                       when statu=1 and status_sempurna=1 and status_ubah=1 and month('$lctgl2')>=month(tgl_dpa_sempurna) and month('$lctgl2')<month(tgl_dpa_ubah) then 'nilai_sempurna'
-                       when statu=1 and status_sempurna=1 and status_ubah=1 and month('$lctgl2')<month(tgl_dpa_sempurna) then 'nilai'
-                       when statu=1 and status_sempurna=1 and status_ubah=0 and month('$lctgl2')>=month(tgl_dpa_sempurna) then 'nilai_sempurna' 
-                       when statu=1 and status_sempurna=1 and status_ubah=0 and month('$lctgl2')<month(tgl_dpa_sempurna) then 'nilai'
-                       when statu=1 and status_sempurna=0 and status_ubah=0 and month('$lctgl2')>=month(tgl_dpa) then 'nilai'
-                       else 'nilai' end as anggaran from trhrka where kd_skpd ='$lcskpd2'";
-            
-            
-         }else{
-            $bulan = $_REQUEST['bulan'];
-            $lcperiode = $this->tukd_model->getBulan($bulan);
-            if($bulan==1){
-                $lcperiode1 = "Bulan Sebelumnya";    
-                }else{
-                $lcperiode1 = "Bulan ".$this->tukd_model->getBulan($bulan-1);
-                }  
-            $lcperiode2 = "Bulan ".$this->tukd_model->getBulan($bulan);
-            $sqlang="select case when statu=1 and status_sempurna=1 and status_ubah=1 and $bulan>=month(tgl_dpa_ubah) then 'nilai_ubah' 
-                       when statu=1 and status_sempurna=1 and status_ubah=1 and $bulan>=month(tgl_dpa_sempurna) and $bulan<month(tgl_dpa_ubah) then 'nilai_sempurna'
-                       when statu=1 and status_sempurna=1 and status_ubah=1 and $bulan<month(tgl_dpa_sempurna) then 'nilai'
-                       when statu=1 and status_sempurna=1 and status_ubah=0 and $bulan>=month(tgl_dpa_sempurna) then 'nilai_sempurna' 
-                       when statu=1 and status_sempurna=1 and status_ubah=0 and $bulan<month(tgl_dpa_sempurna) then 'nilai'
-                       when statu=1 and status_sempurna=0 and status_ubah=0 and $bulan>=month(tgl_dpa) then 'nilai'
-                       else 'nilai' end as anggaran from trhrka where kd_skpd ='$lcskpd2'";
-            
-         }
-         
-         
+        $lcskpd = $_REQUEST['kd_skpd'];
+        $tg_ttd = $_REQUEST['tgl_ttd'];
+        $ttd = $_REQUEST['ttd'];
+        $lcskpd2 = $lcskpd;
+        $pilih = $_REQUEST['cpilih'];
+        $jnsctk = $_REQUEST['jnsctk'];
         
-        $hasilang = $this->db->query($sqlang);
-        $hasil_ang = $hasilang->row();          
-        $anggaran_ = $hasil_ang->anggaran;
-         
-         
-         
-         
-         $tgl_ttd= $_REQUEST['tgl_ttd'];
-         $nippa = str_replace('123456789',' ',$_REQUEST['ttd']);             
-         if($nippa==''){
-                     $lcNmPA = '';
-                     $lcNipPA = '';
-                     $lcJabatanPA = '';
-                     $lcPangkatPA = '';
-            
-         }else{          
-             $csql="SELECT nip as nip,nama,jabatan,pangkat  FROM ms_ttd WHERE nip = '$nippa' AND kd_skpd = '$lcskpd2' AND kode in ('PA','KPA')";
-                     $hasil = $this->db->query($csql);
-                     $trh2 = $hasil->row(); 
-                     
-                     $lcNmPA = $trh2->nama;
-                     $lcNipPA = $trh2->nip;
-                     $lcJabatanPA = $trh2->jabatan;
-                     $lcPangkatPA = $trh2->pangkat;
-         }
-         $nipbp = str_replace('123456789',' ',$_REQUEST['ttd2']);            
-         if($nipbp==''){
-             $lcNmBP = '';
-             $lcNipBP = '';
-             $lcPangkatBP = '';
-             $lcJabatanBP = '';       
-         }else{
-             $csql="SELECT nip,nama,jabatan,pangkat FROM ms_ttd WHERE nip = '$nipbp' AND kd_skpd = '$lcskpd2' AND kode='BP'";
-             $hasil3 = $this->db->query($csql);
-             $trh3 = $hasil3->row();    
-             $lcNmBP = $trh3->nama;
-             $lcNipBP = $trh3->nip;
-             $lcPangkatBP = $trh3->pangkat;
-             $lcJabatanBP = $trh3->jabatan;
-         }
-         $prv = $this->db->query("SELECT provinsi,daerah from sclient WHERE kd_skpd='$lcskpd2'");
-            $prvn = $prv->row();          
-            $prov = $prvn->provinsi;         
-            $daerah = $prvn->daerah;
-
-        $csql="SELECT a.nm_skpd FROM ms_skpd a WHERE left(a.kd_skpd,len('$lcskpd')) = '$lcskpd'";
-        $hasil = $this->db->query($csql);
-        $trh2 = $hasil->row();          
-        $lcNmskpd = $trh2->nm_skpd;
-        
-
-        
-        
-         $cRet = '';
-         $cRet .="<table style=\"border-collapse:collapse;\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\">
-            <tr>
-                <td align=\"center\" colspan=\"13\" style=\"font-size:14px;border: solid 1px white;\"><b>".$prov."<br>
-                    LAPORAN PERTANGGUNGJAWABAN BENDAHARA PENERIMAAN<BR>SPJ PENDAPATAN PERIODE ".strtoupper($lcperiode)."</b></td>
-            </tr>
-            <tr>
-                <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
-                <td align=\"left\" colspan=\"11\" style=\"font-size:12px;border: solid 1px white;\"></td>
-            </tr>
-            <tr>
-                <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;\">OPD</td>
-                <td align=\"left\" colspan=\"11\" style=\"font-size:12px;border: solid 1px white;\">:&nbsp;$lcNmskpd</td>
-            </tr>
-            <tr>
-                <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
-                <td align=\"left\" colspan=\"11\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
-            </tr>
-            
-            </table>
-            
-            <table style=\"border-collapse:collapse;font-size:12px\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\">
-            <thead>
-            <tr>
-                <td align=\"center\" rowspan=\"2\" width=\"10%\" style=\"font-size:12px\">Kode<br>Rekening</td>
-                <td align=\"center\" rowspan=\"2\" width=\"24%\" style=\"font-size:12px\">Uraian</td>
-                <td align=\"center\" rowspan=\"2\" width=\"6%\" style=\"font-size:12px\">Jumlah<br>Anggaran</td>
-                <td align=\"center\" colspan=\"3\" width=\"18%\" style=\"font-size:12px\">Sampai dengan Bulan Lalu</td>
-                <td align=\"center\" colspan=\"3\" width=\"18%\" style=\"font-size:12px\">Bulan Ini</td>
-                <td align=\"center\" colspan=\"4\" width=\"24%\" style=\"font-size:12px\">Sampai dengan Bulan Ini</td>
-            </tr>
-            <tr>
-                <td align=\"center\" width=\"6%\" style=\"font-size:12px\">Penerimaan</td>
-                <td align=\"center\" width=\"6%\" style=\"font-size:12px\">Penyetoran</td>
-                <td align=\"center\" width=\"6%\" style=\"font-size:12px\">Sisa</td>
-                <td align=\"center\" width=\"6%\" style=\"font-size:12px\">Penerimaan</td>
-                <td align=\"center\" width=\"6%\" style=\"font-size:12px\">Penyetoran</td>
-                <td align=\"center\" width=\"6%\" style=\"font-size:12px\">Sisa</td>
-                <td align=\"center\" width=\"6%\" style=\"font-size:12px\">Jumlah<br>Anggaran<br>yang<br>Terealisasi</td>                
-                <td align=\"center\" width=\"6%\" style=\"font-size:12px\">Jumlah<br>Anggaran<br>yang telah<br>Disetor</td>
-                <td align=\"center\" width=\"6%\" style=\"font-size:12px\">Sisa yang<br>Belum<br>Disetor</td>
-                <td align=\"center\" width=\"6%\" style=\"font-size:12px\">Sisa Anggaran yang<br>Belum<br>Terealisasi/Pelam-<br>pauan Anggaran</td>                                
-            </tr>            
-            <tr>
-                <td align=\"center\" style=\"font-size:12px\">1</td>
-                <td align=\"center\" style=\"font-size:12px\">2</td>
-                <td align=\"center\" style=\"font-size:12px\">3</td>
-                <td align=\"center\" style=\"font-size:12px\">4</td>
-                <td align=\"center\" style=\"font-size:12px\">5</td>
-                <td align=\"center\" style=\"font-size:12px\">6=(5-4)</td>
-                <td align=\"center\" style=\"font-size:12px\">7</td>
-                <td align=\"center\" style=\"font-size:12px\">8</td>
-                <td align=\"center\" style=\"font-size:12px\">9=(8-7)</td>
-                <td align=\"center\" style=\"font-size:12px\">10=(4+7)</td>
-                <td align=\"center\" style=\"font-size:12px\">11=(5+8)</td>
-                <td align=\"center\" style=\"font-size:12px\">12=(11-10)</td>
-                <td align=\"center\" style=\"font-size:12px\">13=(3-10)</td>                
-            </tr>
-            </thead>";
-           
-
-            if ($pilih==1   ){
-                $kon_terimaini = " (a.tgl_kas >= '$lctgl1' AND a.tgl_kas <= '$lctgl2')";
-                $kon_keluarini = " (a.tgl_kas >= '$lctgl1' AND a.tgl_kas <= '$lctgl2')";          
-                $kon_terimalalu = " (a.tgl_kas < '$lctgl1')";
-                $kon_keluarlalu = " (a.tgl_kas < '$lctgl1')";
-           }else{
-                $kon_terimaini = " (month(a.tgl_kas)= '$bulan' AND year(a.tgl_kas) = '$thn_ang')";
-                $kon_keluarini = " (month(a.tgl_kas)= '$bulan' AND year(a.tgl_kas) = '$thn_ang')";
-                $kon_terimalalu = " (month(a.tgl_kas)< '$bulan' AND year(a.tgl_kas) = '$thn_ang')";
-                $kon_keluarlalu = " (month(a.tgl_kas)< '$bulan' AND year(a.tgl_kas) = '$thn_ang')";
-           }
-
-            $n_trdrka = 'trdrka';
-            
-            $kon_skpd="a.kd_skpd = ";
-            $sql  = "SELECT z.kd_skpd, z.kd_kegiatan, z.kd_rek5, z.nm_rek5, SUM(z.nilai) AS ang, SUM(z.$anggaran_) AS ang_ubah,
-                    0 AS keluar_ini,
-                    0 AS keluar_lalu,
-                    (SELECT SUM(b.rupiah) FROM trhkasin_ppkd a INNER JOIN trdkasin_ppkd b ON RTRIM(a.no_kas)=RTRIM(b.no_kas) WHERE b.kd_rek5=z.kd_rek5 and a.kd_skpd=z.kd_skpd and $kon_keluarini) AS terima_ini,
-                    (SELECT SUM(b.rupiah) FROM trhkasin_ppkd a INNER JOIN trdkasin_ppkd b ON RTRIM(a.no_kas)=RTRIM(b.no_kas) WHERE b.kd_rek5=z.kd_rek5 and a.kd_skpd=z.kd_skpd and $kon_keluarlalu) AS terima_lalu                    
-                    FROM $n_trdrka z WHERE left(z.kd_skpd,len('$lcskpd'))='$lcskpd' and left(z.kd_rek5,1)='4' and right(z.kd_kegiatan,5)='00.04'
-                    GROUP BY z.kd_skpd, z.kd_kegiatan, z.kd_rek5,z.nm_rek5
-                    ORDER BY z.kd_rek5";
-                                       
-                    $hasil = $this->db->query($sql);                                                      
-                    $lcterima_ini=0;
-                    $lckeluar_ini=0;
-                    $lcprog_lama="";
-                    $lckeg_lama="";
-                    $ln_jlh1 =0;
-                    $ln_jlh2 =0;
-                    $ln_jlh3 =0;
-                    $ln_jlh4 =0;
-                    $ln_jlh5 =0;
-                    $ln_jlh6 =0;
-                    $ln_jlh7 =0;
-                    $ln_jlh8 =0;
-                    $ln_jlh9 =0;
-                    $ln_jlh10 =0;
-                    $ln_jlh11 =0;
-                    
-                    foreach ($hasil->result() as $row)
-                    {
-                        $lcprog=substr($row->kd_kegiatan,0,18);
-                        $lckeg=$row->kd_kegiatan;
-                        $lcrek=$row->kd_rek5;
-                        
-                        if($lcprog<>$lcprog_lama){//cek program
-                             $sql="select z.kd_program, z.nm_program,
-                                (SELECT SUM(a.$anggaran_) FROM $n_trdrka a WHERE substring(a.kd_kegiatan,1,18)=z.kd_program and left(a.kd_skpd,len('$lcskpd'))='$lcskpd' and left(a.kd_rek5,1)='4' and right(a.kd_kegiatan,5)='00.04') AS ang_ubah,
-                                0 AS keluar_ini,
-                               00 AS keluar_lalu,
-                                (SELECT SUM(b.rupiah) FROM trhkasin_ppkd a INNER JOIN trdkasin_ppkd b ON RTRIM(a.no_kas)=RTRIM(b.no_kas) WHERE substring(a.kd_kegiatan,1,18)=z.kd_program and right(b.kd_kegiatan,5)='00.04' and left(a.kd_skpd,len('$lcskpd'))='$lcskpd' and $kon_keluarini) AS terima_ini,
-                                (SELECT SUM(b.rupiah) FROM trhkasin_ppkd a INNER JOIN trdkasin_ppkd b ON RTRIM(a.no_kas)=RTRIM(b.no_kas) WHERE substring(a.kd_kegiatan,1,18)=z.kd_program and right(b.kd_kegiatan,5)='00.04' and left(a.kd_skpd,len('$lcskpd'))='$lcskpd' and $kon_keluarlalu) AS terima_lalu 
-                                    from trskpd z where z.kd_kegiatan='$lckeg' and left(z.kd_skpd,len('$lcskpd'))='$lcskpd'
-                                    group by z.kd_program, z.nm_program ";
-                             $hasil_prog = $this->db->query($sql);
-                             foreach ($hasil_prog->result() as $row_prog)
-                             {
-                             $cRet .="<tr>
-                                    <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>$lcprog</b></td>
-                                  <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>$row_prog->nm_program</b></td>
-                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format($row_prog->ang_ubah)."</b></td>
-                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format($row_prog->terima_lalu)."</b></td>
-                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format($row_prog->keluar_lalu)."</b></td>
-                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format(($row_prog->keluar_lalu)-($row_prog->terima_lalu))."</b></td>
-                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format($row_prog->terima_ini)."</b></td>
-                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format($row_prog->keluar_ini)."</b></td>
-                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format(($row_prog->keluar_ini)-($row_prog->terima_ini))."</b></td>
-                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format(($row_prog->terima_lalu)+($row_prog->terima_ini))."</b></td>
-                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format(($row_prog->keluar_lalu)+($row_prog->keluar_ini))."</b></td>
-                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format(($row_prog->keluar_lalu+$row_prog->keluar_ini)-($row_prog->terima_lalu+$row_prog->terima_ini))."</b></td>
-                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format($row_prog->ang_ubah-($row_prog->terima_lalu+$row_prog->terima_ini))."</b></td>
-                                  </tr>";
-                                    
-                                
-                             }
-                                                                                                                                                                 
-                        }
-                        
-                        if($lckeg<>$lckeg_lama){ //cek kegiatan
-                            $sql="select z.kd_kegiatan, z.nm_kegiatan,
-                                (SELECT SUM(a.$anggaran_) FROM $n_trdrka a WHERE a.kd_kegiatan=z.kd_kegiatan and left(a.kd_skpd,len('$lcskpd'))='$lcskpd') AS ang_ubah,
-                                0 AS keluar_ini,
-                                0 AS keluar_lalu,
-                                (SELECT SUM(b.rupiah) FROM trhkasin_ppkd a INNER JOIN trdkasin_ppkd b ON RTRIM(a.no_kas)=RTRIM(b.no_kas) WHERE a.kd_kegiatan=z.kd_kegiatan and left(a.kd_skpd,len('$lcskpd'))='$lcskpd' and $kon_keluarini) AS terima_ini,
-                                (SELECT SUM(b.rupiah) FROM trhkasin_ppkd a INNER JOIN trdkasin_ppkd b ON RTRIM(a.no_kas)=RTRIM(b.no_kas) WHERE a.kd_kegiatan=z.kd_kegiatan and left(a.kd_skpd,len('$lcskpd'))='$lcskpd' and $kon_keluarlalu) AS terima_lalu 
-                                    from trskpd z where z.kd_kegiatan='$lckeg' and z.kd_skpd='$lcskpd' 
-                                    group by z.kd_kegiatan, z.nm_kegiatan";
-                             $hasil_keg = $this->db->query($sql);
-                             foreach ($hasil_keg->result() as $row_keg)
-                             {
-                                $cRet .="<tr>
-                                    <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>$lckeg</b></td>
-                                  <td valign=\"top\" align=\"left\" style=\"font-size:11px;border-bottom:none;border-top:none\"><b>$row_keg->nm_kegiatan</b></td>
-                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format($row_keg->ang_ubah)."</b></td>
-                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format($row_keg->terima_lalu)."</b></td>
-                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format($row_keg->keluar_lalu)."</b></td>
-                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format(($row_keg->keluar_lalu)-($row_keg->terima_lalu))."</b></td>
-                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format($row_keg->terima_ini)."</b></td>
-                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format($row_keg->keluar_ini)."</b></td>
-                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format(($row_keg->keluar_ini)-($row_keg->terima_ini))."</b></td>
-                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format(($row_keg->terima_lalu)+($row_keg->terima_ini))."</b></td>
-                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format(($row_keg->keluar_lalu)+($row_keg->keluar_ini))."</b></td>
-                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format(($row_keg->keluar_lalu+$row_keg->keluar_ini)-($row_keg->terima_lalu+$row_keg->terima_ini))."</b></td>
-                                  <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format($row_keg->ang_ubah-($row_keg->terima_lalu+$row_keg->terima_ini))."</b></td>
-                                  </tr>";
-                                
-                                
-                             }
-                                                                                                                                                                 
-                        }                                                                                                                        
-                                                                                                                                
-                       $cRet .="<tr>
-                                <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">$lckeg.".$this->tukd_model->dotrek($lcrek)."</td>
-                              <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">$row->nm_rek5</td>
-                              <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format($row->ang_ubah)."</td>
-                              <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format($row->terima_lalu)."</td>
-                              <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format($row->keluar_lalu)."</td>
-                              <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format(($row->keluar_lalu)-($row->terima_lalu))."</td>
-                              <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format($row->terima_ini)."</td>
-                              <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format($row->keluar_ini)."</td>
-                              <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format(($row->keluar_ini)-($row->terima_ini))."</td>
-                              <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format(($row->terima_lalu)+($row->terima_ini))."</td>
-                              <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format(($row->keluar_lalu)+($row->keluar_ini))."</td>
-                              <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format(($row->keluar_lalu+$row->keluar_ini)-($row->terima_lalu+$row->terima_ini))."</td>
-                              <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format($row->ang_ubah-($row->terima_lalu+$row->terima_ini))."</td>
-                              </tr>";    
-                                                              
-                        $ln_jlh1=$ln_jlh1+ $row->ang_ubah;
-                        $ln_jlh2=$ln_jlh2+ $row->terima_lalu;
-                        $ln_jlh3=$ln_jlh3+ $row->keluar_lalu;
-                        $ln_jlh4=$ln_jlh4+ ($row->keluar_lalu)-($row->terima_lalu);
-                        $ln_jlh5=$ln_jlh5+ $row->terima_ini;
-                        $ln_jlh6=$ln_jlh6+ $row->keluar_ini;
-                        $ln_jlh7=$ln_jlh7+ ($row->keluar_ini-$row->terima_ini);
-                        $ln_jlh8=$ln_jlh8+ ($row->terima_lalu+$row->terima_ini);
-                        $ln_jlh9=$ln_jlh9+ ($row->keluar_lalu+$row->keluar_ini);
-                        $ln_jlh10=$ln_jlh10+ (($row->keluar_lalu+$row->keluar_ini)-($row->terima_lalu+$row->terima_ini));
-                        $ln_jlh11=$ln_jlh11+ ($row->ang_ubah-($row->terima_lalu+$row->terima_ini));
-                                                                             
-                        $lcprog_lama=$lcprog;
-                        $lckeg_lama=$lckeg;           
-                    }
-                    
-
-
-         $cRet .="<tr>
-                    <td valign=\"top\" align=\"center\" colspan=\"2\" style=\"font-size:12px\"><b>Jumlah</b></td>
-                    <td valign=\"top\" align=\"right\" style=\"font-size:12px\">".number_format($ln_jlh1)."</td>
-                    <td valign=\"top\" align=\"right\" style=\"font-size:12px\">".number_format($ln_jlh2)."</td>
-                    <td valign=\"top\" align=\"right\" style=\"font-size:12px\">".number_format($ln_jlh3)."</td>
-                    <td valign=\"top\" align=\"right\" style=\"font-size:12px\">".number_format($ln_jlh4)."</td>
-                    <td valign=\"top\" align=\"right\" style=\"font-size:12px\">".number_format($ln_jlh5)."</td>
-                    <td valign=\"top\" align=\"right\" style=\"font-size:12px\">".number_format($ln_jlh6)."</td>
-                    <td valign=\"top\" align=\"right\" style=\"font-size:12px\">".number_format($ln_jlh7)."</td>
-                    <td valign=\"top\" align=\"right\" style=\"font-size:12px\">".number_format($ln_jlh8)."</td>
-                    <td valign=\"top\" align=\"right\" style=\"font-size:12px\">".number_format($ln_jlh9)."</td>
-                    <td valign=\"top\" align=\"right\" style=\"font-size:12px\">".number_format($ln_jlh10)."</td>
-                    <td valign=\"top\" align=\"right\" style=\"font-size:12px\">".number_format($ln_jlh11)."</td>
-                </tr>
-                ";
-                /* <tr>
-                    <td align=\"left\" colspan=\"11\" style=\"font-size:12px;border: solid 1px white;border-top:solid 1px black;\">&nbsp;</td>
-                    <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;border-top:solid 1px black;\"></td>
-                </tr>
-                <tr>
-                    <td align=\"left\" colspan=\"11\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
-                    <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;\"></td>
-                </tr>
-                <tr>
-                    <td align=\"center\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;\">Mengetahui</td>
-                    <td align=\"left\" colspan=\"6\" style=\"font-size:12px;border: solid 1px white;\"></td>
-                    <td align=\"center\" colspan=\"5\" style=\"font-size:12px;border: solid 1px white;\">".$daerah.", tanggal ".$this->tanggal_format_indonesia($tgl_ttd)."</td>                                                                                                                                                                                
-                </tr>
-                <tr>                
-                    <td align=\"center\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;\">$lcJabatanPA</td>
-                    <td align=\"left\" colspan=\"6\" style=\"font-size:12px;border: solid 1px white;\"></td>
-                    <td align=\"center\" colspan=\"5\" style=\"font-size:12px;border: solid 1px white;\">$lcJabatanBP</td>                    
-                </tr>
-                <tr>
-                    <td align=\"left\" colspan=\"11\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
-                    <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;\"></td>
-                </tr>
-                <tr>
-                    <td align=\"left\" colspan=\"11\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
-                    <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;\"></td>
-                </tr>
-                <tr>
-                    <td align=\"center\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;\"><b><u>$lcNmPA</u></b><br>$lcPangkatPA</td>
-                    <td align=\"center\" colspan=\"6\" style=\"font-size:12px;border: solid 1px white;\"></td>
-                    <td align=\"center\" colspan=\"5\" style=\"font-size:12px;border: solid 1px white;\"><b><u>$lcNmBP</u></b><br>$lcPangkatBP</td>
-                </tr>
-                <tr>
-                    <td align=\"center\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;\">NIP. $lcNipPA</td>
-                    <td align=\"center\" colspan=\"6\" style=\"font-size:12px;border: solid 1px white;\"></td>
-                    <td align=\"center\" colspan=\"5\" style=\"font-size:12px;border: solid 1px white;\">NIP. $lcNipBP</td>
-                </tr>"; */
-                
-                                  
-                
-        $cRet .='</table>';
-          $print = $this->uri->segment(3);
-        if($print==0){
-         $data['prev']= $cRet;    
-         echo ("<title>SPJ Pendapatan</title>");
-         echo $cRet;}
-         else{
-
-        $this->_mpdf('',$cRet,10,10,10,'L',0,'');
+        if($jnsctk=='1'){
+               $lcskpd = substr($lcskpd, 0, 7);
         }
-    }
+
+        if ($pilih==1){
+           $lctgl1 = $_REQUEST['tgl1'];
+           $lctgl2 = $_REQUEST['tgl2'];   
+           $lcperiode = $this->tukd_model->tanggal_format_indonesia($lctgl1)."  S.D. ".$this->tukd_model->tanggal_format_indonesia($lctgl2);
+           $lcperiode1 = "Tanggal ".$this->tukd_model->tanggal_format_indonesia($lctgl1);
+           $lcperiode2 = "Tanggal ".$this->tukd_model->tanggal_format_indonesia($lctgl2);
+           
+           $sqlang="select case when statu=1 and status_sempurna=1 and status_ubah=1 then 'nilai_ubah' 
+                      when statu=1 and status_sempurna=1 and status_ubah=0 then 'nilai_sempurna'
+                      when statu=1 and status_sempurna=0 and status_ubah=0 then 'nilai'
+                      when statu=0 and status_sempurna=0 and status_ubah=0 then 'nilai'
+                      else 'nilai' end as anggaran from trhrka where kd_skpd ='$lcskpd2'";
+           
+           
+        }else{
+           $bulan = $_REQUEST['bulan'];
+           $lcperiode = $this->tukd_model->getBulan($bulan);
+           if($bulan==1){
+               $lcperiode1 = "Bulan Sebelumnya";    
+               }else{
+               $lcperiode1 = "Bulan ".$this->tukd_model->getBulan($bulan-1);
+               }  
+           $lcperiode2 = "Bulan ".$this->tukd_model->getBulan($bulan);
+           $sqlang="select case when statu=1 and status_sempurna=1 and status_ubah=1 then 'nilai_ubah' 
+                      when statu=1 and status_sempurna=1 and status_ubah=0 then 'nilai_sempurna'
+                      when statu=1 and status_sempurna=0 and status_ubah=0 then 'nilai'
+                      when statu=0 and status_sempurna=0 and status_ubah=0 then 'nilai'
+                      else 'nilai' end as anggaran from trhrka where kd_skpd ='$lcskpd2'";
+           
+        }         
+       
+       $hasilang = $this->db->query($sqlang);
+       $hasil_ang = $hasilang->row();          
+       $anggaran_ = $hasil_ang->anggaran;
+        
+        if($anggaran_=='nilai'){
+           $det_='total';
+       }else if($anggaran_=='nilai_sempurna'){
+           $det_='total_sempurna';
+       }else if ($anggaran_=='nilai_ubah'){
+           $det_='total_ubah_penyempurna';
+       }else{
+           $det_='total';
+       }
+       
+        
+        $tgl_ttd= $_REQUEST['tgl_ttd'];
+        $nippa = str_replace('ab',' ',$_REQUEST['ttd']);		     
+        {   		 
+            $csql="SELECT nip as nip,nama,jabatan,pangkat FROM ms_ttd WHERE nip = '$nippa'";
+                    $hasil = $this->db->query($csql);
+                    $trh2 = $hasil->row(); 
+                    
+                    $lcNmPA = $trh2->nama;
+                    $lcNipPA = $trh2->nip;
+                    $lcJabatanPA = $trh2->jabatan;
+                    $lcPangkatPA = $trh2->pangkat;
+        }
+        $nipbp = str_replace('123456789',' ',$_REQUEST['ttd2']);		     
+        if($nipbp!=''){
+            $lcNmBP = '';
+            $lcNipBP = '';
+            $lcPangkatBP = '';
+            $lcJabatanBP = '';		  
+        }else{
+            $csql="SELECT nip,nama,jabatan,pangkat FROM ms_ttd WHERE kd_skpd = '$lcskpd2' AND kode='BPPPKD'";
+            $hasil3 = $this->db->query($csql);
+            $trh3 = $hasil3->row(); 	
+            $lcNmBP = $trh3->nama;
+            $lcNipBP = $trh3->nip;
+            $lcPangkatBP = $trh3->pangkat;
+            $lcJabatanBP = $trh3->jabatan;
+        }
+        $prv = $this->db->query("SELECT provinsi,daerah from sclient WHERE kd_skpd='$lcskpd2'");
+           $prvn = $prv->row();          
+           $prov = $prvn->provinsi;         
+           $daerah = $prvn->daerah;
+       
+       $csql="SELECT a.nm_skpd FROM ms_skpd a WHERE left(a.kd_skpd,len('$lcskpd')) = '$lcskpd'";
+       $hasil = $this->db->query($csql);
+       $trh2 = $hasil->row();          
+       $lcNmskpd = $trh2->nm_skpd;        
+       
+        $cRet = '';
+        $cRet .="<table style=\"border-collapse:collapse;\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\">
+           <tr>
+               <td align=\"center\" colspan=\"13\" style=\"font-size:14px;border: solid 1px white;\"><b>".$prov."<br>
+                   LAPORAN PERTANGGUNGJAWABAN BENDAHARA PENERIMAAN<BR>SPJ PENDAPATAN PERIODE ".strtoupper($lcperiode)." ".$thn_ang."</b></td>
+           </tr>
+           <tr>
+               <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
+               <td align=\"left\" colspan=\"11\" style=\"font-size:12px;border: solid 1px white;\"></td>
+           </tr>
+           <tr>
+               <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;\">
+               SKPD &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+               &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+               &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+               &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+               &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : $lcNmskpd</td>                
+               <td align=\"left\" colspan=\"11\" style=\"font-size:12px;border: solid 1px white;\"></td>
+           </tr>
+           <tr>
+               <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;\">Kepala Badan Keuangan Daerah Kota Pontianak &nbsp;
+               &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Drs. HENDRO SUBEKTI</td>
+               <td align=\"left\" colspan=\"11\" style=\"font-size:12px;border: solid 1px white;\"></td>
+           </tr>
+           <tr>
+               <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;\">Bendahara Penerimaan &nbsp;
+               &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+               &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+               &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : M. Mauludin
+               </td>
+               <td align=\"left\" colspan=\"11\" style=\"font-size:12px;border: solid 1px white;\"></td>
+           </tr>
+           <tr>
+               <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
+               <td align=\"left\" colspan=\"11\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
+           </tr>
+           
+           </table>
+           
+           <table style=\"border-collapse:collapse;font-size:12px\" width=\"100%\" align=\"center\" border=\"1\" cellspacing=\"1\" cellpadding=\"1\">
+           <thead>
+           <tr>
+               <td align=\"center\" rowspan=\"2\" style=\"font-size:12px\">Kode<br>Rekening</td>
+               <td align=\"center\" rowspan=\"2\" style=\"font-size:12px\">Uraian</td>
+               <td align=\"center\" rowspan=\"2\" style=\"font-size:12px\">Jumlah<br>Anggaran</td>
+               <td align=\"center\" colspan=\"3\" style=\"font-size:12px\">Sampai dengan Bulan Lalu</td>
+               <td align=\"center\" colspan=\"3\" style=\"font-size:12px\">Bulan Ini</td>
+               <td align=\"center\" colspan=\"4\" style=\"font-size:12px\">Sampai dengan Bulan Ini</td>
+           </tr>
+           <tr>
+               <td align=\"center\" style=\"font-size:12px\">Penerimaan</td>
+               <td align=\"center\" style=\"font-size:12px\">Penyetoran</td>
+               <td align=\"center\" style=\"font-size:12px\">Sisa</td>
+               <td align=\"center\" style=\"font-size:12px\">Penerimaan</td>
+               <td align=\"center\" style=\"font-size:12px\">Penyetoran</td>
+               <td align=\"center\" style=\"font-size:12px\">Sisa</td>
+               <td align=\"center\" style=\"font-size:12px\">Jumlah<br>Anggaran<br>yang<br>Terealisasi</td>                
+               <td align=\"center\" style=\"font-size:12px\">Jumlah<br>Anggaran<br>yang telah<br>Disetor</td>
+               <td align=\"center\" style=\"font-size:12px\">Sisa yang<br>Belum<br>Disetor</td>
+               <td align=\"center\" style=\"font-size:12px\">Sisa Anggaran yang<br>Belum<br>Terealisasi/Pelam-<br>pauan Anggaran</td>                                
+           </tr>            
+           <tr>
+               <td align=\"center\" width=\"5%\" style=\"font-size:12px\">1</td>
+               <td align=\"center\" width=\"6%\" style=\"font-size:12px\">2</td>
+               <td align=\"center\" width=\"9%\" style=\"font-size:12px\">3</td>
+               <td align=\"center\" width=\"9%\" style=\"font-size:12px\">4</td>
+               <td align=\"center\" width=\"9%\" style=\"font-size:12px\">5</td>
+               <td align=\"center\" width=\"9%\" style=\"font-size:12px\">6=(5-4)</td>
+               <td align=\"center\" width=\"9%\" style=\"font-size:12px\">7</td>
+               <td align=\"center\" width=\"9%\" style=\"font-size:12px\">8</td>
+               <td align=\"center\" width=\"9%\" style=\"font-size:12px\">9=(8-7)</td>
+               <td align=\"center\" width=\"9%\" style=\"font-size:12px\">10=(4+7)</td>
+               <td align=\"center\" width=\"9%\" style=\"font-size:12px\">11=(5+8)</td>
+               <td align=\"center\" width=\"9%\" style=\"font-size:12px\">12=(11-10)</td>
+               <td align=\"center\" width=\"9%\" style=\"font-size:12px\">13=(3-10)</td>                
+           </tr>
+           </thead>";
+          
+
+           if ($pilih==1   ){
+               $kon_terimaini = " (a.tgl_kas >= '$lctgl1' AND a.tgl_kas <= '$lctgl2')";
+               $kon_keluarini = " (a.tgl_kas >= '$lctgl1' AND a.tgl_kas <= '$lctgl2')";          
+               $kon_terimalalu = " (a.tgl_kas < '$lctgl1')";
+               $kon_keluarlalu = " (a.tgl_kas < '$lctgl1')";
+          }else{
+               $kon_terimaini = " (month(a.tgl_kas)= '$bulan' AND year(a.tgl_kas) = '$thn_ang')";
+               $kon_keluarini = " (month(a.tgl_kas)= '$bulan' AND year(a.tgl_kas) = '$thn_ang')";
+               $kon_terimalalu = " (month(a.tgl_kas)< '$bulan' AND year(a.tgl_kas) = '$thn_ang')";
+               $kon_keluarlalu = " (month(a.tgl_kas)< '$bulan' AND year(a.tgl_kas) = '$thn_ang')";
+          }
+
+           $n_trdrka = 'trdrka';
+           
+           $kon_skpd="a.kd_skpd = ";
+           $sql  = "SELECT z.kd_skpd, z.kd_sub_kegiatan, z.kd_rek6, z.nm_rek6, SUM(z.nilai) AS ang, SUM(z.$anggaran_) AS ang_ubah,
+                   (SELECT SUM(b.rupiah) FROM trhkasin_ppkd a INNER JOIN trdkasin_ppkd b ON RTRIM(a.no_kas)=RTRIM(b.no_kas) WHERE b.kd_rek5=z.kd_rek6 and a.kd_skpd=z.kd_skpd and $kon_keluarini) AS keluar_ini,
+                   (SELECT SUM(b.rupiah) FROM trhkasin_ppkd a INNER JOIN trdkasin_ppkd b ON RTRIM(a.no_kas)=RTRIM(b.no_kas) WHERE b.kd_rek5=z.kd_rek6 and a.kd_skpd=z.kd_skpd and $kon_keluarlalu) AS keluar_lalu,
+                   (SELECT SUM(b.rupiah) FROM trhkasin_ppkd a INNER JOIN trdkasin_ppkd b ON RTRIM(a.no_kas)=RTRIM(b.no_kas) WHERE b.kd_rek5=z.kd_rek6 and a.kd_skpd=z.kd_skpd and $kon_keluarini) AS terima_ini,
+                   (SELECT SUM(b.rupiah) FROM trhkasin_ppkd a INNER JOIN trdkasin_ppkd b ON RTRIM(a.no_kas)=RTRIM(b.no_kas) WHERE b.kd_rek5=z.kd_rek6 and a.kd_skpd=z.kd_skpd and $kon_keluarlalu) AS terima_lalu                    
+                   FROM $n_trdrka z WHERE left(z.kd_skpd,len('$lcskpd'))='$lcskpd' and left(z.kd_rek6,2) in ('41','42','43','71') and right(z.kd_sub_kegiatan,6) in ('00.001','00.003')
+                   GROUP BY z.kd_skpd, z.kd_sub_kegiatan, z.kd_rek6,z.nm_rek6
+                   UNION
+                   SELECT z.kd_skpd, z.kd_sub_kegiatan, x.kd_rek6 [kd_rek5], right(x.kd_rek6,1)+'. '+x.uraian [nm_rek5], 
+                   (select isnull(sum(total),0) as nilai from trdpo a where a.kd_rek6=left(x.kd_rek6,7) and no_po=right(x.kd_rek6,1) and kd_kegiatan=z.kd_sub_kegiatan) AS ang, 
+                   (select isnull(sum($det_),0) as nilai from trdpo a where a.kd_rek6=left(x.kd_rek6,7) and no_po=right(x.kd_rek6,1) and kd_kegiatan=z.kd_sub_kegiatan) AS ang_ubah,
+                   (SELECT SUM(b.rupiah) FROM trhkasin_ppkd a INNER JOIN trdkasin_ppkd b ON RTRIM(a.no_kas)=RTRIM(b.no_kas) WHERE b.kd_rek6=x.kd_rek6 and a.kd_skpd=z.kd_skpd and $kon_keluarini) AS keluar_ini,
+                   (SELECT SUM(b.rupiah) FROM trhkasin_ppkd a INNER JOIN trdkasin_ppkd b ON RTRIM(a.no_kas)=RTRIM(b.no_kas) WHERE b.kd_rek6=x.kd_rek6 and a.kd_skpd=z.kd_skpd and $kon_keluarlalu) AS keluar_lalu,
+                   (SELECT SUM(b.rupiah) FROM trhkasin_ppkd a INNER JOIN trdkasin_ppkd b ON RTRIM(a.no_kas)=RTRIM(b.no_kas) WHERE b.kd_rek6=x.kd_rek6 and a.kd_skpd=z.kd_skpd and $kon_keluarini) AS terima_ini,
+                   (SELECT SUM(b.rupiah) FROM trhkasin_ppkd a INNER JOIN trdkasin_ppkd b ON RTRIM(a.no_kas)=RTRIM(b.no_kas) WHERE b.kd_rek6=x.kd_rek6 and a.kd_skpd=z.kd_skpd and $kon_keluarlalu) AS terima_lalu                    
+                   FROM $n_trdrka z 
+                   inner join map_rek_penerimaan x on x.kd_rek5 = z.kd_rek6 and z.kd_skpd = x.kd_skpd	
+                   WHERE left(z.kd_skpd,len('$lcskpd'))='$lcskpd' and left(z.kd_rek6,2) in ('41','42','43','71') and right(z.kd_sub_kegiatan,6) in ('00.001','00.003')
+                   GROUP BY x.kd_kegiatan,z.kd_skpd, z.kd_sub_kegiatan, x.kd_rek6,x.uraian
+                   ORDER BY kd_sub_kegiatan,kd_rek6                    
+                   ";
+                                      
+                   $hasil = $this->db->query($sql);                                                      
+                   $lcterima_ini=0;
+                   $lckeluar_ini=0;
+                   $lcprog_lama="";
+                   $lckeg_lama="";
+                   $ln_jlh1 =0;
+                   $ln_jlh2 =0;
+                   $ln_jlh3 =0;
+                   $ln_jlh4 =0;
+                   $ln_jlh5 =0;
+                   $ln_jlh6 =0;
+                   $ln_jlh7 =0;
+                   $ln_jlh8 =0;
+                   $ln_jlh9 =0;
+                   $ln_jlh10 =0;
+                   $ln_jlh11 =0;
+                   
+                   foreach ($hasil->result() as $row)
+                   {
+                       $lcprog=substr($row->kd_kegiatan,0,18);
+                       $lckeg=$row->kd_kegiatan;
+                       $lcrek=$row->kd_rek5;
+                       
+                       if($lcprog<>$lcprog_lama){//cek program
+                            $sql="select z.kd_program, z.nm_program,
+                                  (SELECT SUM(a.$anggaran_) FROM $n_trdrka a WHERE substring(a.kd_kegiatan,1,18)=z.kd_program and left(a.kd_skpd,len('$lcskpd'))='$lcskpd' and left(a.kd_rek5,2) in ('41','42','43','61') and right(a.kd_kegiatan,6) in ('00.001','00.003')) AS ang_ubah,
+                                  (SELECT SUM(b.rupiah) FROM trhkasin_ppkd a INNER JOIN trdkasin_ppkd b ON RTRIM(a.no_kas)=RTRIM(b.no_kas) WHERE substring(b.kd_kegiatan,1,18)=z.kd_program and right(b.kd_kegiatan,6) in ('00.001','00.003') and left(a.kd_skpd,len('$lcskpd'))='$lcskpd' and $kon_keluarini) AS keluar_ini,
+                                  (SELECT SUM(b.rupiah) FROM trhkasin_ppkd a INNER JOIN trdkasin_ppkd b ON RTRIM(a.no_kas)=RTRIM(b.no_kas) WHERE substring(b.kd_kegiatan,1,18)=z.kd_program and right(b.kd_kegiatan,6) in ('00.001','00.003') and left(a.kd_skpd,len('$lcskpd'))='$lcskpd' and $kon_keluarlalu) AS keluar_lalu,
+                                  (SELECT SUM(b.rupiah) FROM trhkasin_ppkd a INNER JOIN trdkasin_ppkd b ON RTRIM(a.no_kas)=RTRIM(b.no_kas) WHERE substring(b.kd_kegiatan,1,18)=z.kd_program and right(b.kd_kegiatan,6) in ('00.001','00.003') and left(a.kd_skpd,len('$lcskpd'))='$lcskpd' and $kon_keluarini) AS terima_ini,
+                                  (SELECT SUM(b.rupiah) FROM trhkasin_ppkd a INNER JOIN trdkasin_ppkd b ON RTRIM(a.no_kas)=RTRIM(b.no_kas) WHERE substring(b.kd_kegiatan,1,18)=z.kd_program and right(b.kd_kegiatan,6) in ('00.001','00.003') and left(a.kd_skpd,len('$lcskpd'))='$lcskpd' and $kon_keluarlalu) AS terima_lalu 
+                                  from trskpd z where z.kd_kegiatan='$lckeg' and left(z.kd_skpd,len('$lcskpd'))='$lcskpd'
+                                  group by z.kd_program, z.nm_program ";
+                            $hasil_prog = $this->db->query($sql);
+                            foreach ($hasil_prog->result() as $row_prog)
+                            {
+                            
+                            /*$cRet .="<tr>
+                                   <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">$lcprog</td>
+                                 <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\">$row_prog->nm_program</td>
+                                 <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format($row_prog->ang_ubah,2)."</td>
+                                 <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format($row_prog->terima_lalu,2)."</td>
+                                 <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format($row_prog->keluar_lalu,2)."</td>
+                                 <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format(($row_prog->keluar_lalu)-($row_prog->terima_lalu),2)."</b></td>
+                                 <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format($row_prog->terima_ini,2)."</td>
+                                 <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format($row_prog->keluar_ini,2)."</td>
+                                 <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format(($row_prog->keluar_ini)-($row_prog->terima_ini),2)."</td>
+                                 <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format(($row_prog->terima_lalu)+($row_prog->terima_ini),2)."</td>
+                                 <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format(($row_prog->keluar_lalu)+($row_prog->keluar_ini),2)."</td>
+                                 <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format(($row_prog->keluar_lalu+$row_prog->keluar_ini)-($row_prog->terima_lalu+$row_prog->terima_ini),2)."</td>
+                                 <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\">".number_format($row_prog->ang_ubah-($row_prog->terima_lalu+$row_prog->terima_ini),2)."</td>
+                                 </tr>";
+                              */                                     
+                            }
+                                                                                                                                                                
+                       }
+                       
+                       if($lckeg<>$lckeg_lama){ //cek kegiatan
+                           $sql="select z.kd_kegiatan, z.nm_kegiatan,
+                               (SELECT SUM(a.$anggaran_) FROM $n_trdrka a WHERE a.kd_kegiatan=z.kd_kegiatan and left(a.kd_skpd,len('$lcskpd'))='$lcskpd') AS ang_ubah,
+                               (SELECT SUM(b.rupiah) FROM trhkasin_ppkd a INNER JOIN trdkasin_ppkd b ON RTRIM(a.no_kas)=RTRIM(b.no_kas) WHERE b.kd_kegiatan=z.kd_kegiatan and left(a.kd_skpd,len('$lcskpd'))='$lcskpd' and $kon_keluarini) AS keluar_ini,
+                               (SELECT SUM(b.rupiah) FROM trhkasin_ppkd a INNER JOIN trdkasin_ppkd b ON RTRIM(a.no_kas)=RTRIM(b.no_kas) WHERE b.kd_kegiatan=z.kd_kegiatan and left(a.kd_skpd,len('$lcskpd'))='$lcskpd' and $kon_keluarlalu) AS keluar_lalu,
+                               (SELECT SUM(b.rupiah) FROM trhkasin_ppkd a INNER JOIN trdkasin_ppkd b ON RTRIM(a.no_kas)=RTRIM(b.no_kas) WHERE b.kd_kegiatan=z.kd_kegiatan and left(a.kd_skpd,len('$lcskpd'))='$lcskpd' and $kon_keluarini) AS terima_ini,
+                               (SELECT SUM(b.rupiah) FROM trhkasin_ppkd a INNER JOIN trdkasin_ppkd b ON RTRIM(a.no_kas)=RTRIM(b.no_kas) WHERE b.kd_kegiatan=z.kd_kegiatan and left(a.kd_skpd,len('$lcskpd'))='$lcskpd' and $kon_keluarlalu) AS terima_lalu 
+                                   from trskpd z where z.kd_kegiatan='$lckeg' and z.kd_skpd='$lcskpd' 
+                                   group by z.kd_kegiatan, z.nm_kegiatan";
+                            $hasil_keg = $this->db->query($sql);
+                            foreach ($hasil_keg->result() as $row_keg)
+                            {
+                               $cRet .="<tr>
+                                   <td valign=\"top\" align=\"left\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>$lckeg</b></td>
+                                 <td valign=\"top\" align=\"left\" style=\"font-size:11px;border-bottom:none;border-top:none\"><b>$row_keg->nm_kegiatan</b></td>
+                                 <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format($row_keg->ang_ubah,2)."</b></td>
+                                 <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format($row_keg->terima_lalu,2)."</b></td>
+                                 <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format($row_keg->keluar_lalu,2)."</b></td>
+                                 <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format(($row_keg->keluar_lalu)-($row_keg->terima_lalu),2)."</b></td>
+                                 <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format($row_keg->terima_ini,2)."</b></td>
+                                 <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format($row_keg->keluar_ini,2)."</b></td>
+                                 <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format(($row_keg->keluar_ini)-($row_keg->terima_ini),2)."</b></td>
+                                 <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format(($row_keg->terima_lalu)+($row_keg->terima_ini),2)."</b></td>
+                                 <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format(($row_keg->keluar_lalu)+($row_keg->keluar_ini),2)."</b></td>
+                                 <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format(($row_keg->keluar_lalu+$row_keg->keluar_ini)-($row_keg->terima_lalu+$row_keg->terima_ini),2)."</b></td>
+                                 <td valign=\"top\" align=\"right\" style=\"font-size:12px;border-bottom:none;border-top:none\"><b>".number_format($row_keg->ang_ubah-($row_keg->terima_lalu+$row_keg->terima_ini),2)."</b></td>
+                                 </tr>";
+                               
+                               
+                            }
+                                                                                                                                                                
+                       }                                                                                                                        
+                      
+                      if(strlen($lcrek)=='7'){
+                           $cRet .="<tr>
+                               <td valign=\"top\" align=\"left\" style=\"font-size:10px;border-bottom:none;border-top:none\">".$this->tukd_model->dotrek($lcrek)."</td>
+                             <td valign=\"top\" align=\"left\" style=\"font-size:10px;border-bottom:none;border-top:none\">$row->nm_rek5</td>
+                             <td valign=\"top\" align=\"right\" style=\"font-size:10px;border-bottom:none;border-top:none\">".number_format($row->ang_ubah,2)."</td>
+                             <td valign=\"top\" align=\"right\" style=\"font-size:10px;border-bottom:none;border-top:none\">".number_format($row->terima_lalu,2)."</td>
+                             <td valign=\"top\" align=\"right\" style=\"font-size:10px;border-bottom:none;border-top:none\">".number_format($row->keluar_lalu,2)."</td>
+                             <td valign=\"top\" align=\"right\" style=\"font-size:10px;border-bottom:none;border-top:none\">".number_format(($row->keluar_lalu)-($row->terima_lalu),2)."</td>
+                             <td valign=\"top\" align=\"right\" style=\"font-size:10px;border-bottom:none;border-top:none\">".number_format($row->terima_ini,2)."</td>
+                             <td valign=\"top\" align=\"right\" style=\"font-size:10px;border-bottom:none;border-top:none\">".number_format($row->keluar_ini,2)."</td>
+                             <td valign=\"top\" align=\"right\" style=\"font-size:10px;border-bottom:none;border-top:none\">".number_format(($row->keluar_ini)-($row->terima_ini),2)."</td>
+                             <td valign=\"top\" align=\"right\" style=\"font-size:10px;border-bottom:none;border-top:none\">".number_format(($row->terima_lalu)+($row->terima_ini),2)."</td>
+                             <td valign=\"top\" align=\"right\" style=\"font-size:10px;border-bottom:none;border-top:none\">".number_format(($row->keluar_lalu)+($row->keluar_ini),2)."</td>
+                             <td valign=\"top\" align=\"right\" style=\"font-size:10px;border-bottom:none;border-top:none\">".number_format(($row->keluar_lalu+$row->keluar_ini)-($row->terima_lalu+$row->terima_ini),2)."</td>
+                             <td valign=\"top\" align=\"right\" style=\"font-size:10px;border-bottom:none;border-top:none\">".number_format($row->ang_ubah-($row->terima_lalu+$row->terima_ini),2)."</td>
+                             </tr>";    
+                                                             
+                       $ln_jlh1=$ln_jlh1+ $row->ang_ubah;
+                       $ln_jlh2=$ln_jlh2+ $row->terima_lalu;
+                       $ln_jlh3=$ln_jlh3+ $row->keluar_lalu;
+                       $ln_jlh4=$ln_jlh4+ ($row->keluar_lalu)-($row->terima_lalu);
+                       $ln_jlh5=$ln_jlh5+ $row->terima_ini;
+                       $ln_jlh6=$ln_jlh6+ $row->keluar_ini;
+                       $ln_jlh7=$ln_jlh7+ ($row->keluar_ini-$row->terima_ini);
+                       $ln_jlh8=$ln_jlh8+ ($row->terima_lalu+$row->terima_ini);
+                       $ln_jlh9=$ln_jlh9+ ($row->keluar_lalu+$row->keluar_ini);
+                       $ln_jlh10=$ln_jlh10+ (($row->keluar_lalu+$row->keluar_ini)-($row->terima_lalu+$row->terima_ini));
+                       $ln_jlh11=$ln_jlh11+ ($row->ang_ubah-($row->terima_lalu+$row->terima_ini));
+                      }else{
+                           $cRet .="<tr>
+                               <td valign=\"top\" align=\"left\" style=\"font-size:10px;border-bottom:none;border-top:none\">$lcrek</td>
+                             <td valign=\"top\" align=\"left\" style=\"font-size:10px;border-bottom:none;border-top:none\">$row->nm_rek5</td>
+                             <td valign=\"top\" align=\"right\" style=\"font-size:10px;border-bottom:none;border-top:none\">".number_format($row->ang_ubah,2)."</td>
+                             <td valign=\"top\" align=\"right\" style=\"font-size:10px;border-bottom:none;border-top:none\">".number_format($row->terima_lalu,2)."</td>
+                             <td valign=\"top\" align=\"right\" style=\"font-size:10px;border-bottom:none;border-top:none\">".number_format($row->keluar_lalu,2)."</td>
+                             <td valign=\"top\" align=\"right\" style=\"font-size:10px;border-bottom:none;border-top:none\">".number_format(($row->keluar_lalu)-($row->terima_lalu),2)."</td>
+                             <td valign=\"top\" align=\"right\" style=\"font-size:10px;border-bottom:none;border-top:none\">".number_format($row->terima_ini,2)."</td>
+                             <td valign=\"top\" align=\"right\" style=\"font-size:10px;border-bottom:none;border-top:none\">".number_format($row->keluar_ini,2)."</td>
+                             <td valign=\"top\" align=\"right\" style=\"font-size:10px;border-bottom:none;border-top:none\">".number_format(($row->keluar_ini)-($row->terima_ini),2)."</td>
+                             <td valign=\"top\" align=\"right\" style=\"font-size:10px;border-bottom:none;border-top:none\">".number_format(($row->terima_lalu)+($row->terima_ini),2)."</td>
+                             <td valign=\"top\" align=\"right\" style=\"font-size:10px;border-bottom:none;border-top:none\">".number_format(($row->keluar_lalu)+($row->keluar_ini),2)."</td>
+                             <td valign=\"top\" align=\"right\" style=\"font-size:10px;border-bottom:none;border-top:none\">".number_format(($row->keluar_lalu+$row->keluar_ini)-($row->terima_lalu+$row->terima_ini),2)."</td>
+                             <td valign=\"top\" align=\"right\" style=\"font-size:10px;border-bottom:none;border-top:none\">".number_format($row->ang_ubah-($row->terima_lalu+$row->terima_ini),2)."</td>
+                             </tr>";    
+                       
+                      }
+                                                                                                                               
+                      
+                                                                            
+                       $lcprog_lama=$lcprog;
+                       $lckeg_lama=$lckeg;           
+                   }
+                   
+       $tgl_ttdini = date('Y-m-d');
+
+        $cRet .="<tr>
+                   <td valign=\"top\" align=\"center\" colspan=\"2\" style=\"font-size:10px\"><b>Jumlah</b></td>
+                   <td valign=\"top\" align=\"right\" style=\"font-size:10px\">".number_format($ln_jlh1,2)."</td>
+                   <td valign=\"top\" align=\"right\" style=\"font-size:10px\">".number_format($ln_jlh2,2)."</td>
+                   <td valign=\"top\" align=\"right\" style=\"font-size:10px\">".number_format($ln_jlh3,2)."</td>
+                   <td valign=\"top\" align=\"right\" style=\"font-size:10px\">".number_format($ln_jlh4,2)."</td>
+                   <td valign=\"top\" align=\"right\" style=\"font-size:10px\">".number_format($ln_jlh5,2)."</td>
+                   <td valign=\"top\" align=\"right\" style=\"font-size:10px\">".number_format($ln_jlh6,2)."</td>
+                   <td valign=\"top\" align=\"right\" style=\"font-size:10px\">".number_format($ln_jlh7,2)."</td>
+                   <td valign=\"top\" align=\"right\" style=\"font-size:10px\">".number_format($ln_jlh8,2)."</td>
+                   <td valign=\"top\" align=\"right\" style=\"font-size:10px\">".number_format($ln_jlh9,2)."</td>
+                   <td valign=\"top\" align=\"right\" style=\"font-size:10px\">".number_format($ln_jlh10,2)."</td>
+                   <td valign=\"top\" align=\"right\" style=\"font-size:10px\">".number_format($ln_jlh11,2)."</td>
+               </tr>
+                <tr>
+                   <td align=\"left\" colspan=\"11\" style=\"font-size:12px;border: solid 1px white;border-top:solid 1px black;\">&nbsp;</td>
+                   <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;border-top:solid 1px black;\"></td>
+               </tr>
+               <tr>
+                   <td align=\"left\" colspan=\"11\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
+                   <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;\"></td>
+               </tr>
+               <tr>
+                   <td align=\"center\" colspan=\"5\" style=\"font-size:12px;border: solid 1px white;\">Mengetahui</td>
+                   <td align=\"left\" colspan=\"3\" style=\"font-size:12px;border: solid 1px white;\"></td>
+                   <td align=\"center\" colspan=\"5\" style=\"font-size:12px;border: solid 1px white;\">".$daerah.", ".$this->tanggal_format_indonesia($tg_ttd)."</td>                                                                                                                                                                                
+               </tr>
+               <tr>                
+                   <td align=\"center\" colspan=\"5\" style=\"font-size:12px;border: solid 1px white;\">$lcJabatanPA</td>
+                   <td align=\"left\" colspan=\"3\" style=\"font-size:12px;border: solid 1px white;\"></td>
+                   <td align=\"center\" colspan=\"5\" style=\"font-size:12px;border: solid 1px white;\">$lcJabatanBP</td>                    
+               </tr>
+               <tr>
+                   <td align=\"left\" colspan=\"11\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
+                   <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;\"></td>
+               </tr>
+               <tr>
+                   <td align=\"left\" colspan=\"11\" style=\"font-size:12px;border: solid 1px white;\">&nbsp;</td>
+                   <td align=\"left\" colspan=\"2\" style=\"font-size:12px;border: solid 1px white;\"></td>
+               </tr>
+               <tr>
+                   <td align=\"center\" colspan=\"5\" style=\"font-size:12px;border: solid 1px white;\"><b><u>$lcNmPA</u></b><br>$lcPangkatPA</td>
+                   <td align=\"center\" colspan=\"3\" style=\"font-size:12px;border: solid 1px white;\"></td>
+                   <td align=\"center\" colspan=\"5\" style=\"font-size:12px;border: solid 1px white;\"><b><u>$lcNmBP</u></b><br>$lcPangkatBP</td>
+               </tr>
+               <tr>
+                   <td align=\"center\" colspan=\"5\" style=\"font-size:12px;border: solid 1px white;\">NIP. $lcNipPA</td>
+                   <td align=\"center\" colspan=\"3\" style=\"font-size:12px;border: solid 1px white;\"></td>
+                   <td align=\"center\" colspan=\"5\" style=\"font-size:12px;border: solid 1px white;\">NIP. $lcNipBP</td>
+               </tr>";
+               
+                                 
+               
+       $cRet .='</table>';
+         $print = $this->uri->segment(3);
+       if($print==0){
+        $data['prev']= $cRet;    
+        echo ("<title>SPJ Pendapatan</title>");
+        echo $cRet;}
+        else{
+
+       $this->_mpdf('',$cRet,5,5,5,'L',0,'');
+       }
+   }
     
     
     
@@ -38217,8 +38263,42 @@ function cetak_bku(){
         $this->template->set('title', 'SPJ Pendapatan');   
         $this->template->load('template','tukd/pendapatan/spj_terima',$data) ; 
     }
+
+    function skpd__pend_ppkd() {
+
+        $kd_skpd = $this->session->userdata('kdskpd');
+        
+        $sql = "SELECT kd_skpd,nm_skpd FROM ms_skpd where kd_skpd='5.02.0.00.0.00.01.0000'";
+        $query1 = $this->db->query($sql);  
+        $result = array();
+        $ii = 0;
+        foreach($query1->result_array() as $resulte)
+        { 
+           
+            $result[] = array(
+                        'id' => $ii,        
+                        'kd_skpd' => $resulte['kd_skpd'],  
+                        'nm_skpd' => $resulte['nm_skpd'],  
+                       
+                        );
+                        $ii++;
+        }
+           
+        echo json_encode($result);
+     $query1->free_result(); 	  
+	}
     
-     
+    function bulan() {
+        for ($count = 1; $count <= 12; $count++)
+        {
+            $result[]= array(
+                     'bln' => $count,
+                     'nm_bulan' => $this->tukd_model->getBulan($count)
+                     );    
+        }
+        echo json_encode($result);
+    }
+
     function cetak_spjterima()
     {
         $thn_ang = $this->session->userdata('pcThang');
@@ -38579,9 +38659,13 @@ function cetak_bku(){
     }
 
 
-        /* function config_skpd(){
-        $skpd     = '1.20.05.01';//$this->session->userdata('kdskpd');
-        $sql = "SELECT kd_skpd,nm_skpd FROM  ms_skpd where kd_skpd = '$skpd'";
+    function config_skpd(){
+        $skpd     = $this->session->userdata('kdskpd');
+        $sql = "SELECT a.kd_skpd,a.nm_skpd,b.statu,b.status_ubah,
+        case when b.statu = 1 and b.status_sempurna=0 and b.status_ubah=0 then 'ANGGARAN MURNI'
+        when b.statu = 1 and b.status_sempurna=1 and b.status_ubah=0 then 'ANGGARAN PERGESERAN'
+        else 'ANGGARAN UBAH' end as status
+        FROM  ms_skpd a LEFT JOIN trhrka b ON a.kd_skpd=b.kd_skpd WHERE a.kd_skpd = '5.02.0.00.0.00.01.0000'";
         $query1 = $this->db->query($sql);  
         
         $test = $query1->num_rows();
@@ -38592,18 +38676,20 @@ function cetak_bku(){
             $result = array(
                         'id' => $ii,        
                         'kd_skpd' => $resulte['kd_skpd'],
-                        'nm_skpd' => $resulte['nm_skpd']
+                        'nm_skpd' => $resulte['nm_skpd'],
+                        'statu' => $resulte['statu'],
+                        'status_ubah' => $resulte['status_ubah'],
+                        'status' => $resulte['status']
                         );
                         $ii++;
-        } 
+        }
         
 
         
         
         echo json_encode($result);
         $query1->free_result();   
-    }*/
-    
+    }
     
     function load_sp2d_transout_ppkd(){
        //$beban='',$giat=''

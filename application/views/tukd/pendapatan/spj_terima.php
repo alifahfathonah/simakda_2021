@@ -1,4 +1,4 @@
-
+ 
 
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   	<link rel="stylesheet" type="text/css" href="<?php echo base_url(); ?>easyui/themes/default/easyui.css">
@@ -25,7 +25,7 @@
     var ctk = '';
      
       $(document).ready(function() {            
-             //get_skpd(); 
+             get_skpd(); 
              cekskpd();              
         });
      
@@ -87,7 +87,7 @@
            idField:'bln',  
            textField:'nm_bulan',  
            mode:'remote',
-           url:'<?php echo base_url(); ?>index.php/rka/bulan',  
+           url:'<?php echo base_url(); ?>index.php/tukd/bulan',  
            columns:[[ 
                {field:'nm_bulan',title:'Nama Bulan',width:700}    
            ]] 
@@ -99,7 +99,7 @@
      $(function(){
     	$('#ttd').combogrid({  
     		panelWidth:500,  
-    		url: '<?php echo base_url(); ?>/index.php/tukd/list_ttd',  
+    		url: '<?php echo base_url(); ?>/index.php/tukd/list_ttd_bud',  
     			idField:'nip',                    
     			textField:'nama',
     			mode:'remote',  
@@ -142,16 +142,18 @@
             });          
          });
     
-    /* function get_skpd()
+    function get_skpd()
         {
         
         	$.ajax({
-        		url:'<?php echo base_url(); ?>index.php/rka/config_skpd',
+        		url:'<?php echo base_url(); ?>index.php/tukd/config_skpd',
         		type: "POST",
         		dataType:"json",                         
         		success:function(data){
+                
         								$("#skpd").attr("value",data.kd_skpd);
         								$("#nmskpd").attr("value",data.nm_skpd);
+                                        $("#statusx").attr("value",data.status);
                                         kdskpd = data.kd_skpd; 
         								kdskpd = data.kd_skpd;
                                         kode=data.kd_skpd;
@@ -163,17 +165,16 @@
                                         } 
         							  }                                     
         	});  
-        } */
+        }
    
         function ttd1(){  
             var ckdskpd = $("#sskpd2").combogrid("getValue");
-			
             $('#ttd1').combogrid({  
                 panelWidth:600,  
                 idField:'nip',  
                 textField:'nip',  
                 mode:'remote',
-                url:'<?php echo base_url(); ?>index.php/tukd/load_ttd_ksd/pa', 
+                url:'<?php echo base_url(); ?>index.php/tukd/load_ttd/pa', 
                 queryParams: ({kdskpd:ckdskpd}), 
                 columns:[[  
                     {field:'nip',title:'NIP',width:200},  
@@ -190,7 +191,7 @@
                 idField:'nip',  
                 textField:'nip',  
                 mode:'remote',
-                url:'<?php echo base_url(); ?>index.php/tukd/load_ttd_ksd/bp',
+                url:'<?php echo base_url(); ?>index.php/tukd/load_ttd/bp',
                 queryParams: ({kdskpd:ckdskpd}),  
                 columns:[[  
                     {field:'nip',title:'NIP',width:200},  
@@ -205,18 +206,17 @@
             idField:'kd_skpd',  
             textField:'kd_skpd',  
             mode:'remote',
-            url:'<?php echo base_url(); ?>index.php/tukd/skpd__pend',
+            url:'<?php echo base_url(); ?>index.php/tukd/skpd__pend_ppkd',
             //queryParams: ({kdskpd:kdskpd2}),
             columns:[[  
                 {field:'kd_skpd',title:'Kode SKPD',width:100},  
-                {field:'nm_skpd',title:'Nama SKPD',width:900}
+                {field:'nm_skpd',title:'Nama SKPD',width:700}
              ]],       
             onSelect:function(rowIndex,rowData){
 				skpd = rowData.kd_skpd;
                 $("#sskpd2").attr("value",rowData.kd_skpd);
                 $("#nmskpd").attr("value",rowData.nm_skpd);
-               
-				ttd1();
+                ttd1();
                 ttd2();
             }
             });
@@ -231,20 +231,14 @@
          var ckdskpd = $("#sskpd2").combogrid("getValue");
         var  ctglttd = $('#tgl_ttd').datebox('getValue');
         var  ttd = $('#ttd1').combogrid('getValue');
-        var ttd = ttd.split(" ").join("123456789");
+        var ttd = ttd.split(" ").join("ab");
         var  ttd2 = $('#ttd2').combogrid('getValue');
         var ttd2 = ttd2.split(" ").join("123456789");
         var jnsctk = document.getElementById('jnsctk').value;
-
-        var atas   =  document.getElementById('atas').value;
-        var bawah   =  document.getElementById('bawah').value;
-        var kanan   =  document.getElementById('kanan').value;
-        var kiri   =  document.getElementById('kiri').value;
-
-		if(ckdskpd=='1.20.12.02'){
-		var url    = "<?php echo site_url(); ?>/tukd/cetak_spjterimappkd"; 
+		if(ckdskpd=='5.02.0.00.0.00.01.0000'){
+		var url    = "<?php echo site_url(); ?>tukd/cetak_spjterimappkd"; 
 		} else{
-		var url    = "<?php echo site_url(); ?>/tukd/cetak_spjterima2"; 
+		var url    = "<?php echo site_url(); ?>tukd/cetak_spjterima2"; 
 		}
 		
 		
@@ -310,10 +304,23 @@
                 <td colspan="3">
                 <div id="div_skpd">
                         <table style="width:100%;" border="0">
+                            <td width="20%">STATUS</td>
+                            <td width="1%">:</td>
+                            <td width="79%">
+                             <input type="text" id="statusx" name="statusx" readonly="true" />
+                            </td>
+                        </table>
+                </div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3">
+                <div id="div_skpd">
+                        <table style="width:100%;" border="0">
                             <td width="20%">SKPD</td>
                             <td width="1%">:</td>
-                            <td width="79%"><input type="hidden" id="skpd" name="skpd" style="width: 100px;" />
-                             <input id="sskpd2" name="sskpd2" style="width:100px;border: 0;" />
+                            <td width="79%"><input type="hidden" id="skpd" name="skpd" style="width: 100px;" readonly="true" />
+                             <input id="sskpd2" name="sskpd2" style="width:100px;border: 0;" readonly="true" />
                             <input type="text" id="nmskpd" readonly="true" style="width: 400px;border:0" />
                             </td>
                         </table>
@@ -340,8 +347,7 @@
                 </div>
                 </td>
             </tr>
-            <!--<tr style="display: none;">-->
-			<tr>
+            <tr>
                 <td colspan="3">
                 <div id="div_bend">
                         <table style="width:100%;" border="0">
@@ -354,14 +360,14 @@
                 </td> 
             </tr>
 
-            <!--<tr style="display: none;">-->
-			<tr>
+            <tr style="display: none;">
                 <td colspan="3">
                 <div id="div_bend">
                         <table style="width:100%;" border="0">
                             <td width="20%">Jenis Cetakkan</td>
                             <td width="1%">:</td>
                             <td><select name="jnsctk" id="jnsctk" style="height: 27px;width: 200px;" > 
+                                <option value="1" >Global</option>
                                 <option value="2" >SKPD</option>
                             </td> 
                         </table>
@@ -369,7 +375,6 @@
                 </td> 
             </tr>
 
-			<!--<tr style="display: none;">-->
 			<tr>
 		<td colspan="4">
                 <div id="div_bend">
@@ -377,33 +382,25 @@
                             <td width="20%">Pengguna Anggaran</td>
                             <td width="1%">:</td>
                             <td><select type="text" id="ttd1" style="width: 100px;" /> 
-                            </td> 
-							
+                            </td>
+                             </table> 
+                             </div>
+				</tr>
+                <tr style="display: none;">			
 							<td width="20%">Bendahara Penerimaan</td>
                             <td width="1%">:</td>
                             <td><input type="text" id="ttd2" style="width: 100px;" /> 
                             </td> 
-                        </table>
-                </div>
+                       
+                
         </td> 
 		</tr>
-        <tr >
-                <td colspan='2'width="100%" height="40" ><strong>Ukuran Margin Untuk Cetakan PDF (Milimeter)</strong></td>
-            </tr>
-            <tr >
-                <td colspan='2'> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                Kiri  : &nbsp;<input type="number" id="kiri" name="kiri" style="width: 50px; border:1" value="10" /> &nbsp;&nbsp;
-                Kanan : &nbsp;<input type="number" id="kanan" name="kanan" style="width: 50px; border:1" value="2" /> &nbsp;&nbsp;
-                Atas  : &nbsp;<input type="number" id="atas" name="atas" style="width: 50px; border:1" value="10" /> &nbsp;&nbsp;
-                Bawah : &nbsp;<input type="number" id="bawah" name="bawah" style="width: 50px; border:1" value="15" /> &nbsp;&nbsp;
-                </td>
-            </tr>
             <td colspan="3">&nbsp;</td>
             </tr>            
             <tr>
                 <td colspan="3" align="center">
 						<a class="easyui-linkbutton" iconCls="icon-print" plain="true" onclick="javascript:cetak(0);">CETAK LAYAR</a>
-						<a class="easyui-linkbutton" iconCls="icon-print" plain="true" onclick="javascript:cetak(1);">CETAK PDF</a>
+						<a class="easyui-linkbutton" iconCls="icon-pdf" plain="true" onclick="javascript:cetak(1);">CETAK PDF</a>
 
                 <!--<a href="<?php echo site_url(); ?>/tukd/cetak_spjterima2/0" class="easyui-linkbutton" iconCls="icon-print" plain="true" onclick="javascript:cetak(this.href);return false">Cetak</a>
                 <a href="<?php echo site_url(); ?>/tukd/cetak_spjterima2/1" class="easyui-linkbutton" iconCls="icon-print" plain="true" onclick="javascript:cetak(this.href);return false">Cetak PDF</a>
@@ -413,4 +410,5 @@
         </table>  
             
     </fieldset>  
+    <br><br>
 </div>	
