@@ -1098,7 +1098,10 @@ function preview_rincian_belanja_skpd_pergeseran(){
                                                         </tr>
                                                  ";
                                                  $nilangsub= $nilangsub+$row->nilai;
-                                                 $nilangsub2= $nilangsub2+$row->nilai2;        
+                                                 $nilangsub2= $nilangsub2+$row->nilai2;
+                                                 $selisih=$this->support->rp_minus($nilangsub2-$nilangsub);
+                                                 $persen=$this->support->rp_minus((($nilangsub2-$nilangsub)/$nilangsub)*100);
+                                                       
                                              }
                                              
                             }
@@ -1107,8 +1110,10 @@ function preview_rincian_belanja_skpd_pergeseran(){
                                         <tr>                                    
                                          <td colspan='6' align='right' style='vertical-align:top;border-top: solid 1px black;border-bottom: none;' >Jumlah Anggaran Sub Kegiatan Sebelum $nama_status</td>
                                          <td style='vertical-align:top;border-top: solid 1px black;border-bottom: none;'  align='right'>".number_format($nilangsub,2,',','.')."</td>
-                                         <td colspan='6' align='right' style='vertical-align:top;border-top: solid 1px black;border-bottom: none;' >Jumlah Anggaran Sub Kegiatan Setelah $nama_status</td>
+                                         <td colspan='4' align='right' style='vertical-align:top;border-top: solid 1px black;border-bottom: none;' >Jumlah Anggaran Sub Kegiatan Setelah $nama_status</td>
                                          <td style='vertical-align:top;border-top: solid 1px black;border-bottom: none;'  align='right'>".number_format($nilangsub2,2,',','.')."</td>
+                                         <td style='vertical-align:top;border-top: solid 1px black;border-bottom: none;'  align='right'>".$selisih."</td>
+                                         <td style='vertical-align:top;border-top: solid 1px black;border-bottom: none;'  align='center'>".$persen."</td>
                                          </tr>
                                                                                   
                                          <tr>                                    
@@ -1120,7 +1125,7 @@ function preview_rincian_belanja_skpd_pergeseran(){
                     
 
 
-                            $cRet    .="<table style='border-collapse:collapse;font-size:12px' width='100%' align='center' border='1' cellspacing='0' cellpadding='0'> 
+                            $cRet    .="<table style='border-collapse:collapse;font-size:12px' width='100%' align='center' border='1' cellspacing='2' cellpadding='5'> 
                                         
 
                                          <tr>                                    
@@ -1224,8 +1229,8 @@ function preview_rincian_belanja_skpd_pergeseran(){
                                 <td width='30%' align='right'>".number_format($angkas5->des,'2',',','.')."</td>                                 
                             </tr>
                             <tr>
-                                <td width='30% align='right'><b>Jumlah</td>
-                                <td width='30%' align='right'><b>".number_format($angkas5->des+$angkas5->nov+$angkas5->jan+$angkas5->feb+$angkas5->mar+$angkas5->apr+$angkas5->mei+$angkas5->jun+$angkas5->jul+$angkas5->ags+$angkas5->sept+$angkas5->okt,'2',',','.')."</td>                               
+                                <td width='30%' align='right'>Jumlah</td>
+                                <td width='30%' align='right'>".number_format($angkas5->des+$angkas5->nov+$angkas5->jan+$angkas5->feb+$angkas5->mar+$angkas5->apr+$angkas5->mei+$angkas5->jun+$angkas5->jul+$angkas5->ags+$angkas5->sept+$angkas5->okt,'2',',','.')."</td>                               
                             </tr>
 
                         </table>";
@@ -1253,6 +1258,7 @@ function preview_rincian_belanja_skpd_pergeseran(){
                 $this->load->view('anggaran/rka/perkadaII', $data);
             break;
             case 0; 
+
                 //$this->master_pdf->_mpdf_margin('',$cRet,$kanan,$kiri,10,'1','',$atas,$bawah); 
                 //echo ("<title>RKA Rincian Belanja</title>");
                echo($cRet);
